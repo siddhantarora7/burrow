@@ -146,7 +146,7 @@ Events: 120/min per pet (excess dropped with 429). Social: 1 per 10 s per sender
 
 ```ts
 type PetState = 'idle' | 'eat' | 'wave' | 'work' | 'sleep' | 'cheer'
-derive(input: { events: Ev[]; friendStops: number[]; now: number }): { state: PetState; since: number; nextChangeAt: number | null }
+derive(input: { events: Ev[]; friendStops?: number[]; now: number }): { state: PetState; lastEventAt: number | null; nextChangeAt: number | null }
 ```
 
 Events are grouped by `session`. Per session, the latest event decides its phase: `prompt`/`heartbeat`/`session_start` → running; `needs_input`/`error` → waiting; `stop` → done; `session_end` → ended. A running session with no event for 10 min is stale (treated as ended).
@@ -161,6 +161,8 @@ Pet state, first match wins:
 | 4 | work | any session running for ≥ 15 s (debounce: short turns never flash the laptop) |
 | 5 | idle | any event within the last 20 min |
 | 6 | sleep | otherwise |
+
+Waiting sessions older than 60 min and running sessions silent for 10 min are ignored. A run resumed after a permission prompt counts from its latest `prompt`, so it is already work.
 
 `nextChangeAt` is the earliest future instant at which the result could change without a new event (eat expiring, work debounce maturing, stale cutoff, idle → sleep). Callers schedule one timer for it. Constants live in one exported `TIMING` object.
 
