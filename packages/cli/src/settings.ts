@@ -1,4 +1,4 @@
-import { copyFile, mkdir, readFile, rename, writeFile } from 'node:fs/promises'
+import { copyFile, mkdir, readFile, realpath, rename, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { HOOK_FILE } from './config'
 import type { HookArg } from './hook'
@@ -53,20 +53,35 @@ export function addHooks(settings: unknown, scriptPath: string): { settings: Rec
 
 export function removeHooks(settings: unknown): { settings: Record<string, unknown>; removed: number } {
   const { root, hooks } = hooksObject(settings)
+  const hadEvents = Object.keys(hooks).length > 0
   let removed = 0
   for (const [event, value] of Object.entries(hooks)) {
-    const groups = (value as unknown[]).flatMap((g) => {
+    const before = value as unknown[]
+    let touched = false
+    const groups = before.flatMap((g) => {
       if (!isObj(g) || !Array.isArray(g.hooks)) return [g]
       const kept = g.hooks.filter((h) => !isBurrowHook(h))
+      if (kept.length === g.hooks.length) return [g]
+      touched = true
       removed += g.hooks.length - kept.length
       return kept.length ? [{ ...g, hooks: kept }] : []
     })
-    if (groups.length) hooks[event] = groups
-    else delete hooks[event]
+    // Only remove containers that burrow itself emptied; the user's own empties stay.
+    if (touched && groups.length === 0) delete hooks[event]
+    else if (touched) hooks[event] = groups
   }
   const out: Record<string, unknown> = { ...root, hooks }
-  if (Object.keys(hooks).length === 0) delete out.hooks
+  if (removed > 0 && hadEvents && Object.keys(hooks).length === 0) delete out.hooks
   return { settings: out, removed }
+}
+
+/** Keep the file's own indentation and trailing newline so a round trip changes nothing else. */
+function formatLike(raw: string | null, value: unknown): string {
+  const detected = raw?.match(/^\{\r?\n([ \t]+)"/)?.[1]
+  // A minified or new file is being reformatted anyway; give it the conventional trailing newline.
+  const newline = detected === undefined || raw === null || raw.endsWith('\n')
+  const indent = detected ?? 2
+  return JSON.stringify(value, null, indent) + (newline ? '\n' : '')
 }
 
 export async function updateSettingsFile(
@@ -74,6 +89,8 @@ export async function updateSettingsFile(
   backupDir: string,
   fn: (s: unknown) => Record<string, unknown>,
 ): Promise<{ backup: string | null }> {
+  // Write through symlinks (dotfile managers) instead of replacing the link with a file.
+  path = await realpath(path).catch(() => path)
   let raw: string | null = null
   try {
     raw = await readFile(path, 'utf8')
@@ -97,7 +114,7 @@ export async function updateSettingsFile(
   }
   await mkdir(dirname(path), { recursive: true })
   const tmp = `${path}.burrow.tmp`
-  await writeFile(tmp, JSON.stringify(next, null, 2) + '\n')
+  await writeFile(tmp, formatLike(raw, next))
   await rename(tmp, path)
   return { backup }
 }

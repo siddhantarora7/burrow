@@ -1,12 +1,13 @@
 import { randomBytes } from 'node:crypto'
-import { copyFile, mkdir, rm } from 'node:fs/promises'
+import { mkdir, rm } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createInterface } from 'node:readline/promises'
 import { parseArgs } from 'node:util'
 import { cleanName, DEFAULT_COLOR, isSpecies, SPECIES, type Species } from '@burrow/core'
 import { burrowHome, claudeSettingsPath, HOOK_FILE, readConfig, writeConfig, type BurrowConfig } from './config'
-import { addHooks, removeHooks, SettingsError, updateSettingsFile } from './settings'
+import { checkSettings, installHooks } from './install'
+import { removeHooks, SettingsError, updateSettingsFile } from './settings'
 import { bold, dim, FACE, green, hookTable, privacyBlock } from './ui'
 
 const here = dirname(fileURLToPath(import.meta.url))
@@ -44,9 +45,16 @@ async function ask(question: string): Promise<string> {
 
 async function init(): Promise<void> {
   const home = burrowHome()
+  const settingsPath = claudeSettingsPath()
+  const hookSource = join(here, HOOK_FILE)
+  // Fail on unusable settings before hatching anything, so a retry never orphans a pet.
+  await checkSettings(settingsPath)
   const existing = await readConfig(home)
   if (existing) {
-    console.log(`\n  ${FACE[existing.pet.species]}  ${existing.pet.name} already lives here. run ${bold('npx burrow-pets status')}.\n`)
+    // Re-running init repairs the hooks (e.g. after fixing settings.json) without hatching again.
+    const added = await installHooks({ home, settingsPath, hookSource })
+    const note = added.length ? `reinstalled ${added.length} hooks.` : 'hooks are already installed.'
+    console.log(`\n  ${FACE[existing.pet.species]}  ${existing.pet.name} already lives here. ${note}\n`)
     return
   }
   const interactive = process.stdin.isTTY
@@ -80,15 +88,7 @@ async function init(): Promise<void> {
     burrows: [body.burrowId], pet: { name, species, color: DEFAULT_COLOR[species] },
   }
   await writeConfig(home, cfg)
-  const script = join(home, HOOK_FILE)
-  await copyFile(join(here, HOOK_FILE), script)
-  const settingsPath = claudeSettingsPath()
-  let added: string[] = []
-  await updateSettingsFile(settingsPath, join(home, 'backups'), (s) => {
-    const r = addHooks(s, script)
-    added = r.added
-    return r.settings
-  })
+  const added = await installHooks({ home, settingsPath, hookSource })
 
   console.log(`
   ${FACE[species]}  ${green('hatched')} ${bold(name)} the ${species}

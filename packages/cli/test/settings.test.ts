@@ -85,3 +85,35 @@ describe('updateSettingsFile', () => {
     expect(await readdir(dir)).toEqual(['settings.json'])
   })
 })
+
+describe('round trips and links', () => {
+  const fourSpace = JSON.stringify(
+    { model: 'opus', hooks: { Stop: [{ hooks: [{ type: 'command', command: 'say done' }] }], PreToolUse: [] }, statusLine: { type: 'command', command: 'x' } },
+    null,
+    4,
+  )
+  it('init then uninstall gives back the exact bytes of a 4-space file, user empties included', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'burrow-rt-'))
+    const file = join(dir, 'settings.json')
+    await writeFile(file, fourSpace)
+    await updateSettingsFile(file, join(dir, 'b'), (s) => addHooks(s, SCRIPT).settings)
+    expect(await readFile(file, 'utf8')).toMatch(/^\{\n {4}"model"/)
+    await updateSettingsFile(file, join(dir, 'b'), (s) => removeHooks(s).settings)
+    expect(await readFile(file, 'utf8')).toBe(fourSpace)
+  })
+  it('leaves empty containers it did not empty itself', () => {
+    const s = { hooks: { PreToolUse: [], Stop: [{ hooks: [] }] } }
+    expect(removeHooks(structuredClone(s))).toEqual({ settings: s, removed: 0 })
+    expect(removeHooks({ hooks: {} }).settings).toEqual({ hooks: {} })
+  })
+  it('writes through a symlinked settings.json and keeps the link', async () => {
+    const { symlink, lstat } = await import('node:fs/promises')
+    const dir = await mkdtemp(join(tmpdir(), 'burrow-ln-'))
+    const real = join(dir, 'real.json'), link = join(dir, 'settings.json')
+    await writeFile(real, '{}\n')
+    await symlink(real, link)
+    await updateSettingsFile(link, join(dir, 'b'), (s) => addHooks(s, SCRIPT).settings)
+    expect((await lstat(link)).isSymbolicLink()).toBe(true)
+    expect(Object.keys(JSON.parse(await readFile(real, 'utf8')).hooks)).toHaveLength(HOOKS.length)
+  })
+})
