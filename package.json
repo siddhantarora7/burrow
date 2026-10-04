@@ -1,0 +1,20 @@
+{
+  "name": "burrow",
+  "private": true,
+  "type": "module",
+  "workspaces": ["packages/*", "apps/*"],
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "dev:server": "npm run dev -w @burrow/server",
+    "dev:web": "npm run dev -w @burrow/web",
+    "build:cli": "npm run build -w burrow-pets",
+    "smoke": "node scripts/smoke.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^24",
+    "typescript": "~6.0.3",
+    "vitest": "^5.0.3"
+  }
+}
