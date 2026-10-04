@@ -1,0 +1,916 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>burrow directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Yusei+Magic&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+/* ---------- board chrome (neutral, stays out of the way) ---------- */
+:root{
+  --b-bg:#EEEEEC; --b-ink:#1E1E22; --b-mute:#64646C; --b-line:#D4D4D0; --b-card:#F8F8F6;
+}
+:root[data-theme="dark"]{
+  --b-bg:#151517; --b-ink:#ECECEE; --b-mute:#9A9AA2; --b-line:#2C2C30; --b-card:#1C1C1F;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--b-bg);color:var(--b-ink);font:400 15px/1.55 Geist,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid #3B82F6;outline-offset:3px;border-radius:6px}
+.wrap{max-width:1280px;margin:0 auto;padding:0 24px}
+@media (max-width:640px){.wrap{padding:0 16px}}
+
+.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--b-bg) 86%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--b-line)}
+.top .wrap{display:flex;align-items:center;gap:16px;height:60px}
+.top h1{font:600 15px/1 Geist;margin:0;letter-spacing:-.01em}
+.top nav{display:flex;gap:4px;margin-left:8px}
+.top nav a{text-decoration:none;color:var(--b-mute);padding:6px 10px;border-radius:8px;font-size:14px}
+.top nav a:hover{color:var(--b-ink);background:var(--b-card)}
+.top .ctrl{margin-left:auto;display:flex;gap:8px;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--b-line);border-radius:10px;padding:2px;background:var(--b-card)}
+.seg button{border:0;background:none;padding:5px 10px;border-radius:8px;font-size:13px;color:var(--b-mute);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--b-ink);color:var(--b-bg)}
+@media (max-width:820px){.top nav{display:none}}
+@media (max-width:520px){.seg.species{display:none}}
+
+.intro{padding:56px 0 24px;max-width:70ch}
+.intro h2{font:600 clamp(28px,4vw,40px)/1.1 Geist;letter-spacing:-.03em;margin:0 0 14px}
+.intro p{color:var(--b-mute);margin:0 0 10px}
+
+.dir{padding:48px 0 32px;border-top:1px solid var(--b-line);margin-top:40px}
+.dir-head{display:grid;grid-template-columns:auto 1fr;gap:6px 18px;align-items:baseline;margin-bottom:22px}
+.dir-letter{font:600 14px/1 Geist Mono;color:var(--b-mute);border:1px solid var(--b-line);border-radius:8px;padding:6px 8px;grid-row:span 2;align-self:start}
+.dir-head h3{font:600 clamp(24px,3vw,32px)/1.1 Geist;letter-spacing:-.025em;margin:0}
+.dir-head h3 small{font:500 13px Geist;color:var(--b-mute);letter-spacing:0;margin-left:10px;vertical-align:middle;border:1px solid var(--b-line);padding:3px 8px;border-radius:999px}
+.dir-head p{margin:0;color:var(--b-mute);max-width:78ch}
+
+.comp{border-radius:18px;overflow:hidden;border:1px solid var(--b-line);position:relative;container-type:inline-size}
+.cap{font-size:13px;color:var(--b-mute);margin:10px 2px 0}
+
+.grid2{display:grid;grid-template-columns:1.35fr 1fr;gap:20px;margin-top:20px}
+@media (max-width:900px){.grid2{grid-template-columns:1fr}}
+.panel{background:var(--b-card);border:1px solid var(--b-line);border-radius:16px;padding:18px}
+.panel h4{font:600 13px/1 Geist;margin:0 0 14px;color:var(--b-mute)}
+
+.sheet{display:grid;grid-template-columns:repeat(3,1fr);gap:10px 8px}
+@media (max-width:420px){.sheet{grid-template-columns:repeat(2,1fr)}}
+.cell{border-radius:12px;padding:6px 6px 10px;text-align:center}
+.cell svg,.cell canvas{width:min(100%,150px);margin:0 auto;height:auto;display:block;aspect-ratio:1}
+.cell b{display:block;font:600 13px/1.2 Geist}
+.cell span{display:block;font-size:11.5px;line-height:1.3;color:var(--b-mute);margin-top:2px}
+
+.swatches{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.sw-col h5{font:500 12px Geist;color:var(--b-mute);margin:0 0 8px}
+.sw{display:flex;align-items:center;gap:10px;margin-bottom:6px;font:400 12.5px/1.2 Geist Mono}
+.sw i{width:30px;height:30px;border-radius:8px;border:1px solid rgba(127,127,127,.25);flex:none}
+.sw em{font:500 12.5px Geist;font-style:normal;display:block}
+
+.typespec{display:grid;gap:12px;margin-top:4px}
+.typespec .t1{font-size:32px;line-height:1.05}
+.typespec .t2{font-size:14.5px;line-height:1.5;max-width:46ch}
+.typespec .meta{font:400 12px Geist Mono;color:var(--b-mute)}
+
+.notes{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:20px}
+@media (max-width:900px){.notes{grid-template-columns:1fr}}
+.note{border-left:2px solid var(--b-line);padding:2px 0 2px 14px}
+.note b{display:block;font:600 13px Geist;margin-bottom:4px}
+.note p{margin:0;color:var(--b-mute);font-size:14px}
+
+.demoted{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media (max-width:900px){.demoted{grid-template-columns:1fr}}
+.demoted .panel p{margin:6px 0 0;font-size:13.5px;color:var(--b-mute)}
+.demoted .panel b{font:600 14px Geist}
+.verdict{font:500 11.5px Geist Mono;color:var(--b-mute);border:1px solid var(--b-line);border-radius:6px;padding:2px 6px;margin-left:6px}
+
+.endnote{padding:40px 0 80px;color:var(--b-mute);max-width:72ch}
+
+/* ---------- pet rig animation (shared by A and B) ---------- */
+.pet{overflow:visible}
+.pet .squash,.pet .hop,.pet .eyes,.pet .item,.pet .crumb,.pet .z,.pet .spark,.pet .bubble,.pet .hand,.pet .glow,.pet .mo,.pet .mc,.pet .shadow{transform-box:fill-box}
+.pet .squash{transform-origin:50% 100%}
+.pet .eyes{transform-origin:50% 50%}
+.pet .shadow{transform-origin:50% 50%}
+.pet .z{font-family:var(--pet-font,inherit)}
+@media (prefers-reduced-motion:no-preference){
+  .st-idle .squash{animation:breathe 3.4s ease-in-out infinite}
+  .st-idle .eyes,.st-wave .eyes{animation:blink 4.6s infinite}
+  .st-eat .item{animation:drop 2.6s cubic-bezier(.5,0,.75,0) infinite}
+  .st-eat .squash{animation:chomp 2.6s ease-out infinite}
+  .st-eat .mo{animation:mouthOpen 2.6s steps(1) infinite}
+  .st-eat .mc{animation:mouthClosed 2.6s steps(1) infinite}
+  .st-eat .crumb{animation:crumb 2.6s ease-out infinite}
+  .st-eat .crumb.c2{animation-name:crumb2}
+  .st-wave .arm-wave{animation:wave .42s ease-in-out infinite alternate}
+  .st-wave .squash{animation:lean 1.68s ease-in-out infinite}
+  .st-wave .bubble{animation:bob 1.2s ease-in-out infinite}
+  .st-work .hand{animation:type .26s ease-in-out infinite alternate}
+  .st-work .hand.h2{animation-delay:-.13s}
+  .st-work .glow{animation:flicker 2.2s steps(4) infinite}
+  .st-work .squash{animation:breathe 2.4s ease-in-out infinite}
+  .st-sleep .squash{animation:snore 4.8s ease-in-out infinite}
+  .st-sleep .z{animation:zed 3.6s ease-out infinite;opacity:0}
+  .st-sleep .z.z2{animation-delay:1.2s}
+  .st-sleep .z.z3{animation-delay:2.4s}
+  .st-cheer .hop{animation:hop 1s cubic-bezier(.3,.7,.4,1) infinite}
+  .st-cheer .squash{animation:land 1s ease-out infinite}
+  .st-cheer .shadow{animation:shadowHop 1s cubic-bezier(.3,.7,.4,1) infinite}
+  .st-cheer .arm-up{animation:wiggle .25s ease-in-out infinite alternate}
+  .st-cheer .spark{animation:spark 1s ease-out infinite;opacity:0}
+  .st-cheer .spark.s2{animation-delay:.33s}
+  .st-cheer .spark.s3{animation-delay:.66s}
+}
+@media (prefers-reduced-motion:reduce){
+  .st-eat .item{opacity:0}
+  .st-eat .mo{opacity:0}
+  .st-sleep .z{opacity:.8}
+}
+@keyframes breathe{0%,100%{transform:scale(1,1)}50%{transform:scale(1.025,.965)}}
+@keyframes snore{0%,100%{transform:scale(1,1)}50%{transform:scale(1.045,.94)}}
+@keyframes blink{0%,92%,100%{transform:scaleY(1)}94%{transform:scaleY(.08)}96%{transform:scaleY(1)}}
+@keyframes drop{0%{transform:translateY(-58px);opacity:0}8%{opacity:1}30%{transform:translateY(0);opacity:1}33%{transform:translateY(2px) scale(.5);opacity:0}100%{opacity:0;transform:translateY(0)}}
+@keyframes chomp{0%,32%{transform:scale(1,1)}38%{transform:scale(1.07,.9)}46%{transform:scale(.98,1.03)}54%{transform:scale(1.05,.94)}62%,100%{transform:scale(1,1)}}
+@keyframes mouthOpen{0%{opacity:0}12%{opacity:1}33%{opacity:0}100%{opacity:0}}
+@keyframes mouthClosed{0%{opacity:1}12%{opacity:0}33%{opacity:1}100%{opacity:1}}
+@keyframes crumb{0%,34%{opacity:0;transform:translate(0,0)}40%{opacity:1}64%{opacity:0;transform:translate(-9px,6px)}100%{opacity:0}}
+@keyframes crumb2{0%,34%{opacity:0;transform:translate(0,0)}42%{opacity:1}66%{opacity:0;transform:translate(10px,4px)}100%{opacity:0}}
+@keyframes wave{from{transform:rotate(-162deg)}to{transform:rotate(-122deg)}}
+@keyframes lean{0%,100%{transform:rotate(0)}50%{transform:rotate(-2.5deg)}}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes type{from{transform:translateY(0)}to{transform:translateY(-2.5px)}}
+@keyframes flicker{0%{opacity:.55}25%{opacity:.7}50%{opacity:.5}75%{opacity:.75}100%{opacity:.6}}
+@keyframes zed{0%{transform:translate(0,0) scale(.7);opacity:0}20%{opacity:.9}100%{transform:translate(10px,-26px) scale(1.15);opacity:0}}
+@keyframes hop{0%,12%{transform:translateY(0)}38%{transform:translateY(-17px)}62%,100%{transform:translateY(0)}}
+@keyframes land{0%{transform:scale(1.06,.92)}12%{transform:scale(.95,1.06)}38%{transform:scale(.98,1.03)}62%{transform:scale(1.09,.88)}74%{transform:scale(.98,1.03)}86%,100%{transform:scale(1,1)}}
+@keyframes shadowHop{0%,12%{transform:scale(1)}38%{transform:scale(.62);opacity:.5}62%,100%{transform:scale(1)}}
+@keyframes wiggle{from{transform:rotate(calc(var(--r) - 8deg))}to{transform:rotate(calc(var(--r) + 8deg))}}
+@keyframes spark{0%{transform:scale(0) rotate(0);opacity:0}20%{opacity:1}55%{transform:scale(1) rotate(45deg);opacity:1}100%{transform:scale(.2) rotate(90deg);opacity:0}}
+.pet .arm{transform-box:fill-box;transform-origin:50% 0;transform:rotate(var(--r))}
+
+.pet .boil{filter:url(#boilA)}
+@media (prefers-reduced-motion:no-preference){.pet .boil{animation:boil .5s steps(1) infinite}}
+@keyframes boil{0%{filter:url(#boilA)}33%{filter:url(#boilB)}66%{filter:url(#boilC)}}
+/* ================= A: sticker book ================= */
+.wA{
+  --paper:#F7F8F5; --grid:#D3E1E8; --ink:#2E2B3A; --mute:#666377;
+  --pink:#FF6FAE; --teal:#22A699; --sun:#FFC53D; --hanko:#E2363F; --blue:#4D6BD1;
+  --tape:rgba(255,111,174,.42); --tape2:rgba(34,166,153,.38); --tape3:rgba(255,197,61,.5);
+  --pet-font:"Yusei Magic";
+}
+:root[data-theme="dark"] .wA{
+  --paper:#1B1E2B; --grid:#2A3047; --ink:#EEF0F6; --mute:#A6A9BC;
+  --tape:rgba(255,111,174,.5); --tape2:rgba(34,166,153,.5); --tape3:rgba(255,197,61,.5);
+}
+.wA{background-color:var(--paper);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:20px 20px;background-position:-1px -1px;color:var(--ink)}
+.A-hero{display:grid;grid-template-columns:.9fr 1.1fr;align-items:center;gap:2cqw;padding:7cqw 4cqw 3cqw;min-height:min(52cqw,640px)}
+.A-nav{position:absolute;top:2.2cqw;left:4cqw;right:4cqw;display:flex;align-items:center;gap:10px;font:400 15px Geist}
+.A-nav .logo{display:flex;align-items:center;gap:8px;font:400 22px "Yusei Magic"}
+.A-nav .links{margin-left:auto;display:flex;gap:22px;color:var(--mute);font-size:14px}
+.A-hero h2{font:400 clamp(30px,4.5cqw,62px)/1.08 "Yusei Magic";margin:0 0 1.6cqw;letter-spacing:-.01em}
+.A-hero p{font:400 clamp(14px,1.45cqw,18px)/1.5 Geist;color:var(--mute);max-width:36ch;margin:0 0 2.4cqw}
+.cmd{display:inline-flex;align-items:center;gap:12px;background:var(--ink);color:var(--paper);border-radius:14px;padding:12px 14px 12px 18px;font:500 clamp(13px,1.25cqw,16px) "Geist Mono";box-shadow:0 2px 0 rgba(0,0,0,.18)}
+.cmd .copy{border:1px solid color-mix(in srgb,var(--paper) 30%,transparent);border-radius:9px;padding:4px 9px;font:500 12px Geist;cursor:pointer;background:none;color:inherit}
+.A-hero .sec{display:inline-block;margin-left:16px;font:500 14px Geist;color:var(--ink);text-underline-offset:4px}
+.A-scene{width:100%;height:auto;display:block}
+@media (max-width:700px){.A-hero{grid-template-columns:1fr;padding-top:64px}.A-nav .links{display:none}}
+
+/* ================= B: glass burrow ================= */
+.wB{
+  --base:#E9ECE4; --sumi:#26241F; --mute:#5E5B53; --matcha:#98B062; --sakura:#EFA9BC; --ai:#4E6EA3; --yuzu:#F0C64E;
+  --soil1:#7C5C45; --soil2:#634837; --soil3:#4A372B; --tunnel:#A58468; --lamp:#FFD58A;
+  --glass:rgba(255,255,255,.34); --glass-line:rgba(255,255,255,.55);
+  --pet-font:"Zen Maru Gothic";
+}
+:root[data-theme="dark"] .wB{
+  --base:#14161A; --sumi:#EDEBE4; --mute:#A9A69C;
+  --soil1:#3E3027; --soil2:#33271F; --soil3:#271E18; --tunnel:#5B4637;
+  --glass:rgba(30,32,38,.42); --glass-line:rgba(255,255,255,.16);
+}
+.wB{background:var(--base);color:var(--sumi);font-family:"Zen Kaku Gothic New",sans-serif}
+.B-stage{position:relative;aspect-ratio:16/10;overflow:hidden}
+.B-stage svg.scene{position:absolute;inset:0;width:100%;height:100%}
+.B-copy{position:absolute;left:4.5cqw;top:6cqw;max-width:46cqw;z-index:2}
+.B-copy h2{font:700 clamp(24px,4cqw,56px)/1.06 "Zen Maru Gothic";margin:0 0 1.2cqw;letter-spacing:-.02em;color:var(--skyInk,#1E2433)}
+.B-copy p{font:500 clamp(13px,1.35cqw,18px)/1.5 "Zen Kaku Gothic New";margin:0 0 1.8cqw;color:var(--skyMute,#3A4255);max-width:40ch}
+.glass{background:var(--glass);border:1px solid var(--glass-line);backdrop-filter:blur(14px) saturate(1.4);-webkit-backdrop-filter:blur(14px) saturate(1.4);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 10px 30px rgba(20,24,40,.12)}
+@media (prefers-reduced-transparency:reduce){.glass{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(245,246,242,.94)}}
+.B-cmd{display:inline-flex;align-items:center;gap:12px;border-radius:999px;padding:10px 10px 10px 20px;font:500 clamp(12px,1.2cqw,15px) "Geist Mono";color:var(--skyInk,#1E2433)}
+.B-cmd button{border:0;border-radius:999px;padding:7px 14px;background:#1E2433;color:#F4F5F0;font:700 12.5px "Zen Maru Gothic";cursor:pointer}
+.B-nav{position:absolute;top:2cqw;left:4.5cqw;right:4.5cqw;display:flex;align-items:center;z-index:3;color:var(--skyInk,#1E2433)}
+.B-nav .logo{font:700 20px "Zen Maru Gothic";display:flex;gap:8px;align-items:center}
+.B-nav .pill{margin-left:auto;display:flex;gap:18px;padding:8px 16px;border-radius:999px;font:500 13.5px "Zen Kaku Gothic New"}
+.tag{font:700 clamp(9px,.95cqw,13px) "Zen Maru Gothic";padding:.35em .8em;border-radius:999px;color:#F4F2EC;white-space:nowrap;background:rgba(28,22,18,.42);border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.B-tags{position:absolute;inset:0;pointer-events:none;z-index:2}
+.B-tags .tag{position:absolute;transform:translate(-50%,0)}
+.B-tags .tag i{font-style:normal;opacity:.75;font-weight:500;margin-left:.4em}
+.scrub{display:flex;align-items:center;gap:12px;margin-top:12px;font-size:13px;color:var(--b-mute)}
+.scrub input{flex:1;max-width:420px;accent-color:#4E6EA3}
+@media (max-width:700px){.B-stage{aspect-ratio:4/5}.B-nav .pill{display:none}.B-copy{max-width:80cqw}}
+
+/* ================= C: pocket ================= */
+.wC{
+  --base:#E2E4DC; --ink:#1D251B; --mute:#5A6455; --shell:#F1EFEA; --shell2:#DCD9D2; --bezel:#2C3230; --accent:#D2453B;
+  --l0:#C8D3A1; --l1:#94A56B; --l2:#56683F; --l3:#1E2A1B;
+}
+:root[data-theme="dark"] .wC{
+  --base:#101310; --ink:#E4EADF; --mute:#98A391; --shell:#2A2D2B; --shell2:#202321; --bezel:#0B0D0C;
+  --l0:#0E1A13; --l1:#24452F; --l2:#4E8A5A; --l3:#BDF2A6;
+}
+.wC{background:var(--base);color:var(--ink)}
+.C-hero{display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:3cqw;padding:7cqw 5cqw 5cqw;min-height:min(60cqw,700px);position:relative}
+.C-nav{position:absolute;top:2.2cqw;left:5cqw;right:5cqw;display:flex;align-items:center;font:400 14px Geist}
+.C-nav .logo{font:400 20px DotGothic16;display:flex;gap:10px;align-items:center}
+.C-nav .links{margin-left:auto;display:flex;gap:22px;color:var(--mute)}
+.C-hero h2{font:400 clamp(28px,5cqw,66px)/1.08 DotGothic16;margin:0 0 1.6cqw;letter-spacing:-.01em}
+.C-hero p{font:400 clamp(14px,1.4cqw,18px)/1.55 Geist;color:var(--mute);margin:0 0 2.4cqw;max-width:38ch}
+.C-cmd{display:inline-flex;gap:12px;align-items:center;padding:12px 14px 12px 18px;border:2px solid var(--ink);border-radius:4px;font:500 clamp(13px,1.2cqw,15px) "Geist Mono";box-shadow:4px 4px 0 var(--ink);background:var(--base)}
+.C-cmd b{font:400 13px DotGothic16;background:var(--ink);color:var(--base);padding:4px 10px;border-radius:2px}
+.device{justify-self:center;width:min(100%,340px);aspect-ratio:10/15;border-radius:22px 22px 64px 22px;background:linear-gradient(160deg,var(--shell),var(--shell2));box-shadow:inset 0 2px 0 rgba(255,255,255,.6),inset 0 -6px 14px rgba(0,0,0,.08),0 30px 60px rgba(20,30,20,.22),0 6px 14px rgba(20,30,20,.12);padding:7% 8%;position:relative}
+.bezel{background:var(--bezel);border-radius:10px 10px 28px 10px;padding:9% 8% 7%;position:relative}
+.bezel .led{position:absolute;left:4%;top:42%;width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent)}
+.lcd{position:relative;border-radius:3px;overflow:hidden;background:var(--l0)}
+.lcd canvas{display:block;width:100%;height:auto;image-rendering:pixelated}
+.lcd::after{content:"";position:absolute;inset:0;background:linear-gradient(125deg,rgba(255,255,255,.28) 0%,rgba(255,255,255,.06) 32%,transparent 33%,transparent 100%);pointer-events:none}
+.lcd .box{position:absolute;left:3%;right:3%;bottom:3%;background:var(--l0);border:2px solid var(--l3);color:var(--l3);font:400 clamp(9px,1.05cqw,13px)/1.35 DotGothic16;padding:4px 7px}
+.bezel .brand{color:#8D948F;font:400 12px DotGothic16;margin-top:6%;letter-spacing:.06em}
+.controls{display:grid;grid-template-columns:1fr 1fr;align-items:center;margin-top:9%}
+.dpad{width:84px;height:84px;position:relative}
+.dpad i{position:absolute;background:#2F3432;border-radius:4px}
+.dpad i:nth-child(1){left:30px;top:0;width:24px;height:84px}
+.dpad i:nth-child(2){left:0;top:30px;width:84px;height:24px}
+.ab{justify-self:end;display:flex;gap:14px;transform:rotate(-24deg)}
+.ab span{width:40px;height:40px;border-radius:50%;background:var(--accent);box-shadow:inset 0 -3px 0 rgba(0,0,0,.2);display:grid;place-items:center;color:#F7E4E1;font:400 12px DotGothic16}
+.C-scenebox{display:grid;place-items:center}
+@media (max-width:700px){.C-hero{grid-template-columns:1fr;padding-top:64px}.C-nav .links{display:none}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <h1>burrow, design directions</h1>
+    <nav aria-label="Directions">
+      <a href="#a">A sticker book</a><a href="#b">B glass burrow</a><a href="#c">C pocket</a><a href="#others">others</a>
+    </nav>
+    <div class="ctrl">
+      <div class="seg species" role="group" aria-label="Species in mascot sheets">
+        <button data-sp="mix" aria-pressed="true">mixed</button>
+        <button data-sp="mochi" aria-pressed="false">mochi</button>
+        <button data-sp="tofu" aria-pressed="false">tofu</button>
+        <button data-sp="onigiri" aria-pressed="false">onigiri</button>
+      </div>
+      <div class="seg" role="group" aria-label="Theme">
+        <button data-th="light" aria-pressed="true">light</button>
+        <button data-th="dark" aria-pressed="false">dark</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="intro">
+    <h2>Three ways burrow could look and feel.</h2>
+    <p>Each direction takes a different slice of your list (imperfect, squishy, japandi, retro, pixel, glass) and commits to it, so the result doesn't turn to mush. All three share the same pet rig: three species (mochi, tofu, onigiri), six states, with personality from posture and timing rather than detail.</p>
+    <p>Everything here is live code, not images. Use the toggles above to switch the light/dark theme or show a single species. Pet names and events are demo data.</p>
+  </section>
+
+  <!-- ===================== A ===================== -->
+  <section class="dir" id="a">
+    <div class="dir-head">
+      <span class="dir-letter">A</span>
+      <h3>sticker book <small>lead direction</small></h3>
+      <p>Japanese stationery: grid notebook paper, die-cut vinyl stickers, washi tape and hanko stamps. Pets are stickers that come alive. The burrow is a doodle in a shared notebook, and your friends' pets are stuck into its rooms. Imperfect comes from riso misregistration and a hand-drawn line that boils, and the color lives only in the stickers.</p>
+    </div>
+    <div class="comp wA" id="A-comp">
+      <div class="A-nav">
+        <span class="logo"><svg width="30" height="30" viewBox="0 0 120 120" aria-hidden="true" id="A-logo"></svg>burrow</span>
+        <span class="links"><span>how it works</span><span>privacy</span><span>github</span></span>
+      </div>
+      <div class="A-hero">
+        <div>
+          <h2>your agent ships.<br>your pet eats.</h2>
+          <p>A tiny pet that reacts live to Claude Code, and lives next to your friends' pets in one shared burrow.</p>
+          <span class="cmd">$ npx burrow-pets init <button class="copy" type="button">copy</button></span>
+          <a class="sec" href="#a">peek into a burrow</a>
+        </div>
+        <svg class="A-scene" id="A-scene" viewBox="0 0 640 520" role="img" aria-label="A notebook doodle of a burrow with four pet stickers: you working, mika eating, jun waving because his agent needs input, ada asleep."></svg>
+      </div>
+    </div>
+    <p class="cap">Hero comp, desktop. The scene is also the product: the real burrow page uses this notebook, at full width, with one room per friend.</p>
+
+    <div class="grid2">
+      <div class="panel wA" style="background-image:none">
+        <h4>mascot sheet</h4>
+        <div class="sheet" data-sheet="A"></div>
+      </div>
+      <div class="panel">
+        <h4>palette</h4>
+        <div class="swatches" data-sw="A"></div>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="panel">
+        <h4>type</h4>
+        <div class="typespec">
+          <div class="t1" style="font-family:'Yusei Magic'">mika's agent finished. she's eating.</div>
+          <div class="t2" style="font-family:Geist">Body and UI in Geist. Display, pet voice and annotations in Yusei Magic, a marker-pen face that keeps the hand-made wobble in the type, not just the art.</div>
+          <div class="meta">Yusei Magic 400 / Geist 400 500 / Geist Mono for commands only</div>
+        </div>
+      </div>
+      <div class="panel">
+        <h4>what it took from the declined directions</h4>
+        <div class="typespec" style="gap:10px;font-size:14px">
+          <div><b>from the op-art textile:</b> the burrow is one seamless field. Tunnels redraw to any width and grow as friends join, never a grid of tiles.</div>
+          <div><b>from ebru marbling:</b> the day leaves marks. Every finished task leaves a hanko stamp or crumb that stays until midnight, so one glance shows how today went.</div>
+          <div><b>from teletext:</b> everything snaps to the 5mm notebook grid, and every burrow gets a short address you can type.</div>
+        </div>
+      </div>
+    </div>
+    <div class="notes">
+      <div class="note"><b>Signature moment</b><p>When a friend's agent ships, a red hanko stamp thunks onto their room and every other sticker in the burrow hops once.</p></div>
+      <div class="note"><b>Reaches across surfaces</b><p>Share cards are literally stickers: a die-cut pet on a white border with a stats strip. The CLI prints a tiny ascii sticker on hatch.</p></div>
+      <div class="note"><b>Honest risk</b><p>It could slide into kawaii merch if the color isn't held to four inks. The boiling line needs pre-baked path variants (no live SVG filters) to hold 60fps with 10+ pets.</p></div>
+    </div>
+  </section>
+
+  <!-- ===================== B ===================== -->
+  <section class="dir" id="b">
+    <div class="dir-head">
+      <span class="dir-letter">B</span>
+      <h3>glass burrow <small>my pick</small></h3>
+      <p>Japandi earth seen through glass, like an ant farm on a desk. The page is a cross-section: a strip of real sky that follows your local time, and soil layers below with carved rooms, one per friend. Pets are matte, squishy and colored, with no outlines. Glass appears only where it would in that world: the pane over the soil, and frosted tags and controls.</p>
+    </div>
+    <div class="comp wB" id="B-comp">
+      <div class="B-stage">
+        <svg class="scene" id="B-scene" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Cross-section of a burrow under a sky. Five pets in rooms: you working, mika eating, jun waving, theo cheering, ada asleep."></svg>
+        <div class="B-nav"><span class="logo"><svg width="28" height="28" viewBox="0 0 120 120" aria-hidden="true" id="B-logo"></svg>burrow</span><span class="pill glass"><span>how it works</span><span>privacy</span><span>github</span></span></div>
+        <div class="B-copy">
+          <h2>everyone's agents,<br>one burrow.</h2>
+          <p>Keep it open on a second screen. See who's shipping, who's stuck, and who fell asleep.</p>
+          <span class="B-cmd glass">npx burrow-pets init <button type="button">copy</button></span>
+        </div>
+        <div class="B-tags" id="B-tags"></div>
+      </div>
+    </div>
+    <div class="scrub"><label for="hour">time of day</label><input id="hour" type="range" min="0" max="23.75" step="0.25"><output id="hourOut"></output></div>
+    <p class="cap">Hero comp, desktop. Drag the slider: sky, sun, moon and room lamps follow the clock. Mobile crops to a tall 4:5 slice with the rooms stacked down the tunnel.</p>
+
+    <div class="grid2">
+      <div class="panel wB">
+        <h4>mascot sheet</h4>
+        <div class="sheet" data-sheet="B"></div>
+      </div>
+      <div class="panel">
+        <h4>palette</h4>
+        <div class="swatches" data-sw="B"></div>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="panel">
+        <h4>type</h4>
+        <div class="typespec">
+          <div class="t1" style="font-family:'Zen Maru Gothic';font-weight:700">jun's agent needs him.</div>
+          <div class="t2" style="font-family:'Zen Kaku Gothic New'">Zen Maru Gothic for display and pet voice, Zen Kaku Gothic New for body. A rounded and square pair from the same Japanese type family: calm, clean, a little soft.</div>
+          <div class="meta">Zen Maru Gothic 500 700 / Zen Kaku Gothic New 400 500 / Geist Mono for commands</div>
+        </div>
+      </div>
+      <div class="panel">
+        <h4>why I'd pick it</h4>
+        <div class="typespec" style="gap:10px;font-size:14px">
+          <div>It's the name, made literal. "Join my burrow" and the picture in your head match the page you land on.</div>
+          <div>The sky is a free glance signal: at 2am the whole burrow is dark, with lamps lit in the rooms of friends who are still working.</div>
+          <div>It's the easiest to scale to 10+ pets: rooms are generated, so a bigger group just means a deeper burrow.</div>
+        </div>
+      </div>
+    </div>
+    <div class="notes">
+      <div class="note"><b>Signature moment</b><p>A treat drops from the surface, rolls down the tunnel and lands in a friend's room. Cheers travel the same way, as a little light.</p></div>
+      <div class="note"><b>Reaches across surfaces</b><p>The landing page scrolls downward into the earth: each section is a deeper soil layer, and the privacy section sits at bedrock.</p></div>
+      <div class="note"><b>Honest risk</b><p>It's the most expected reading of the name, and it's illustration-heavy. Soil, rooms and sky have to be procedural SVG to stay crisp and cheap, and the glass must stay subtle or it looks like a 2021 Dribbble shot.</p></div>
+    </div>
+  </section>
+
+  <!-- ===================== C ===================== -->
+  <section class="dir" id="c">
+    <div class="dir-head">
+      <span class="dir-letter">C</span>
+      <h3>pocket <small>alternate</small></h3>
+      <p>A handheld from 1998, redrawn sleek. The burrow lives on a four-shade LCD under real glass: pets are 32px sprites with two- or three-frame motion, and the surrounding site is clean and modern. Status reads from across the room because every sprite is a silhouette first.</p>
+    </div>
+    <div class="comp wC" id="C-comp">
+      <div class="C-nav"><span class="logo"><canvas id="C-logo" width="16" height="16" style="width:26px;height:26px;image-rendering:pixelated"></canvas>burrow</span><span class="links"><span>how it works</span><span>privacy</span><span>github</span></span></div>
+      <div class="C-hero">
+        <div>
+          <h2>is it done yet?<br>ask the pet.</h2>
+          <p>A pocket pet for Claude Code. It eats when your agent finishes, and waves when it needs you.</p>
+          <span class="C-cmd">npx burrow-pets init <b>copy</b></span>
+        </div>
+        <div class="C-scenebox">
+          <div class="device">
+            <div class="bezel"><span class="led" aria-hidden="true"></span>
+              <div class="lcd"><canvas id="C-scene" width="160" height="144" role="img" aria-label="Pixel burrow on a handheld screen with four pets."></canvas><div class="box" id="C-box">jun's agent needs him.</div></div>
+              <div class="brand">BURROW POCKET</div>
+            </div>
+            <div class="controls"><div class="dpad"><i></i><i></i></div><div class="ab"><span>B</span><span>A</span></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="cap">Hero comp, desktop. Dark mode turns on the backlight, and the four shades invert to a glowing green.</p>
+
+    <div class="grid2">
+      <div class="panel wC">
+        <h4>mascot sheet</h4>
+        <div class="sheet" data-sheet="C"></div>
+      </div>
+      <div class="panel">
+        <h4>palette</h4>
+        <div class="swatches" data-sw="C"></div>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="panel">
+        <h4>type</h4>
+        <div class="typespec">
+          <div class="t1" style="font-family:DotGothic16">ada fell asleep. agent idle 31m.</div>
+          <div class="t2" style="font-family:Geist">DotGothic16 for display and every on-screen string. Geist for body copy outside the device. The pixel face is a Japanese bitmap gothic, so it reads retro without being a cliché arcade font.</div>
+          <div class="meta">DotGothic16 400 / Geist 400 500 / Geist Mono for commands</div>
+        </div>
+      </div>
+      <div class="panel">
+        <h4>verdict</h4>
+        <div class="typespec" style="gap:10px;font-size:14px">
+          <div><b>Competitive.</b> It wins on glanceability and on developers recognizing it, and loses on warmth and on "color in pets", since four greens can't carry individual pet colors.</div>
+          <div>If you want pixel art without the whole world, A or B can ship a pixel "pocket mode" for the menubar or terminal later.</div>
+        </div>
+      </div>
+    </div>
+    <div class="notes">
+      <div class="note"><b>Signature moment</b><p>When your agent needs you, the screen blinks twice and the LED on the shell turns red: the only red anywhere.</p></div>
+      <div class="note"><b>Reaches across surfaces</b><p>The terminal gets the same sprites as half-block ANSI art, and share cards look like screenshots of the device.</p></div>
+      <div class="note"><b>Honest risk</b><p>Pixel retro is a crowded lane for dev toys and pulls toward Tamagotchi nostalgia, which /buddy and Tamamon already own.</p></div>
+    </div>
+  </section>
+
+  <section class="dir" id="others">
+    <div class="dir-head">
+      <span class="dir-letter">+</span>
+      <h3>Also considered</h3>
+      <p>These were weighed and set aside. Each one still donated a discipline to A, and any of them can come back if you ask.</p>
+    </div>
+    <div class="demoted">
+      <div class="panel"><b>op-art textile</b><span class="verdict">declined</span><p>A black-and-white wave field. Too cold for pets, but its seamless repeat became A's tunnels that never show a seam.</p></div>
+      <div class="panel"><b>ebru marbling</b><span class="verdict">declined</span><p>Floating pigment with irreversible strokes. Too abstract to read at a glance, but it gave A "the day leaves marks".</p></div>
+      <div class="panel"><b>teletext pages</b><span class="verdict">declined</span><p>A 40×24 cell grid on black. Too harsh for cozy, but it gave A the strict grid and typeable burrow addresses.</p></div>
+    </div>
+    <p class="cap" style="margin-top:14px">Not shown: a provenance ribbon and a curved paper fold (they stay in the pool for a re-roll). There's also the standard look for this category, always available if you want it: a sunny cozy-game meadow with pets wandering on grass.</p>
+  </section>
+
+  <p class="endnote">Pick one (or a mix, but one world has to own the page). Next I'll write the architecture doc, then build milestone 1 in the chosen world.</p>
+</main>
+
+<script>
+/* =========================================================
+   Pet rig: one geometry, three looks. Viewbox 120x120, ground at y=100.
+   ========================================================= */
+const SP = {
+  mochi:  {d:'M18 97 C14 66 36 40 60 40 C84 40 106 66 102 97 C101 101 19 101 18 97 Z', fy:72, armL:[25,84], armR:[95,84]},
+  tofu:   {d:'M31 46 H89 Q100 46 100 57 V91 Q100 100 91 100 H29 Q20 100 20 91 V57 Q20 46 31 46 Z', fy:70, armL:[22,82], armR:[98,82]},
+  onigiri:{d:'M60 33 C67 33 72 38 77 47 L98 84 C104 95 98 100 87 100 L33 100 C22 100 16 95 22 84 L43 47 C48 38 53 33 60 33 Z', fy:68, armL:[31,86], armR:[89,86], nori:true}
+};
+const STATES = [
+  ['idle','idle','agent quiet'],
+  ['eat','eat','agent finished a task'],
+  ['wave','wave','agent needs your input'],
+  ['work','work','long run in progress'],
+  ['sleep','sleep','no activity for 20m'],
+  ['cheer','cheer','a friend shipped']
+];
+const MIX = {idle:'mochi',eat:'tofu',wave:'onigiri',work:'mochi',sleep:'tofu',cheer:'onigiri'};
+
+function star(cx,cy,r1,r2,n){let p='';for(let i=0;i<n*2;i++){const r=i%2?r2:r1,a=Math.PI*i/n-Math.PI/2;p+=(i?'L':'M')+(cx+r*Math.cos(a)).toFixed(1)+' '+(cy+r*Math.sin(a)).toFixed(1)}return p+'Z'}
+const SPARK='M0 -7 Q1.2 -1.2 7 0 Q1.2 1.2 0 7 Q-1.2 1.2 -7 0 Q-1.2 -1.2 0 -7Z';
+
+/* look: {kind:'sticker'|'matte', ink, face, color, nori, cheek, uid} */
+function pet(species, state, look){
+  const s = SP[species], u = look.uid, ink = look.ink, face = look.face||ink, c = look.color;
+  const sticker = look.kind==='sticker';
+  let fy = s.fy - (state==='work'?7:0);
+  const ex1=49, ex2=71;
+  const arms = [];
+  if(state==='wave') arms.push({a:s.armR, r:-140, cls:'arm-wave'}), arms.push({a:s.armL, r:22, cls:''});
+  if(state==='cheer') arms.push({a:s.armR, r:-150, cls:'arm-up'}), arms.push({a:s.armL, r:150, cls:'arm-up'});
+  const armEl = (o, layer) => `<g transform="translate(${o.a[0]} ${o.a[1]})"><g class="arm ${o.cls}" style="--r:${o.r}deg"><rect x="-5" y="-3" width="10" height="17" rx="5" ${layer==='border'?`fill="#fff" stroke="#fff" stroke-width="9"`:layer==='ink'?`fill="none" stroke="${ink}" stroke-width="2.4"`:`fill="${c}"`}/></g></g>`;
+
+  // eyes
+  let eyes='';
+  const dot = (x)=>`<ellipse cx="${x}" cy="${fy}" rx="3.3" ry="${state==='wave'?4.2:3.6}" fill="${face}"/>`;
+  if(state==='idle'||state==='wave') eyes = `<g class="eyes">${dot(ex1)}${dot(ex2)}</g>`;
+  if(state==='work') eyes = `<g class="eyes"><ellipse cx="${ex1}" cy="${fy+1.5}" rx="3.2" ry="2.6" fill="${face}"/><ellipse cx="${ex2}" cy="${fy+1.5}" rx="3.2" ry="2.6" fill="${face}"/></g>`;
+  if(state==='sleep') eyes = `<path d="M${ex1-4.5} ${fy} q4.5 3.6 9 0 M${ex2-4.5} ${fy} q4.5 3.6 9 0" stroke="${face}" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
+  if(state==='eat'||state==='cheer') eyes = `<path d="M${ex1-4.5} ${fy+1.5} q4.5 -5.5 9 0 M${ex2-4.5} ${fy+1.5} q4.5 -5.5 9 0" stroke="${face}" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
+
+  // mouth
+  const my = fy+7;
+  let mouth='';
+  if(state==='idle') mouth = `<path d="M56 ${my} q4 3.2 8 0" stroke="${face}" stroke-width="2.2" fill="none" stroke-linecap="round"/>`;
+  if(state==='eat') mouth = `<ellipse class="mo" cx="60" cy="${my+1}" rx="4.2" ry="4.6" fill="${face}"/><path class="mc" d="M55.5 ${my} q2.25 2.6 4.5 0 q2.25 2.6 4.5 0" stroke="${face}" stroke-width="2.2" fill="none" stroke-linecap="round"/>`;
+  if(state==='wave') mouth = `<path d="M55.5 ${my-1} q4.5 7 9 0 z" fill="${face}"/>`;
+  if(state==='work') mouth = '';
+  if(state==='sleep') mouth = `<ellipse cx="60" cy="${my+1}" rx="2" ry="2.3" fill="${face}" opacity=".85"/>`;
+  if(state==='cheer') mouth = `<path d="M53.5 ${my-1.5} q6.5 11 13 0 z" fill="${face}"/><path d="M56.5 ${my+3.2} q3.5 2.6 7 0" stroke="${look.tongue||'#FF8FA3'}" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
+
+  const cheeks = (state!=='work') ? `<ellipse cx="${ex1-8}" cy="${fy+6}" rx="4.6" ry="2.6" fill="${look.cheek}" opacity="${sticker?.75:.55}"/><ellipse cx="${ex2+8}" cy="${fy+6}" rx="4.6" ry="2.6" fill="${look.cheek}" opacity="${sticker?.75:.55}"/>` : '';
+
+  const nori = s.nori ? `<path d="M47 ${86} H73 V100 H47 Z" fill="${look.nori}"/>` : '';
+  const clip = `<clipPath id="cl${u}"><path d="${s.d}"/></clipPath>`;
+
+  // body layers
+  let body='';
+  if(sticker){
+    body += `<path d="${s.d}" fill="#fff" stroke="#fff" stroke-width="11" stroke-linejoin="round" filter="url(#stickShadow)"/>`;
+    body += arms.map(o=>armEl(o,'border')).join('');
+    body += `<g transform="translate(1.8 -1.4)"><path d="${s.d}" fill="${c}"/><path d="${s.d}" fill="url(#halftone)" opacity=".22"/></g>`;
+    body += s.nori ? `<g clip-path="url(#cl${u})">${nori}</g>` : '';
+    body += `<path d="${s.d}" fill="none" stroke="${ink}" stroke-width="2.6" stroke-linejoin="round" class="boil"/>`;
+    body += `<ellipse cx="44" cy="${s.fy-20}" rx="9" ry="4.5" transform="rotate(-28 44 ${s.fy-20})" fill="#fff" opacity=".7"/>`;
+  } else {
+    body += `<path d="${s.d}" fill="${c}"/>`;
+    body += `<g clip-path="url(#cl${u})">${nori}<path d="${s.d}" fill="url(#mShade)"/><path d="${s.d}" fill="url(#mLight)"/></g>`;
+  }
+  const armFill = arms.map(o=>armEl(o,'fill')).join('') + (sticker? arms.map(o=>armEl(o,'ink')).join('') : '');
+
+  // props
+  let props='', front='';
+  if(state==='eat'){
+    const kc = look.treat||'#FFC53D';
+    props += `<g class="item"><path d="${star(60,my+1,6.5,4.2,7)}" fill="${kc}" stroke="${kc}" stroke-width="2.2" stroke-linejoin="round"/>${sticker?`<path d="${star(60,my+1,6.5,4.2,7)}" fill="none" stroke="${ink}" stroke-width="1.4" stroke-linejoin="round"/>`:''}</g>`;
+    props += `<circle class="crumb" cx="52" cy="${my+4}" r="1.8" fill="${kc}"/><circle class="crumb c2" cx="68" cy="${my+4}" r="1.6" fill="${kc}"/>`;
+  }
+  if(state==='wave'){
+    const bf = sticker ? '#fff' : 'rgba(255,255,255,.72)';
+    const bs = sticker ? `stroke="${ink}" stroke-width="2.2"` : `stroke="rgba(255,255,255,.9)" stroke-width="1.2"`;
+    props += `<g class="bubble"><path d="M86 6 h20 a8 8 0 0 1 8 8 v14 a8 8 0 0 1 -8 8 h-12 l-7 7 l1 -7 h-2 a8 8 0 0 1 -8 -8 v-14 a8 8 0 0 1 8 -8z" fill="${bf}" ${bs} ${sticker?'class="boil"':''}/><rect x="94" y="12" width="4.4" height="13" rx="2.2" fill="${look.alert||ink}"/><circle cx="96.2" cy="30" r="2.5" fill="${look.alert||ink}"/></g>`;
+  }
+  if(state==='work'){
+    const lc = look.laptop||'#D8DDE6';
+    front += `<g><rect class="glow" x="38" y="${fy-10}" width="44" height="20" rx="10" fill="${look.glow||'#BFE3FF'}" opacity=".28"/></g>`;
+    front += `<rect x="34" y="72" width="52" height="29" rx="3.5" fill="${lc}" ${sticker?`stroke="${ink}" stroke-width="2.2"`:''}/>`;
+    front += `<circle cx="60" cy="86" r="4" fill="${sticker?ink:'rgba(0,0,0,.18)'}" opacity="${sticker?.8:1}"/>`;
+    front += `<path d="M28 101 H92 L88 105 H32 Z" fill="${sticker?ink:'#9AA1AC'}"/>`;
+    front += `<ellipse class="hand" cx="45" cy="72" rx="5" ry="3.6" fill="${c}" ${sticker?`stroke="${ink}" stroke-width="2"`:''}/><ellipse class="hand h2" cx="75" cy="72" rx="5" ry="3.6" fill="${c}" ${sticker?`stroke="${ink}" stroke-width="2"`:''}/>`;
+  }
+  if(state==='sleep'){
+    const zf = look.zc||ink;
+    props += `<text class="z" x="82" y="44" font-size="17" fill="${zf}">z</text><text class="z z2" x="90" y="36" font-size="13" fill="${zf}">z</text><text class="z z3" x="80" y="30" font-size="20" fill="${zf}">z</text>`;
+  }
+  if(state==='cheer'){
+    const sc = look.spark||['#FFC53D','#FF6FAE','#22A699'];
+    props += `<path class="spark" d="${SPARK}" transform="translate(18 38)" fill="${sc[0]}"/><path class="spark s2" d="${SPARK}" transform="translate(104 30) scale(.8)" fill="${sc[1]}"/><path class="spark s3" d="${SPARK}" transform="translate(98 62) scale(.6)" fill="${sc[2]}"/>`;
+  }
+  const shadow = sticker ? '' : `<ellipse class="shadow" cx="60" cy="101.5" rx="34" ry="3.6" fill="${look.shadow||'rgba(40,30,20,.22)'}"/>`;
+
+  return `<svg class="pet st-${state} sp-${species}" viewBox="0 0 120 120" aria-hidden="true"><defs>${clip}</defs>${shadow}${props}<g class="hop"><g class="squash">${body}${armFill}${cheeks}${eyes}${mouth}</g></g>${front}</svg>`;
+}
+
+/* shared SVG defs (filters, patterns) */
+document.body.insertAdjacentHTML('afterbegin',`<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<filter id="boilA" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency=".045" numOctaves="2" seed="3"/><feDisplacementMap in="SourceGraphic" scale="2.4"/></filter><filter id="boilB" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency=".045" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="2.4"/></filter><filter id="boilC" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency=".045" numOctaves="2" seed="11"/><feDisplacementMap in="SourceGraphic" scale="2.4"/></filter>
+<filter id="stickShadow" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="2.2" stdDeviation="1.8" flood-color="#2E2B3A" flood-opacity=".22"/></filter>
+<pattern id="halftone" width="4" height="4" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r=".75" fill="#000"/><circle cx="3" cy="3" r=".75" fill="#000"/></pattern>
+<radialGradient id="mLight" cx=".34" cy=".28" r=".55"><stop offset="0" stop-color="#fff" stop-opacity=".42"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+<linearGradient id="mShade" x1="0" y1="0" x2="0" y2="1"><stop offset=".55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".16"/></linearGradient>
+</defs></svg>`);
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+let uidN = 0;
+const css = (el,v)=>getComputedStyle(el).getPropertyValue(v).trim();
+
+/* ---------- looks per direction ---------- */
+function lookA(species, root){
+  const map = {mochi:css(root,'--pink'), tofu:css(root,'--teal'), onigiri:css(root,'--sun')};
+  return {kind:'sticker', ink:'#2E2B3A', face:'#2E2B3A', color:map[species], cheek:'#FF8FB8', nori:'#2E2B3A', treat:'#4D6BD1', alert:'#E2363F', laptop:'#E8ECF2', glow:'#CFE6FF', zc:css(root,'--ink'), spark:['#FFC53D','#E2363F','#4D6BD1'], uid:'a'+(uidN++)};
+}
+function lookB(species, root){
+  const map = {mochi:'#EFA9BC', tofu:'#98B062', onigiri:'#F4EFE4'};
+  return {kind:'matte', ink:'#26241F', face:'#26241F', color:map[species], cheek:'#E77C93', nori:'#2F3A2B', treat:'#F0C64E', alert:'#26241F', laptop:'#DCE0E6', glow:'#CDE7FF', zc:css(root,'--sumi'), spark:['#F0C64E','#EFA9BC','#98B062'], shadow:'rgba(35,25,15,.25)', uid:'b'+(uidN++)};
+}
+
+/* ---------- mascot sheets ---------- */
+let speciesMode = 'mix';
+function renderSheets(){
+  for(const key of ['A','B']){
+    const host = document.querySelector(`[data-sheet="${key}"]`);
+    const root = host.closest('.wA,.wB');
+    host.innerHTML = STATES.map(([st,label,why])=>{
+      const sp = speciesMode==='mix'?MIX[st]:speciesMode;
+      const look = key==='A'?lookA(sp,root):lookB(sp,root);
+      return `<div class="cell">${pet(sp,st,look)}<b>${label}</b><span>${why}</span></div>`;
+    }).join('');
+  }
+  const hostC = document.querySelector('[data-sheet="C"]');
+  hostC.innerHTML = STATES.map(([st,label,why])=>`<div class="cell"><canvas width="32" height="32" data-st="${st}" style="image-rendering:pixelated;background:var(--l0);border-radius:6px"></canvas><b>${label}</b><span>${why}</span></div>`).join('');
+}
+
+/* ---------- swatches ---------- */
+const SW = {
+  A:{light:[['paper','#F7F8F5'],['grid','#D3E1E8'],['ink','#2E2B3A'],['mochi pink','#FF6FAE'],['tofu teal','#22A699'],['onigiri sun','#FFC53D'],['hanko red','#E2363F']],
+     dark:[['night paper','#1B1E2B'],['grid','#2A3047'],['ink','#EEF0F6'],['mochi pink','#FF6FAE'],['tofu teal','#22A699'],['onigiri sun','#FFC53D'],['hanko red','#E2363F']]},
+  B:{light:[['washi','#E9ECE4'],['sumi','#26241F'],['topsoil','#7C5C45'],['tunnel','#A58468'],['sakura','#EFA9BC'],['matcha','#98B062'],['yuzu','#F0C64E']],
+     dark:[['night','#14161A'],['moonlit','#EDEBE4'],['topsoil','#3E3027'],['tunnel','#5B4637'],['lamp','#FFD58A'],['sakura','#EFA9BC'],['night sky','#141C3C']]},
+  C:{light:[['lcd 0','#C8D3A1'],['lcd 1','#94A56B'],['lcd 2','#56683F'],['lcd 3','#1E2A1B'],['shell','#F1EFEA'],['site','#E2E4DC'],['alert led','#D2453B']],
+     dark:[['backlit 0','#0E1A13'],['backlit 1','#24452F'],['backlit 2','#4E8A5A'],['backlit 3','#BDF2A6'],['shell','#2A2D2B'],['site','#101310'],['alert led','#D2453B']]}
+};
+for(const k in SW){
+  document.querySelector(`[data-sw="${k}"]`).innerHTML = ['light','dark'].map(m=>`<div class="sw-col"><h5>${m}</h5>${SW[k][m].map(([n,h])=>`<div class="sw"><i style="background:${h}"></i><div><em>${n}</em>${h}</div></div>`).join('')}</div>`).join('');
+}
+
+/* =========================================================
+   A: notebook burrow scene
+   ========================================================= */
+function wobble(pts, amp=2.2, seed=1){
+  // hand-drawn polyline through points with slight jitter, as a smooth path
+  let r = seed; const rnd=()=>{r=(r*9301+49297)%233280;return r/233280-.5};
+  const p = pts.map(([x,y])=>[x+rnd()*amp,y+rnd()*amp]);
+  let d = `M${p[0][0]} ${p[0][1]}`;
+  for(let i=1;i<p.length;i++){const [x0,y0]=p[i-1],[x1,y1]=p[i];d+=` Q${x0} ${y0} ${(x0+x1)/2} ${(y0+y1)/2}`}
+  const l=p[p.length-1]; return d+` T${l[0]} ${l[1]}`;
+}
+function blob(cx,cy,rx,ry,seed){const pts=[];for(let i=0;i<=24;i++){const a=i/24*Math.PI*2;pts.push([cx+Math.cos(a)*rx,cy+Math.sin(a)*ry])}return wobble(pts,3,seed)}
+
+function renderA(){
+  const root = document.getElementById('A-comp');
+  const svg = document.getElementById('A-scene');
+  const ink = css(root,'--ink');
+  const ground = [];for(let x=10;x<=630;x+=30) ground.push([x,128+Math.sin(x/70)*5]);
+  const rooms = [
+    {x:130,y:270,rx:92,ry:66,name:'you',st:'work',sp:'mochi',tape:'--tape'},
+    {x:470,y:250,rx:92,ry:64,name:'mika',st:'eat',sp:'tofu',tape:'--tape2'},
+    {x:300,y:420,rx:96,ry:62,name:'jun',st:'wave',sp:'onigiri',tape:'--tape3'},
+    {x:530,y:430,rx:70,ry:50,name:'ada',st:'sleep',sp:'mochi',tape:'--tape2',small:true},
+  ];
+  let g = '';
+  // sun doodle and clouds
+  g += `<path d="${blob(560,52,22,22,4)}" fill="none" stroke="${ink}" stroke-width="2.2" filter="url(#boilA)"/>`;
+  for(let i=0;i<8;i++){const a=i/8*Math.PI*2;g+=`<path d="M${560+Math.cos(a)*30} ${52+Math.sin(a)*30} L${560+Math.cos(a)*38} ${52+Math.sin(a)*38}" stroke="${ink}" stroke-width="2.2" stroke-linecap="round"/>`}
+  // ground + grass
+  g += `<path d="${wobble(ground,2,7)}" fill="none" stroke="${ink}" stroke-width="2.6" stroke-linecap="round" filter="url(#boilA)"/>`;
+  for(let x=24;x<620;x+=46){const y=128+Math.sin(x/70)*5;g+=`<path d="M${x} ${y} l3 -9 M${x+6} ${y} l-1 -12 M${x+11} ${y} l-4 -8" stroke="${css(root,'--teal')}" stroke-width="2.2" stroke-linecap="round"/>`}
+  // entrance + tunnels (double line)
+  const tunnel = (pts,seed)=>`<path d="${wobble(pts,2,seed)}" fill="none" stroke="${ink}" stroke-width="30" stroke-linecap="round" stroke-linejoin="round" filter="url(#boilA)"/><path d="${wobble(pts,2,seed)}" fill="none" stroke="var(--paper)" stroke-width="25" stroke-linecap="round" stroke-linejoin="round"/>`;
+  g += tunnel([[80,118],[90,170],[120,230]],2);
+  g += tunnel([[150,300],[230,340],[290,400]],5);
+  g += tunnel([[200,260],[320,230],[420,240]],9);
+  g += tunnel([[380,420],[460,430],[500,430]],11);
+  // rooms
+  for(const r of rooms){
+    g += `<path d="${blob(r.x,r.y,r.rx,r.ry,r.x)}" fill="var(--paper)" stroke="${ink}" stroke-width="2.6" filter="url(#boilA)"/>`;
+  }
+  // day marks: hanko + crumbs (ebru raise)
+  g += `<g transform="translate(560 190) rotate(-14)"><circle r="25" fill="none" stroke="${css(root,'--hanko')}" stroke-width="3"/><circle r="20" fill="none" stroke="${css(root,'--hanko')}" stroke-width="1.2"/><text text-anchor="middle" y="5" font-family="Yusei Magic" font-size="13" fill="${css(root,'--hanko')}">shipped</text></g>`;
+  g += `<g fill="${css(root,'--blue')}"><path d="${star(395,300,4,2.6,7)}"/><path d="${star(410,312,3.4,2.2,7)}"/><path d="${star(386,316,3,2,7)}"/></g>`;
+  // pets
+  for(const r of rooms){
+    const size = r.small?112:140;
+    const markup = pet(r.sp,r.st,lookA(r.sp,root)).replace('<svg ',`<svg x="${r.x-size/2}" y="${r.y+r.ry-size+(r.small?6:12)}" width="${size}" height="${size}" `);
+    g += markup;
+    // washi tape label
+    g += `<g transform="translate(${r.x-r.rx+6} ${r.y-r.ry+2}) rotate(-6)"><rect x="0" y="-14" width="${r.name.length*11+28}" height="24" fill="var(${r.tape})"/><text x="13" y="4" font-family="Yusei Magic" font-size="17" fill="${ink}">${r.name}</text></g>`;
+  }
+  // annotation: arrow to jun
+  g += `<path d="${wobble([[96,486],[150,500],[200,478],[226,452]],1.5,3)}" fill="none" stroke="${ink}" stroke-width="2" stroke-linecap="round"/><path d="M216 448 L227 451 L224 462" fill="none" stroke="${ink}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
+  g += `<text x="0" y="482" font-family="Yusei Magic" font-size="18" fill="${ink}">jun's agent</text><text x="0" y="504" font-family="Yusei Magic" font-size="18" fill="${ink}">needs him</text>`;
+  // pet narration
+  g += `<g transform="translate(228 70) rotate(-3)"><text font-family="Yusei Magic" font-size="16" fill="${css(root,'--mute')}"><tspan x="0" y="0">mika: "3 things shipped today.</tspan><tspan x="58" y="22">i'm so full."</tspan></text></g>`;
+  svg.innerHTML = g;
+  document.getElementById('A-logo').innerHTML = pet('mochi','idle',lookA('mochi',root)).replace(/^<svg[^>]*>/,'').replace(/<\/svg>$/,'');
+}
+
+/* =========================================================
+   B: glass burrow scene with time-of-day sky
+   ========================================================= */
+const SKY = [ // hour, top, bottom, ink, mute
+  [0,'#0D1530','#24305A','#EEF0F8','#C3C8DA'],
+  [4.5,'#1A2148','#3B3F6E','#EEF0F8','#C3C8DA'],
+  [6,'#4C5A93','#E7A99A','#1E2433','#3A4255'],
+  [8,'#8DB9DA','#F2DDBF','#1E2433','#3A4255'],
+  [12,'#78B0DA','#D6ECF3','#1E2433','#3A4255'],
+  [16.5,'#7EA3D2','#F1D6B0','#1E2433','#3A4255'],
+  [18.5,'#5A5E9E','#EE9C7E','#1E2433','#2E3446'],
+  [20,'#232A5C','#5B4D7A','#EEF0F8','#C3C8DA'],
+  [21.5,'#111A3A','#2B3462','#EEF0F8','#C3C8DA'],
+  [24,'#0D1530','#24305A','#EEF0F8','#C3C8DA']
+];
+const hex2=(h)=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+const mix=(a,b,t)=>{const A=hex2(a),B=hex2(b);return '#'+A.map((v,i)=>Math.round(v+(B[i]-v)*t).toString(16).padStart(2,'0')).join('')};
+function skyAt(h){
+  let i=0;while(i<SKY.length-2 && h>=SKY[i+1][0]) i++;
+  const [h0,t0,b0,ink0,m0]=SKY[i],[h1,t1,b1]=SKY[i+1];
+  const t=(h-h0)/(h1-h0);
+  return {top:mix(t0,t1,t),bot:mix(b0,b1,t),ink:ink0,mute:m0,night:(h<5.5||h>=19.8)};
+}
+const B_ROOMS = [
+  {x:330,y:660,rx:150,ry:100,name:'you',ev:'working',st:'work',sp:'mochi'},
+  {x:790,y:600,rx:140,ry:96,name:'mika',ev:'ate',st:'eat',sp:'tofu'},
+  {x:1230,y:640,rx:150,ry:100,name:'jun',ev:'needs input',st:'wave',sp:'onigiri'},
+  {x:620,y:870,rx:140,ry:88,name:'theo',ev:'cheering',st:'cheer',sp:'tofu'},
+  {x:1060,y:880,rx:132,ry:84,name:'ada',ev:'asleep',st:'sleep',sp:'mochi'},
+];
+function renderB(hour){
+  const root = document.getElementById('B-comp');
+  const svg = document.getElementById('B-scene');
+  const sky = skyAt(hour);
+  root.style.setProperty('--skyInk', sky.ink);
+  root.style.setProperty('--skyMute', sky.mute);
+  const S1=css(root,'--soil1'),S2=css(root,'--soil2'),S3=css(root,'--soil3'),T=css(root,'--tunnel'),L=css(root,'--lamp');
+  const GY=460;
+  let g = `<defs><linearGradient id="skyG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${sky.top}"/><stop offset="1" stop-color="${sky.bot}"/></linearGradient>
+  <radialGradient id="lampG"><stop offset="0" stop-color="${L}" stop-opacity=".55"/><stop offset="1" stop-color="${L}" stop-opacity="0"/></radialGradient>
+  <radialGradient id="sunG"><stop offset=".35" stop-color="#FFE9A8" stop-opacity=".35"/><stop offset="1" stop-color="#FFE9A8" stop-opacity="0"/></radialGradient><linearGradient id="paneG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".10"/><stop offset=".4" stop-color="#fff" stop-opacity=".02"/><stop offset="1" stop-color="#fff" stop-opacity=".06"/></linearGradient></defs>`;
+  g += `<rect width="1600" height="${GY+20}" fill="url(#skyG)"/>`;
+  // sun / moon on an arc
+  const dayT = (hour-6)/13; // 6..19
+  if(!sky.night && dayT>=0 && dayT<=1){
+    const sx=200+dayT*1200, sy=GY-40-Math.sin(dayT*Math.PI)*300;
+    g += `<circle cx="${sx}" cy="${sy}" r="46" fill="#FFE9A8" opacity=".95"/><circle cx="${sx}" cy="${sy}" r="110" fill="url(#sunG)"/>`;
+    for(const [cx,cy,w] of [[420,150,170],[1010,110,220],[1380,210,150]]) g+=`<rect x="${cx}" y="${cy}" width="${w}" height="${w*.24}" rx="${w*.12}" fill="#fff" opacity=".55"/>`;
+  } else {
+    const nt = ((hour<6?hour+24:hour)-19.8)/10.2;
+    const mx=1400-nt*1100, my=GY-60-Math.sin(nt*Math.PI)*260;
+    let r=17; for(let i=0;i<70;i++){r=(r*9301+49297)%233280;const x=r/233280*1600;r=(r*9301+49297)%233280;const y=r/233280*(GY-40);g+=`<circle cx="${x}" cy="${y}" r="${(i%3)+1}" fill="#fff" opacity="${.25+(i%4)*.15}"/>`}
+    g += `<circle cx="${mx}" cy="${my}" r="34" fill="#F3EFD8"/><circle cx="${mx+13}" cy="${my-8}" r="30" fill="${sky.top}" opacity=".9"/>`;
+  }
+  // hills line + grass
+  g += `<path d="M0 ${GY} C 240 ${GY-18} 420 ${GY+10} 700 ${GY-6} S 1200 ${GY-20} 1600 ${GY} V1000 H0Z" fill="${S1}"/>`;
+  g += `<path d="M0 ${GY+2} C 240 ${GY-16} 420 ${GY+12} 700 ${GY-4} S 1200 ${GY-18} 1600 ${GY+2}" fill="none" stroke="#7E9C55" stroke-width="10"/>`;
+  for(let x=30;x<1600;x+=58){const y=GY-6+Math.sin(x/120)*8;g+=`<path d="M${x} ${y} q4 -16 2 -22 M${x+9} ${y} q-1 -14 4 -18" stroke="#7E9C55" stroke-width="5" fill="none" stroke-linecap="round"/>`}
+  // soil bands
+  g += `<path d="M0 640 C 300 610 600 670 900 640 S 1400 620 1600 650 V1000 H0Z" fill="${S2}"/>`;
+  g += `<path d="M0 860 C 260 840 560 890 900 860 S 1400 850 1600 870 V1000 H0Z" fill="${S3}"/>`;
+  // pebbles + roots
+  let r=5; for(let i=0;i<46;i++){r=(r*9301+49297)%233280;const x=r/233280*1600;r=(r*9301+49297)%233280;const y=GY+40+r/233280*540;g+=`<ellipse cx="${x}" cy="${y}" rx="${6+(i%4)*3}" ry="${4+(i%3)*2}" fill="#000" opacity=".12"/>`}
+  g += `<path d="M520 ${GY} q10 60 -14 110 q-16 34 6 70 M470 ${GY+40} q30 20 26 60" stroke="#3B2C22" stroke-width="5" fill="none" opacity=".35" stroke-linecap="round"/>`;
+  // entrance + tunnels
+  const tun = [[160,GY-4],[200,520],[300,640]];
+  const path = (pts)=>'M'+pts.map(p=>p.join(' ')).join(' L');
+  const TP = [
+    [[150,GY],[200,560],[330,650]],
+    [[330,660],[560,630],[790,600]],
+    [[790,600],[1010,620],[1230,640]],
+    [[330,660],[440,800],[620,870]],
+    [[620,870],[840,890],[1060,880]],
+    [[1230,640],[1180,770],[1060,880]],
+  ];
+  for(const p of TP) g += `<path d="${path(p)}" fill="none" stroke="${T}" stroke-width="64" stroke-linecap="round" stroke-linejoin="round"/>`;
+  g += `<ellipse cx="150" cy="${GY+4}" rx="46" ry="16" fill="${S3}"/>`;
+  // rooms
+  for(const rm of B_ROOMS){
+    g += `<ellipse cx="${rm.x}" cy="${rm.y}" rx="${rm.rx}" ry="${rm.ry}" fill="${T}"/>`;
+    g += `<ellipse cx="${rm.x}" cy="${rm.y+rm.ry-8}" rx="${rm.rx*.86}" ry="14" fill="#000" opacity=".1"/>`;
+    const lit = sky.night && rm.st!=='sleep';
+    if(lit) g += `<ellipse cx="${rm.x}" cy="${rm.y-10}" rx="${rm.rx*1.15}" ry="${rm.ry*1.25}" fill="url(#lampG)"/><circle cx="${rm.x-rm.rx*.62}" cy="${rm.y-rm.ry*.42}" r="7" fill="${L}"/><path d="M${rm.x-rm.rx*.62} ${rm.y-rm.ry*.42-7} V${rm.y-rm.ry-4}" stroke="#2A2019" stroke-width="2"/>`;
+    const size=rm.st==='sleep'?170:190;
+    g += pet(rm.sp,rm.st,lookB(rm.sp,root)).replace('<svg ',`<svg x="${rm.x-size/2}" y="${rm.y+rm.ry-size+8}" width="${size}" height="${size}" `);
+  }
+  // glass pane over the earth: frame edge + streaks
+  g += `<rect x="0" y="${GY+30}" width="1600" height="${1000-GY-30}" fill="url(#paneG)"/>`;
+  g += `<path d="M1180 ${GY+40} L1060 1000 M1250 ${GY+40} L1190 1000" stroke="#fff" stroke-opacity=".045" stroke-width="40"/>`;
+  g += `<rect x="0" y="${GY+28}" width="1600" height="3" fill="#fff" opacity=".18"/>`;
+  svg.innerHTML = g;
+  // tags (html, glass)
+  document.getElementById('B-tags').innerHTML = B_ROOMS.map(rm=>`<span class="tag" style="left:${rm.x/16}%;top:${(rm.y+rm.ry+6)/10}%">${rm.name}<i>${rm.ev}</i></span>`).join('');
+  document.getElementById('B-logo').innerHTML = pet('mochi','idle',lookB('mochi',root)).replace(/^<svg[^>]*>/,'').replace(/<\/svg>$/,'');
+  const hh=Math.floor(hour), mm=Math.round((hour-hh)*60);
+  document.getElementById('hourOut').textContent = `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
+}
+
+/* =========================================================
+   C: pixel renderer (vector silhouette -> thresholded 4-shade sprite)
+   ========================================================= */
+function lcdPal(){const r=document.getElementById('C-comp');return ['--l0','--l1','--l2','--l3'].map(v=>css(r,v))}
+const FILL = {mochi:0, tofu:1, onigiri:0};
+const BM = {
+  bang:['.33333.','3000003','3003003','3003003','3000003','3003003','3000003','.33333.','.3.....','3......'],
+  z:['333','..3','.3.','3..','333'],
+  spark:['..3..','..3..','33.33','..3..','..3..'],
+  konpeito:['.2.','222','.2.'],
+};
+function stamp(grid,bm,ox,oy){bm.forEach((row,y)=>[...row].forEach((ch,x)=>{if(ch!=='.'){const gy=oy+y,gx=ox+x;if(grid[gy]&&gx>=0&&gx<grid[0].length)grid[gy][gx]=+ch}}))}
+const off = document.createElement('canvas'); const octx = off.getContext('2d',{willReadFrequently:true});
+function spriteGrid(species, state, f, N){
+  off.width=off.height=N; const k=N/120; const s=SP[species];
+  let sx=1, sy=1, dy=0, armR=null, armL=null;
+  if(state==='idle'){ if(f%2) {sx=1.04;sy=.95} }
+  if(state==='sleep'){ if(f%3===1) {sx=1.05;sy=.94} }
+  if(state==='eat'){ if(f%3===2){sx=1.08;sy=.9} }
+  if(state==='work'){ if(f%2) {sy=.98} }
+  if(state==='wave'){ armR = f%2?-120:-160; armL=20 }
+  if(state==='cheer'){ if(f%2){dy=-14} else {sx=1.08;sy=.9}; armR=-150; armL=150 }
+  const draw = (what)=>{
+    octx.setTransform(1,0,0,1,0,0); octx.clearRect(0,0,N,N);
+    octx.setTransform(k*sx,0,0,k*sy,k*(60-60*sx),k*(100-100*sy+dy));
+    octx.fillStyle='#000';
+    if(what==='body'){ octx.fill(new Path2D(s.d));
+      for(const [a,r] of [[s.armR,armR],[s.armL,armL]]){ if(r===null) continue; octx.save(); octx.translate(a[0],a[1]); octx.rotate(r*Math.PI/180); octx.beginPath(); octx.roundRect(-6,-3,12,20,6); octx.fill(); octx.restore(); }
+    } else { octx.fillRect(46,86,28,14) }
+    const d=octx.getImageData(0,0,N,N).data; const m=[];
+    for(let y=0;y<N;y++){m.push([]);for(let x=0;x<N;x++)m[y].push(d[(y*N+x)*4+3]>120)}
+    return m;
+  };
+  const body = draw('body'); const nori = s.nori?draw('nori'):null;
+  const g = Array.from({length:N},()=>Array(N).fill(-1));
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++) if(body[y][x]) g[y][x] = (nori&&nori[y][x])?3:FILL[species];
+  // outline
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++) if(!body[y][x] && ((body[y-1]&&body[y-1][x])||(body[y+1]&&body[y+1][x])||body[y][x-1]||body[y][x+1])) g[y][x]=3;
+  // face, mapped through the same squash
+  const P=(x,y)=>[Math.round(k*(60+(x-60)*sx)), Math.round(k*(100+(y-100)*sy+dy))];
+  const fy = s.fy-(state==='work'?7:0);
+  const [e1x,ey]=P(49,fy), [e2x]=P(71,fy);
+  const blink = state==='idle' && f%12===11;
+  const set=(x,y,v)=>{if(g[y]&&x>=0&&x<N)g[y][x]=v};
+  if(state==='sleep'){ set(e1x-1,ey,3);set(e1x,ey+1,3);set(e1x+1,ey,3); set(e2x-1,ey,3);set(e2x,ey+1,3);set(e2x+1,ey,3) }
+  else if(state==='eat'||state==='cheer'){ set(e1x-1,ey+1,3);set(e1x,ey,3);set(e1x+1,ey+1,3); set(e2x-1,ey+1,3);set(e2x,ey,3);set(e2x+1,ey+1,3) }
+  else if(blink){ set(e1x,ey,3);set(e1x+1,ey,3);set(e2x,ey,3);set(e2x-1,ey,3) }
+  else { set(e1x,ey,3);set(e1x,ey-1,3);set(e2x,ey,3);set(e2x,ey-1,3) }
+  const [mx,my]=P(60,fy+7);
+  if(state==='cheer'||(state==='eat'&&f%3===1)||state==='wave'){ set(mx-1,my,3);set(mx,my,3);set(mx,my+1,3);set(mx-1,my+1,3) }
+  else if(state!=='work'){ set(mx-1,my,3);set(mx,my,3) }
+  // props
+  if(state==='eat'){ if(f%3===0) stamp(g,BM.konpeito,mx-1,my-9); if(f%3===2){set(mx-4,my+2,2);set(mx+3,my+1,2)} }
+  if(state==='wave' && f%4!==3) stamp(g,BM.bang,N-8,0);
+  if(state==='sleep'){ const o=f%3; stamp(g,BM.z,N-9+o,8-o*3) }
+  if(state==='cheer'){ stamp(g,BM.spark,f%2?2:4,f%2?6:3); stamp(g,BM.spark,N-7,f%2?4:9) }
+  if(state==='work'){ const [lx,ly]=P(34,72),[rx2,by]=P(86,101);
+    for(let y=ly;y<=by;y++)for(let x=lx;x<=rx2;x++) set(x,y,(y===ly||y===by||x===lx||x===rx2)?3:1);
+    set(Math.round((lx+rx2)/2),Math.round((ly+by)/2),3);
+    for(let x=lx-2;x<=rx2+2;x++) set(x,by+1,3);
+    set(lx+3,ly-1-(f%2),FILL[species]===0?2:1); set(rx2-3,ly-1-((f+1)%2),FILL[species]===0?2:1);
+  }
+  return g;
+}
+function paintGrid(ctx,g,ox,oy,pal){g.forEach((row,y)=>row.forEach((v,x)=>{if(v>=0){ctx.fillStyle=pal[v];ctx.fillRect(ox+x,oy+y,1,1)}}))}
+
+const C_PETS = [
+  {x:6,y:38,sp:'mochi',st:'work'},
+  {x:112,y:34,sp:'tofu',st:'eat'},
+  {x:44,y:70,sp:'onigiri',st:'wave'},
+  {x:106,y:72,sp:'mochi',st:'sleep'},
+];
+function renderC(f){
+  const pal = lcdPal();
+  const cv = document.getElementById('C-scene'), ctx = cv.getContext('2d');
+  ctx.fillStyle=pal[0]; ctx.fillRect(0,0,160,144);
+  // sky: sun + cloud
+  for(let y=0;y<8;y++)for(let x=0;x<8;x++){if((x-3.5)**2+(y-3.5)**2<12){ctx.fillStyle=pal[1];ctx.fillRect(132+x,8+y,1,1)}}
+  ctx.fillStyle=pal[1]; ctx.fillRect(20,14,22,4); ctx.fillRect(24,11,12,3); ctx.fillRect(70,20,16,3);
+  // ground
+  const GY=30;
+  for(let x=0;x<160;x++){ const gy=GY+Math.round(Math.sin(x/14)); ctx.fillStyle=pal[3]; ctx.fillRect(x,gy,1,1);
+    for(let y=gy+1;y<144;y++){ const deep=y>104; const hsh=((x*73856093)^(y*19349663))>>>0; const dith = deep? ((x+y)%2===0) : (hsh%13===0); ctx.fillStyle = deep? (dith?pal[2]:pal[3]) : (dith?pal[1]:pal[2]); ctx.fillRect(x,y,1,1) } }
+  for(let x=4;x<160;x+=11){ctx.fillStyle=pal[3];ctx.fillRect(x,GY-2,1,2);ctx.fillRect(x+2,GY-3,1,3)}
+  // tunnels + rooms carved
+  const carve=(cx,cy,rx,ry)=>{for(let y=-ry;y<=ry;y++)for(let x=-rx;x<=rx;x++)if((x*x)/(rx*rx)+(y*y)/(ry*ry)<=1){ctx.fillStyle=pal[0];ctx.fillRect(cx+x,cy+y,1,1)}};
+  const line=(x0,y0,x1,y1,r)=>{const n=Math.hypot(x1-x0,y1-y0);for(let i=0;i<=n;i++){carve(Math.round(x0+(x1-x0)*i/n),Math.round(y0+(y1-y0)*i/n),r,r)}};
+  line(12,GY,20,50,4); line(36,57,124,53,4); line(26,64,56,88,4); line(74,92,118,92,4);
+  carve(14,GY+1,6,3);
+  for(const p of C_PETS) carve(p.x+16,p.y+19,21,15);
+  // pets
+  for(const p of C_PETS){ const g = spriteGrid(p.sp,p.st,f,32); paintGrid(ctx,g,p.x,p.y+2,pal) }
+}
+function renderCSheet(f){
+  const pal = lcdPal();
+  document.querySelectorAll('[data-sheet="C"] canvas').forEach(cv=>{
+    const st=cv.dataset.st, sp=speciesMode==='mix'?MIX[st]:speciesMode;
+    const ctx=cv.getContext('2d'); ctx.fillStyle=pal[0]; ctx.fillRect(0,0,32,32);
+    paintGrid(ctx,spriteGrid(sp,st,f,32),0,0,pal);
+  });
+  const lg=document.getElementById('C-logo').getContext('2d'); lg.clearRect(0,0,16,16); paintGrid(lg,spriteGrid('mochi','idle',0,16),0,0,pal);
+}
+
+/* ---------- boot + controls ---------- */
+const hourIn = document.getElementById('hour');
+const now = new Date(); hourIn.value = now.getHours()+Math.round(now.getMinutes()/15)/4;
+function renderAll(){ renderSheets(); renderA(); renderB(+hourIn.value); renderC(0); renderCSheet(0) }
+hourIn.addEventListener('input',()=>renderB(+hourIn.value));
+document.querySelectorAll('[data-th]').forEach(b=>b.addEventListener('click',()=>{
+  document.documentElement.dataset.theme=b.dataset.th;
+  document.querySelectorAll('[data-th]').forEach(x=>x.setAttribute('aria-pressed',x===b)); renderAll();
+}));
+document.querySelectorAll('[data-sp]').forEach(b=>b.addEventListener('click',()=>{
+  speciesMode=b.dataset.sp;
+  document.querySelectorAll('[data-sp]').forEach(x=>x.setAttribute('aria-pressed',x===b)); renderSheets(); renderCSheet(frame);
+}));
+if(matchMedia('(prefers-color-scheme: dark)').matches){document.querySelector('[data-th="dark"]').click()} else renderAll();
+document.fonts && document.fonts.ready.then(()=>{renderA();renderB(+hourIn.value)});
+
+// pixel world runs at 4 fps: sprites move in two or three frames, like the hardware
+let frame=0;
+const BOX = ["jun's agent needs him.","mika's agent finished. she ate.","you: working, 14m.","ada fell asleep."];
+if(!reduceMotion){
+  setInterval(()=>{frame++; renderC(frame); renderCSheet(frame); if(frame%16===0) document.getElementById('C-box').textContent=BOX[(frame/16)%BOX.length]},250);
+}
+</script>
+</body>
+</html>
