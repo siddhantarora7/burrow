@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: var(--font-zen-maru), ui-rounded, system-ui, sans-serif;
+  --font-sans: var(--font-zen-kaku), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+:root {
+  --washi: #e9ece4;
+  --sumi: #26241f;
+  --glass: rgba(255, 255, 255, 0.4);
+  --glass-line: rgba(255, 255, 255, 0.6);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --washi: #14161a; --sumi: #edebe4; --glass: rgba(30, 32, 38, 0.45); --glass-line: rgba(255, 255, 255, 0.16); color-scheme: dark; }
+}
+:root[data-theme="dark"] { --washi: #14161a; --sumi: #edebe4; --glass: rgba(30, 32, 38, 0.45); --glass-line: rgba(255, 255, 255, 0.16); color-scheme: dark; }
+
+body { background: var(--washi); color: var(--sumi); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+:focus-visible { outline: 2px solid #4e6ea3; outline-offset: 3px; border-radius: 8px; }
+
+.glass {
+  background: var(--glass);
+  border: 1px solid var(--glass-line);
+  backdrop-filter: blur(14px) saturate(1.4);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 10px 30px rgba(20, 24, 40, 0.12);
+}
+@media (prefers-reduced-transparency: reduce) { .glass { backdrop-filter: none; -webkit-backdrop-filter: none; background: var(--washi); } }
+
+.tag {
+  font: 700 clamp(10px, 0.95vw, 14px) / 1 var(--font-display);
+  padding: 0.45em 0.85em;
+  border-radius: 999px;
+  color: #f4f2ec;
+  white-space: nowrap;
+  background: rgba(28, 26, 22, 0.46);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.tag i { font-style: normal; font-weight: 500; opacity: 0.78; margin-left: 0.45em; }
+.tag-alert { background: rgba(38, 36, 31, 0.86); box-shadow: 0 0 0 3px rgba(240, 198, 78, 0.55); }
+
+/* pond ripple when an agent ships: one-shot, never loops */
+.ripple { transform-box: fill-box; transform-origin: center; opacity: 0; animation: ripple 2.6s cubic-bezier(.16,1,.3,1) forwards; }
+.ripple.r2 { animation-delay: .35s; }
+@keyframes ripple { 0% { transform: scale(.25); opacity: .75 } 100% { transform: scale(1.7); opacity: 0 } }
+@media (prefers-reduced-motion: reduce) { .ripple { display: none; } }
+
+::selection { background: #efa9bc; color: #26241f; }
