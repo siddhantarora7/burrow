@@ -1,4 +1,4 @@
-import { isId, newId, parseToken, SECRET_LEN } from '@burrow/core'
+import { burrowName, isId, newId, parseToken, SECRET_LEN } from '@burrow/core'
 import { json, sha256Hex, validateHatch } from './logic'
 
 export { PetDO } from './pet'
@@ -35,7 +35,7 @@ export default {
       const burrowId = newId()
       const profile = await pet(env, petId).hatch(petId, hatch.value, await sha256Hex(secret), now)
       const b = burrow(env, burrowId)
-      await b.create({ id: burrowId, name: `${profile.name}'s burrow`, env: 'garden', createdAt: now, createdBy: petId })
+      await b.create({ id: burrowId, name: burrowName(profile.name), env: 'garden', createdAt: now, createdBy: petId })
       await b.join(profile, now)
       await pet(env, petId).addBurrow(burrowId)
       return json({ petId, token: `${petId}.${secret}`, burrowId }, 201, cors)

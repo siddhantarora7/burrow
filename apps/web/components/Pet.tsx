@@ -7,6 +7,8 @@ const BODY: Record<Species, { d: string; fy: number; armL: [number, number]; arm
   onigiri: { d: 'M60 33 C67 33 72 38 77 47 L98 84 C104 95 98 100 87 100 L33 100 C22 100 16 95 22 84 L43 47 C48 38 53 33 60 33 Z', fy: 68, armL: [31, 86], armR: [89, 86], nori: true },
 }
 const INK = '#26241F'
+const darken = (hex: string, k: number) =>
+  '#' + [1, 3, 5].map((i) => Math.round(parseInt(hex.slice(i, i + 2), 16) * (1 - k)).toString(16).padStart(2, '0')).join('')
 const SPARK = 'M0 -7 Q1.2 -1.2 7 0 Q1.2 1.2 0 7 Q-1.2 1.2 -7 0 Q-1.2 -1.2 0 -7Z'
 
 function star(cx: number, cy: number, r1: number, r2: number, n: number) {
@@ -35,12 +37,13 @@ export interface PetProps {
   /** Placement when nested inside a parent SVG. */
   x?: number
   y?: number
-  size?: number
+  /** A number for nested SVG placement, or '100%' to fill an HTML box. */
+  size?: number | string
 }
 
 export function Pet({ species, state, color, x, y, size = 120 }: PetProps) {
   const b = BODY[species]
-  const fy = b.fy - (state === 'work' ? 7 : 0)
+  const fy = b.fy
   const my = fy + 7
   const clipId = `clip-${species}`
   const dot = (cx: number) => <ellipse key={cx} cx={cx} cy={fy} rx={3.3} ry={state === 'wave' ? 4.2 : 3.6} fill={INK} />
@@ -48,7 +51,8 @@ export function Pet({ species, state, color, x, y, size = 120 }: PetProps) {
 
   let eyes: ReactNode = null
   if (state === 'idle' || state === 'wave') eyes = <g className="eyes">{dot(49)}{dot(71)}</g>
-  if (state === 'work') eyes = <g className="eyes"><ellipse cx={49} cy={fy + 1.5} rx={3.2} ry={2.6} fill={INK} /><ellipse cx={71} cy={fy + 1.5} rx={3.2} ry={2.6} fill={INK} /></g>
+  // Focused: eyes look down at the screen.
+  if (state === 'work') eyes = <g className="eyes"><ellipse cx={49} cy={fy + 2} rx={3.2} ry={2.5} fill={INK} /><ellipse cx={71} cy={fy + 2} rx={3.2} ry={2.5} fill={INK} /></g>
   if (state === 'sleep') eyes = arc(`M44.5 ${fy} q4.5 3.6 9 0 M66.5 ${fy} q4.5 3.6 9 0`)
   if (state === 'eat' || state === 'cheer') eyes = arc(`M44.5 ${fy + 1.5} q4.5 -5.5 9 0 M66.5 ${fy + 1.5} q4.5 -5.5 9 0`)
 
@@ -56,6 +60,7 @@ export function Pet({ species, state, color, x, y, size = 120 }: PetProps) {
   if (state === 'idle') mouth = arc(`M56 ${my} q4 3.2 8 0`)
   if (state === 'eat') mouth = <><ellipse className="mo" cx={60} cy={my + 1} rx={4.2} ry={4.6} fill={INK} /><path className="mc" d={`M55.5 ${my} q2.25 2.6 4.5 0 q2.25 2.6 4.5 0`} stroke={INK} strokeWidth={2.2} fill="none" strokeLinecap="round" /></>
   if (state === 'wave') mouth = <path d={`M55.5 ${my - 1} q4.5 7 9 0 z`} fill={INK} />
+  if (state === 'work') mouth = arc(`M57 ${my} q3 1.4 6 0`)
   if (state === 'sleep') mouth = <ellipse cx={60} cy={my + 1} rx={2} ry={2.3} fill={INK} opacity={0.85} />
   if (state === 'cheer') mouth = <><path d={`M53.5 ${my - 1.5} q6.5 11 13 0 z`} fill={INK} /><path d={`M56.5 ${my + 3.2} q3.5 2.6 7 0`} stroke="#FF8FA3" strokeWidth={2.4} fill="none" strokeLinecap="round" /></>
 
@@ -120,12 +125,13 @@ export function Pet({ species, state, color, x, y, size = 120 }: PetProps) {
       </g>
       {state === 'work' && (
         <>
-          <rect className="glow" x={38} y={fy - 10} width={44} height={20} rx={10} fill="#CDE7FF" opacity={0.28} />
-          <rect x={34} y={72} width={52} height={29} rx={3.5} fill="#DCE0E6" />
-          <circle cx={60} cy={86} r={4} fill="rgba(0,0,0,.18)" />
-          <path d="M28 101 H92 L88 105 H32 Z" fill="#9AA1AC" />
-          <ellipse className="hand" cx={45} cy={72} rx={5} ry={3.6} fill={color} />
-          <ellipse className="hand h2" cx={75} cy={72} rx={5} ry={3.6} fill={color} />
+          {/* Laptop sits below the mouth so the face stays readable from across a room. */}
+          <ellipse className="glow" cx={60} cy={fy + 13} rx={24} ry={6} fill="#CDE7FF" opacity={0.3} />
+          <rect x={33} y={86} width={54} height={15} rx={3} fill="#DCE0E6" />
+          <circle cx={60} cy={93.5} r={2.6} fill="rgba(0,0,0,.18)" />
+          <path d="M27 101 H93 L89 105 H31 Z" fill="#9AA1AC" />
+          <g className="hand"><ellipse cx={45} cy={89.5} rx={6} ry={3.4} fill={darken(color, 0.18)} /></g>
+          <g className="hand h2"><ellipse cx={75} cy={89.5} rx={6} ry={3.4} fill={darken(color, 0.18)} /></g>
         </>
       )}
     </svg>

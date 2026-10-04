@@ -1,4 +1,6 @@
-.pet { overflow: visible; }
+/* Each pet is its own compositing layer. Without this, every animation frame dirties the
+   garden beneath the frosted glass and the blur is recomputed: measured 2 fps -> 60 fps. */
+.pet { overflow: visible; will-change: transform; }
 .pet .squash, .pet .hop, .pet .eyes, .pet .item, .pet .crumb, .pet .z, .pet .spark, .pet .bubble, .pet .hand, .pet .glow, .pet .mo, .pet .mc, .pet .shadow, .pet .arm { transform-box: fill-box; }
 .pet .squash { transform-origin: 50% 100%; }
 .pet .eyes, .pet .shadow { transform-origin: 50% 50%; }

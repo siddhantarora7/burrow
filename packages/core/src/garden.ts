@@ -77,3 +77,40 @@ export const GARDEN_LAYOUTS: Record<GardenLayout, GardenGeometry> = {
 export function spotsFor(count: number, layout: GardenLayout = 'wide'): Spot[] {
   return GARDEN_LAYOUTS[layout].spots.slice(0, Math.max(0, count))
 }
+
+/** Spec §5: members per burrow at launch. */
+export const MAX_MEMBERS = 24
+
+function extraSpot(layout: GardenLayout, k: number): Spot {
+  // Rows below the base scene, alternating so stones never line up into a grid.
+  if (layout === 'wide') {
+    const row = Math.floor(k / 4)
+    const col = k % 4
+    const xs = row % 2 ? [440, 800, 1160, 1440] : [260, 620, 980, 1340]
+    return { x: xs[col]!, y: 1080 + row * 200, scale: 1.05 }
+  }
+  const row = Math.floor(k / 2)
+  const col = k % 2
+  return { x: (row % 2 ? [300, 560] : [190, 610])[col]!, y: 1300 + (row + 1) * 210, scale: 1.05 }
+}
+
+/**
+ * The garden for `count` members: exactly that many spots (up to MAX_MEMBERS), a height that
+ * grows to fit them, and a lone pet promoted to the focal point. `minHeight` extends the gravel so
+ * the scene matches the viewport's proportions instead of being cropped at the sides.
+ */
+export function gardenFor(count: number, layout: GardenLayout, minHeight = 0): GardenGeometry {
+  const base = GARDEN_LAYOUTS[layout]
+  const n = Math.max(0, Math.min(count, MAX_MEMBERS))
+  const spots: Spot[] = base.spots.slice(0, n).map((s) => ({ ...s }))
+  for (let k = 0; spots.length < n; k++) spots.push(extraSpot(layout, k))
+
+  if (n === 1) spots[0] = layout === 'wide' ? { x: 330, y: 760, scale: 1.5 } : { x: 400, y: 600, scale: 1.4 }
+  if (n === 2) for (const s of spots) s.scale *= 1.2
+
+  const lowest = Math.max(base.pond.cy + base.pond.ry, ...spots.map((s) => s.y))
+  const minH = layout === 'tall' ? base.pond.cy + base.pond.ry + 200 : base.h
+  const h = Math.max(minH, lowest + 120, Math.round(minHeight))
+  const moss = base.moss.map((m, i) => (i === base.moss.length - 1 ? { ...m, y: h - m.ry - 18 } : m))
+  return { ...base, h, spots, moss }
+}

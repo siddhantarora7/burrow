@@ -1,7 +1,8 @@
 'use client'
+import Link from 'next/link'
 import { useEffect, useState, useSyncExternalStore } from 'react'
-import { GARDEN_LAYOUTS, PET_COLORS, spotsFor, TIMING, type GardenGeometry, type GardenLayout, type Member, type PetState } from '@burrow/core'
-import { Garden, Stone } from './Garden'
+import { gardenFor, PET_COLORS, TIMING, type GardenGeometry, type GardenLayout, type Member, type PetState, type Spot } from '@burrow/core'
+import { Garden, Ripples, Stone } from './Garden'
 import { Pet } from './Pet'
 import { season, skyAt } from '@/lib/sky'
 import { useBurrow } from '@/lib/useBurrow'
@@ -16,53 +17,89 @@ const WHY: Record<PetState, string> = {
   idle: 'agent is quiet', eat: 'agent finished a task', wave: 'agent is waiting for input',
   work: 'agent is on a long run', sleep: `no activity for ${TIMING.idleMs / 60_000} minutes`, cheer: 'a friend just shipped',
 }
+const COMMAND = 'npx burrow-pets init'
+const GARDEN_WIDTH: Record<GardenLayout, number> = { wide: 1600, tall: 800 }
 
-function ago(ms: number): string {
-  const m = Math.round(ms / 60_000)
-  if (m < 1) return 'just now'
-  if (m < 60) return `${m} min ago`
-  return `${Math.round(m / 60)} h ago`
+// The visitor's own clock drives the sky. The server cannot know it, so it renders the
+// chrome only (null) instead of guessing a time of day and flashing the wrong sky.
+function subscribeClock(cb: () => void) {
+  const t = setInterval(cb, 15_000)
+  return () => clearInterval(t)
+}
+const clockKey = () => {
+  const d = new Date()
+  return `${d.getMonth()}:${d.getHours() * 60 + d.getMinutes()}`
+}
+function useClock(): { hour: number; month: number } | null {
+  const key = useSyncExternalStore(subscribeClock, clockKey, () => null)
+  if (key === null) return null
+  const [month, minutes] = key.split(':').map(Number)
+  return { hour: minutes! / 60, month: month! }
 }
 
-function useClockHour(): number {
-  const [hour, setHour] = useState(() => { const d = new Date(); return d.getHours() + d.getMinutes() / 60 })
-  useEffect(() => {
-    const t = setInterval(() => { const d = new Date(); setHour(d.getHours() + d.getMinutes() / 60) }, 60_000)
-    return () => clearInterval(t)
-  }, [])
-  return hour
-}
-
-// Portrait screens get the tall garden. The server renders wide; the client corrects without a hydration mismatch.
+// Portrait screens get the tall garden.
 const TALL = '(max-aspect-ratio: 4/5)'
+function subscribeLayout(cb: () => void) {
+  const mq = matchMedia(TALL)
+  mq.addEventListener('change', cb)
+  return () => mq.removeEventListener('change', cb)
+}
 function useLayout(): GardenLayout {
-  return useSyncExternalStore(
-    (cb) => {
-      const mq = matchMedia(TALL)
-      mq.addEventListener('change', cb)
-      return () => mq.removeEventListener('change', cb)
-    },
-    () => (matchMedia(TALL).matches ? 'tall' : 'wide'),
-    () => 'wide',
-  )
+  return useSyncExternalStore(subscribeLayout, () => (matchMedia(TALL).matches ? 'tall' : 'wide'), () => 'wide')
+}
+
+// Viewport proportions, so the garden is drawn to fill the screen rather than cropped.
+function subscribeResize(cb: () => void) {
+  addEventListener('resize', cb)
+  return () => removeEventListener('resize', cb)
+}
+function useViewportRatio(): number | null {
+  return useSyncExternalStore(subscribeResize, () => innerHeight / innerWidth, () => null)
+}
+
+/** Percent box for something drawn at viewBox coordinates, inside the overlay that mirrors the SVG's slice. */
+function box(g: GardenGeometry, x: number, y: number, w: number, h: number) {
+  return { left: `${(x / g.w) * 100}%`, top: `${(y / g.h) * 100}%`, width: `${(w / g.w) * 100}%`, height: `${(h / g.h) * 100}%` }
 }
 
 export function BurrowView({ id }: { id: string }) {
   const { status, burrow, members, offset } = useBurrow(id)
   const states = usePetStates(members, offset)
-  const hour = useClockHour()
-  const sky = skyAt(hour)
-  const seasonNow = season(new Date().getMonth())
-  const leaf = LEAF[seasonNow]
+  const clock = useClock()
   const layout = useLayout()
-  const g = GARDEN_LAYOUTS[layout]
-  const spots = spotsFor(members.length, layout)
-  const placed = members.slice(0, spots.length).map((m, i) => ({ m, spot: spots[i]! }))
+  const ratio = useViewportRatio()
 
   // A background tab still answers "is it done, or waiting on me?"
   useEffect(() => {
     document.title = burrowTitle(members.map((m) => ({ name: m.name, state: states.get(m.petId)?.state ?? 'sleep' })))
   }, [members, states])
+
+  const statusText = status === 'live' ? 'live' : status === 'not_found' ? 'not found' : status === 'reconnecting' ? 'reconnecting…' : 'connecting…'
+  const header = (night: boolean) => (
+    <header className={`absolute inset-x-0 top-0 z-20 flex items-center gap-3 px-4 py-3 sm:px-8 sm:py-4 ${night ? 'text-[#eef0f8]' : 'text-[#1e2433]'}`}>
+      <span className="flex items-center gap-2 font-display text-xl font-bold">
+        <svg width={26} height={26} viewBox="0 0 120 120" aria-hidden="true">
+          <Pet species="mochi" state="idle" color={PET_COLORS.sakura} size={120} />
+        </svg>
+        burrow
+      </span>
+      {burrow && <span className="hidden truncate text-sm opacity-80 sm:inline">{burrow.name}</span>}
+      <nav className={`chip ${night ? 'chip-night' : ''} ml-auto flex items-center gap-3 rounded-full py-1 pl-3 pr-1 text-xs font-medium`}>
+        <Link href="/privacy" className="underline-offset-4 hover:underline">privacy</Link>
+        <span role="status" className="chip-solid rounded-full px-2.5 py-1">{statusText}</span>
+      </nav>
+    </header>
+  )
+
+  if (clock === null || ratio === null) {
+    return <main className="relative h-[100dvh] w-full overflow-hidden bg-[var(--washi)]">{header(false)}</main>
+  }
+
+  const sky = skyAt(clock.hour)
+  const autumn = season(clock.month) === 'autumn'
+  const g = gardenFor(members.length, layout, GARDEN_WIDTH[layout] * ratio)
+  const placed = members.slice(0, g.spots.length).map((m, i) => ({ m, spot: g.spots[i]! }))
+  const shadowDx = layout === 'wide' ? 18 : 14
 
   // Every finished task sends one ripple across the pond, from the side the pet sits on.
   const now = Date.now() + offset
@@ -71,47 +108,38 @@ export function BurrowView({ id }: { id: string }) {
   )
 
   return (
-    <main className="relative h-[100dvh] w-full overflow-hidden" style={{ background: sky.top }}>
-      <Garden g={g} sky={sky} leaf={leaf} fallen={seasonNow === 'autumn'} ripples={ripples}>
-        {[...placed].sort((a, b) => a.spot.y - b.spot.y).map(({ m, spot }) => {
-          const size = 200 * spot.scale
-          const st = states.get(m.petId)?.state ?? 'sleep'
-          return (
-            <g key={m.petId}>
-              <Stone x={spot.x} y={spot.y} scale={spot.scale} night={sky.night} />
-              <Pet species={m.species} state={st} color={PET_COLORS[m.color]} x={spot.x - size / 2} y={spot.y - size + 14 * spot.scale} size={size} />
-            </g>
-          )
-        })}
-      </Garden>
+    <main className="relative w-full overflow-x-hidden" style={{ background: sky.top }}>
+      {header(sky.night)}
+      {/* The stage keeps the garden's aspect ratio and grows taller (and scrolls) as members join. */}
+      <div className="relative w-full overflow-hidden" style={{ aspectRatio: `${g.w} / ${g.h}`, minHeight: '100dvh' }}>
+        <Garden g={g} sky={sky} leaf={LEAF[season(clock.month)]} fallen={autumn}>
+          {placed.map(({ spot }, i) => <Stone key={i} {...spot} night={sky.night} shadowDx={shadowDx} />)}
+        </Garden>
 
-      <header className="absolute inset-x-0 top-0 z-10 flex items-center gap-3 px-5 py-4 sm:px-8" style={{ color: sky.ink }}>
-        <span className="flex items-center gap-2 font-display text-xl font-bold">
-          <svg width={26} height={26} viewBox="0 0 120 120" aria-hidden="true"><Pet species="mochi" state="idle" color={PET_COLORS.sakura} size={120} /></svg>
-          burrow
-        </span>
-        {burrow && <span className="truncate text-sm opacity-80">{burrow.name}</span>}
-        <span className="glass ml-auto rounded-full px-3 py-1 text-xs font-medium" role="status">
-          {status === 'live' ? 'live' : status === 'not_found' ? 'not found' : status === 'reconnecting' ? 'reconnecting…' : 'connecting…'}
-        </span>
-      </header>
+        {/* Mirrors the SVG's xMidYMid slice, so percentages of the viewBox land on the same pixels. */}
+        <div className="absolute left-1/2 top-1/2 min-h-full min-w-full -translate-x-1/2 -translate-y-1/2" style={{ aspectRatio: `${g.w} / ${g.h}` }} aria-hidden="true">
+          <Ripples g={g} ripples={ripples} />
+          {[...placed].sort((a, b) => a.spot.y - b.spot.y).map(({ m, spot }) => (
+            <PetOnStone key={m.petId} g={g} m={m} spot={spot} state={states.get(m.petId)?.state ?? 'sleep'} night={sky.night} />
+          ))}
+        </div>
+      </div>
 
-      <Tags g={g} placed={placed} states={states} />
-
-      {status === 'not_found' && (
-        <Notice title="this burrow doesn't exist." body="check the link for typos, or start your own garden:" command="npx burrow-pets init" />
-      )}
-      {status === 'live' && members.length === 0 && (
-        <Notice title="nobody lives here yet." body="hatch the first pet from your terminal:" command="npx burrow-pets init" />
+      {status === 'not_found' ? (
+        <Notice night={sky.night} title="this burrow doesn't exist." body="check the link for typos, or start your own garden:" />
+      ) : status === 'live' && members.length === 0 ? (
+        <Notice night={sky.night} title="nobody lives here yet." body="hatch the first pet from your terminal:" />
+      ) : (
+        <CommandPill night={sky.night} />
       )}
 
-      <ul className="sr-only" aria-live="polite">
+      <ul className="sr-only">
         {members.map((m) => {
           const r = states.get(m.petId)
           const st = r?.state ?? 'sleep'
           return (
             <li key={m.petId}>
-              {m.name} is {VERB[st]}: {WHY[st]}{r?.lastEventAt ? `, last activity ${ago(Date.now() + offset - r.lastEventAt)}` : ''}.
+              {m.name} is {VERB[st]}: {WHY[st]}.
             </li>
           )
         })}
@@ -120,49 +148,56 @@ export function BurrowView({ id }: { id: string }) {
   )
 }
 
-function Tags({ g, placed, states }: {
-  g: GardenGeometry
-  placed: Array<{ m: Member; spot: { x: number; y: number; scale: number } }>; states: ReturnType<typeof usePetStates> }) {
-  // Tags are HTML so they stay crisp and selectable; positioned in % of the same viewBox the SVG slices.
+function PetOnStone({ g, m, spot, state, night }: { g: GardenGeometry; m: Member; spot: Spot; state: PetState; night: boolean }) {
+  const size = 200 * spot.scale
   return (
-    <div className="pointer-events-none absolute inset-0" aria-hidden="true">
-      <div className="absolute left-1/2 top-1/2 min-h-full min-w-full -translate-x-1/2 -translate-y-1/2" style={{ aspectRatio: `${g.w} / ${g.h}` }}>
-        {placed.map(({ m, spot }) => {
-          const st = states.get(m.petId)?.state ?? 'sleep'
-          return (
-            <span
-              key={m.petId}
-              className={`tag absolute -translate-x-1/2 ${st === 'wave' ? 'tag-alert' : ''}`}
-              style={{ left: `${(spot.x / g.w) * 100}%`, top: `${((spot.y + 34 * spot.scale) / g.h) * 100}%` }}
-            >
-              {m.name}
-              <i>{VERB[st]}</i>
-            </span>
-          )
-        })}
+    <>
+      <div className="absolute" style={box(g, spot.x - size / 2, spot.y - size + 14 * spot.scale, size, size)}>
+        <Pet species={m.species} state={state} color={PET_COLORS[m.color]} size="100%" />
       </div>
+      <span
+        className={`tag absolute -translate-x-1/2 ${night ? 'tag-night' : ''} ${state === 'wave' ? 'tag-alert' : ''}`}
+        style={{ left: `${(spot.x / g.w) * 100}%`, top: `${((spot.y + 40 * spot.scale) / g.h) * 100}%` }}
+      >
+        {m.name}
+        <i>{VERB[state]}</i>
+      </span>
+    </>
+  )
+}
+
+function CopyButton() {
+  const [copied, setCopied] = useState(false)
+  return (
+    <button
+      type="button"
+      className="chip-solid rounded-full px-3 py-1 font-display text-xs font-bold transition-transform active:scale-[0.97]"
+      onClick={() => navigator.clipboard?.writeText(COMMAND).then(() => setCopied(true), () => {})}
+    >
+      {copied ? 'copied' : 'copy'}
+    </button>
+  )
+}
+
+function CommandPill({ night }: { night: boolean }) {
+  return (
+    <div className={`chip ${night ? 'chip-night' : ''} fixed bottom-4 left-1/2 z-20 flex -translate-x-1/2 items-center gap-3 whitespace-nowrap rounded-full py-1.5 pl-4 pr-1.5 text-sm sm:left-8 sm:translate-x-0`}>
+      <span className="hidden font-display font-bold sm:inline">get a pet</span>
+      <code className="font-mono text-[13px]">{COMMAND}</code>
+      <CopyButton />
     </div>
   )
 }
 
-function Notice({ title, body, command }: { title: string; body: string; command?: string }) {
-  const [copied, setCopied] = useState(false)
+function Notice({ title, body, night }: { title: string; body: string; night: boolean }) {
   return (
-    <div className="glass absolute inset-x-4 bottom-8 z-10 mx-auto max-w-md rounded-2xl p-5 text-center">
+    <div className={`chip ${night ? 'chip-night' : ''} fixed inset-x-4 bottom-8 z-20 mx-auto max-w-md rounded-2xl p-5 text-center`}>
       <p className="font-display text-lg font-bold">{title}</p>
       <p className="mt-1 text-sm opacity-80">{body}</p>
-      {command && (
-        <div className="mt-3 inline-flex items-center gap-3 rounded-full bg-black/5 py-1.5 pl-4 pr-1.5 font-mono text-sm dark:bg-white/10">
-          {command}
-          <button
-            type="button"
-            className="rounded-full bg-[var(--sumi)] px-3 py-1 font-display text-xs font-bold text-[var(--washi)] active:scale-[0.97]"
-            onClick={() => navigator.clipboard?.writeText(command).then(() => setCopied(true), () => {})}
-          >
-            {copied ? 'copied' : 'copy'}
-          </button>
-        </div>
-      )}
+      <div className="mt-3 inline-flex items-center gap-3 whitespace-nowrap rounded-full bg-black/5 py-1.5 pl-4 pr-1.5 font-mono text-sm">
+        {COMMAND}
+        <CopyButton />
+      </div>
     </div>
   )
 }

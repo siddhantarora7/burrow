@@ -22,3 +22,8 @@ export function cleanName(raw: unknown): string | null {
   const n = raw.trim().toLowerCase().replace(/\s+/g, ' ')
   return /^[a-z0-9][a-z0-9 _-]{0,15}$/.test(n) ? n : null
 }
+
+/** "kiwi's burrow", "james' burrow". */
+export function burrowName(petName: string): string {
+  return `${petName}${petName.endsWith('s') ? "'" : "'s"} burrow`
+}

@@ -24,3 +24,14 @@ describe('isPetColor', () => {
     expect(isPetColor('__proto__')).toBe(false)
   })
 })
+
+describe('burrowName', () => {
+  it.each([
+    ['kiwi', "kiwi's burrow"],
+    ['james', "james' burrow"],
+    ['mr bean', "mr bean's burrow"],
+  ])('%s -> %s', async (name, out) => {
+    const { burrowName } = await import('../src/species')
+    expect(burrowName(name)).toBe(out)
+  })
+})
