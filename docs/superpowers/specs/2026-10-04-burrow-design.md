@@ -9,7 +9,8 @@ burrow gives each developer a small pet that reacts live to their AI coding agen
 | Area | Decision | Why |
 |---|---|---|
 | Name | burrow; npm package `burrow-pets` (`burrow` is squatted) | Domain TBD: burrow.party or getburrow.dev |
-| Visual world | **B · glass burrow** (see §9) | Fits the name; time-of-day sky is a free glance signal; scales to 10+ pets |
+| Visual world | B's pets, type, and glass discipline, set in **environments**. Main env: **zen garden** (see §9). No underground/soil scenes | The user rejected the literal dirt burrow; "burrow" names the crew's shared space, not a hole |
+| Environments | Data-driven scenes: background layers + pet spots + day/night lighting. Launch: zen garden (default), tatami room (milestone 2) | One rig, many places; owner picks per burrow |
 | Species | mochi, tofu, onigiri | All three ship at launch |
 | Realtime + storage | Cloudflare Workers + Durable Objects | Never pauses (Supabase free tier pauses after 7 idle days, fatal for a portfolio link); hibernating WebSockets make idle tabs ~free; one object per burrow matches the product |
 | Web | Next.js (App Router) on Vercel | Static landing, client burrow page, `next/og` share cards |
@@ -18,6 +19,7 @@ burrow gives each developer a small pet that reacts live to their AI coding agen
 | Hook transport | Local `command` hook script, `async: true` | Claude Code's `http` hook type would POST the full hook JSON (prompt, cwd, transcript path, tool input). Never use it |
 | State machine | One pure function shared by browser, server, and OG renderer | Deterministic, unit-testable, no server timers |
 | Pet animation | SVG + CSS keyframes (transform/opacity only) | Proven on the directions board; no Motion, no Rive |
+| TypeScript | `typescript` 6.0.x (not 7.x) | 7.x is the native Go port; Next.js and vitest tooling expect the 6.x JS API |
 
 ### Dependencies (approved)
 
@@ -109,7 +111,7 @@ Hook script rules: read stdin JSON, keep only `session_id` and `notification_typ
 - On a valid event: append, update stats, forward `{petId, ev}` to each BurrowDO.
 
 **BurrowDO** (one per burrow, id = burrowId)
-- `meta`: name, createdAt, createdBy.
+- `meta`: name, createdAt, createdBy, env (`garden` default).
 - `members`: petId → {name, species, color, stage, joinedAt}, plus a cached copy of each member's recent events (so a snapshot needs no fan-in).
 - WebSockets via the hibernation API. Each socket's attachment: `{ viewerPetId | null }`.
 - Presence = set of viewerPetIds with at least one open socket ("who has the burrow open").
@@ -171,35 +173,35 @@ Growth: `stageFor(mealsTotal)`: hatchling 0–9, sprout 10–49, grown 50+. Visu
 | Route | Render | Content |
 |---|---|---|
 | `/` | static | Landing (milestone 4) |
-| `/b/[id]` | client | The burrow: sky + soil cross-section, one room per member, live states, presence, treats/cheers |
+| `/b/[id]` | client | The burrow in its environment: time-of-day sky, one spot per member, live states, presence, treats/cheers |
 | `/p/[id]` | static shell + `next/og` image | Pet card for sharing |
 | `/claim` | client | Reads `#code`, exchanges it, stores the token in localStorage, redirects to the burrow |
 
-Burrow layout: `layoutBurrow(memberCount, viewport)` in `core`, deterministic by join order. Desktop: rooms snake down in a 3-wide band; mobile: one column down a single tunnel. Sky follows the viewer's local clock.
+Scene layout: each environment declares an ordered list of spots (normalized x/y + scale) for desktop and for mobile; `spotsFor(env, memberCount, viewport)` in `core` assigns members to spots deterministically by join order. Garden desktop: stepping stones around a pond, extending along a gravel path beyond 8 members; mobile: one column down the path. Sky follows the viewer's local clock.
 
-Performance budget: 60 fps with 24 pets. Only transform/opacity animate; no SVG filters on pets; rooms off-screen pause animations (`content-visibility` + IntersectionObserver); hidden tab stops timers; one `derive` timer per pet.
+Performance budget: 60 fps with 24 pets. Only transform/opacity animate; no SVG filters on pets; off-screen pets pause animations (`content-visibility` + IntersectionObserver); hidden tab stops timers; one `derive` timer per pet.
 
 Accessibility: each pet has a text label ("mika is eating. Agent finished a task 2 min ago."); your own pet's `wave` is announced in a polite live region; reduced motion shows static key poses; visible focus on every control; dark mode via `prefers-color-scheme` with a manual toggle.
 
 ## 8. Milestones (each demoed before the next)
 
 1. **Core loop**: `core` derive + tests; CLI `init` + hook script; Worker + PetDO + one BurrowDO; `/b/[id]` showing one pet reacting live.
-2. **Shared burrow**: invite links, `join`, multiple members, presence, procedural rooms, mobile layout.
+2. **Shared burrow**: invite links, `join`, multiple members, presence, garden spots for up to 24, mobile layout, second environment (tatami room) and env picker.
 3. **Social**: treats and cheers, growth stages, `/p/[id]` share card.
-4. **Landing**: scroll story descending through soil layers; privacy section at bedrock; 20 s demo video slot.
+4. **Landing**: scroll story as a walk along the garden path (stops: react, together, grow, privacy at the stone lantern, install); 20 s demo video slot.
 5. **Launch kit**: README with demo GIF, Show HN draft, X thread draft.
 
 ## 9. Visual direction contract
 
-THESIS: the burrow is a living cross-section, sky above and earth below, where every friend has a lit room. It refuses the category default of pets wandering a flat meadow or a dashboard of status chips.
+THESIS: a calm shared garden where every friend's pet sits on its own stepping stone under the real sky, and the agent's state reads from across the room. It refuses the category defaults: pets wandering a generic meadow, a dashboard of status chips, and (per the user) any underground or dirt scene.
 
-OWN-WORLD: washi base #E9ECE4 / night #14161A; sumi ink #26241F; soil bands #7C5C45 #634837 #4A372B with carved tunnels #A58468; pets matte sakura #EFA9BC, matcha #98B062, rice #F4EFE4 with soft top-left light and no outlines; lamp #FFD58A at night; glass only on the soil pane, name tags, nav and command pill. Zen Maru Gothic (display, pet voice) + Zen Kaku Gothic New (body), Geist Mono for commands. Lowercase voice.
+OWN-WORLD: day gravel #E6E4DA with raked lines #D3CFC2, night gravel #23262C; sumi ink #26241F; moss #8EA35C; stones #A3A099 / #85827B; pond reflects the sky gradient; maple follows the season (October: momiji #C9573B used only on leaves); stone lantern (toro) glows #FFD58A at night. Pets matte sakura #EFA9BC, matcha #98B062, rice #F4EFE4 with soft top-left light, no outlines. Glass only on UI chrome: name tags, nav, command pill. Zen Maru Gothic (display, pet voice) + Zen Kaku Gothic New (body), Geist Mono for commands. Lowercase voice.
 
 STORY: a visitor sees friends' pets working, eating, and waving in real time, understands "my agent's status, and my friends', at a glance", trusts the one-line privacy payload, and runs one command.
 
-FIRST VIEWPORT: full-bleed cross-section; top ~45% sky in the viewer's real time of day with sun or moon; headline "everyone's agents, one burrow." top-left in the sky with one line of subtext and the frosted command pill; below the grass line, 4–5 rooms with live demo pets, each with a frosted name tag. Primary action is the copyable `npx burrow-pets init`.
+FIRST VIEWPORT: full-bleed garden; sky in the viewer's real time of day across the top third with sun or moon; headline "everyone's agents, one burrow." top-left over the sky with one line of subtext and the frosted command pill; the pond, maple, and 4-5 demo pets on stones below, each with a frosted name tag. Primary action is the copyable `npx burrow-pets init`.
 
-FORM: candidate 1 of the grounded list (burrow cross-section seen through glass); chosen as IMPECCABLE'S PICK over the assigned sticker-book direction. Seed key e3e1e07e.
+FORM: the glass-burrow direction (candidate 1, IMPECCABLE'S PICK, seed key e3e1e07e) with its environment replaced by the user: zen garden main env, tatami room second. Raised from the declined op-art direction: the garden extends seamlessly as members join, no visible tiling.
 
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance.
 
@@ -207,5 +209,6 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 
 - Domain (user to buy) and final API hostname. Until then, `BURROW_API_URL` env with a workers.dev default.
 - Growth-stage visuals (milestone 3).
+- Which environments come after the tatami room (rooftop was the other candidate).
 - Whether milestone 4 needs `gsap`.
 - Tokens live in browser localStorage for treats; acceptable for low-stakes data, revisit if accounts arrive.

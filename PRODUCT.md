@@ -48,6 +48,7 @@ Single-player coding pets already exist (Anthropic's /buddy, Tamamon, others). b
 - Name: burrow, lowercase.
 - Voice: lowercase, warm, short. Pets may narrate in first person.
 - Craft reference: nudgy.run's design discipline (one minimal mascot, personality from tiny changes, two fonts, scroll storytelling, hand-drawn annotations). Do not reuse its blob mascot, fonts, blue-sky palette, or copy.
+- Environments: the shared space is not literally underground. No soil/dirt scenes. Main environment is a zen garden.
 - User-stated visual vocabulary (binding direction, to be synthesized, not stacked): imperfect hand-made art, squishy minimalism with a modern feel, color concentrated in pets and environment, Japanese / japandi calm, a retro touch, sleek and clean, optional pixel-art accents, optional glass.
 
 ## Evidence on Hand
