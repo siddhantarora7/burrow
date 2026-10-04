@@ -82,6 +82,26 @@ describe('derive: priorities and sessions', () => {
   })
 })
 
+describe('derive: delivery order and clock skew', () => {
+  it('orders a session by when things happened (`at`), not when requests arrived', () => {
+    // The heartbeat hook process was slower than the permission notification.
+    const needs: Ev = { v: 1, type: 'needs_input', at: T0 + 60_000, session: 'aaaaaaaaaaaa', t: T0 + 60_010 }
+    const lateBeat: Ev = { v: 1, type: 'heartbeat', at: T0 + 59_900, session: 'aaaaaaaaaaaa', t: T0 + 60_050 }
+    expect(at([ev('prompt', T0), needs, lateBeat], T0 + 61_000).state).toBe('wave')
+  })
+  it('schedules a wake-up for an event stamped slightly in the future', () => {
+    const r = at([ev('prompt', T0), ev('stop', T0 + 60_005)], T0 + 60_000)
+    expect(r.state).toBe('work')
+    expect(r.nextChangeAt).toBe(T0 + 60_005)
+    expect(at([ev('prompt', T0), ev('stop', T0 + 60_005)], T0 + 60_005).state).toBe('eat')
+  })
+  it('schedules a wake-up for a friend stop stamped in the future', () => {
+    const r = at([ev('session_start', T0)], T0 + 10 * S, [T0 + 15 * S])
+    expect(r.state).toBe('idle')
+    expect(r.nextChangeAt).toBe(T0 + 15 * S)
+  })
+})
+
 describe('derive: cheer', () => {
   it('cheers for 3 s when a friend ships while idle or working', () => {
     expect(at([ev('session_start', T0)], T0 + 10 * S, [T0 + 9 * S]).state).toBe('cheer')

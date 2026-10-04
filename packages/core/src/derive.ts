@@ -37,14 +37,19 @@ const PHASE: Record<EventType, Phase> = {
   session_end: 'ended',
 }
 
+// Timing uses the server's receive time `t`. Order *within a session* uses the client's `at`:
+// hooks run as separate processes, so a heartbeat can arrive after a later notification.
 const byTime = (a: Ev, b: Ev) => a.t - b.t || a.at - b.at
+const byAt = (a: Ev, b: Ev) => a.at - b.at || a.t - b.t
 
 export function derive({ events, friendStops = [], now }: DeriveInput): DeriveResult {
-  const past = events.filter((e) => e.t <= now).sort(byTime)
   const upcoming: number[] = []
   const later = (x: number) => {
     if (x > now) upcoming.push(x)
   }
+  // An event stamped slightly ahead of `now` (clock skew between machines) must still wake us.
+  for (const e of events) later(e.t)
+  const past = events.filter((e) => e.t <= now).sort(byTime)
 
   const last = past[past.length - 1]
   const lastEventAt = last ? last.t : null
@@ -58,7 +63,8 @@ export function derive({ events, friendStops = [], now }: DeriveInput): DeriveRe
 
   let waiting = false
   let working = false
-  for (const evs of sessions.values()) {
+  for (const unordered of sessions.values()) {
+    const evs = unordered.sort(byAt)
     const tail = evs[evs.length - 1]!
     const phase = PHASE[tail.type]
     if (phase === 'waiting') {
@@ -90,7 +96,10 @@ export function derive({ events, friendStops = [], now }: DeriveInput): DeriveRe
   let state: PetState = waiting ? 'wave' : eating ? 'eat' : working ? 'work' : active ? 'idle' : 'sleep'
 
   let friend: number | null = null
-  for (const f of friendStops) if (f <= now && (friend === null || f > friend)) friend = f
+  for (const f of friendStops) {
+    later(f)
+    if (f <= now && (friend === null || f > friend)) friend = f
+  }
   if (friend !== null) {
     later(friend + TIMING.cheerMs)
     if ((state === 'work' || state === 'idle') && now < friend + TIMING.cheerMs) state = 'cheer'

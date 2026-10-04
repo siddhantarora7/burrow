@@ -28,7 +28,8 @@ export class BurrowDO extends DurableObject<Env> {
     m.events = pruneEvents([...m.events, ev], ev.t)
     if (ev.type === 'stop') m.mealsTotal++
     await this.ctx.storage.put('members', members)
-    this.broadcast({ t: 'event', petId, ev, serverNow: Date.now() })
+    // The Worker that stamped ev.t may run on a machine whose clock is slightly ahead of this one.
+    this.broadcast({ t: 'event', petId, ev, serverNow: Math.max(Date.now(), ev.t) })
   }
 
   override async fetch(req: Request): Promise<Response> {
