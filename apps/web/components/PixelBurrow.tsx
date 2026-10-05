@@ -1,0 +1,347 @@
+'use client'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { layoutGarden, TIMING, type DeriveResult, type GardenLayout, type Member, type PetState, type Species } from '@burrow/core'
+import { hash, paletteAt, phaseAt, type Palette } from '@/lib/pixel/palette'
+import { bakeGround, bakeSky, sunPosition, type Buffer } from '@/lib/pixel/scene'
+import { colorsFor, FPS, FRAMES, GRID, petGrid } from '@/lib/pixel/sprites'
+
+const BOT = 28
+const CX = 16
+
+export const VERB: Record<PetState, string> = {
+  idle: 'hanging out', eat: 'eating', wave: 'needs you', work: 'working', sleep: 'asleep', cheer: 'cheering',
+}
+
+function ago(ms: number) {
+  const m = Math.max(0, Math.round(ms / 60_000))
+  return m < 1 ? 'just now' : m < 60 ? `${m}m ago` : `${Math.round(m / 60)}h ago`
+}
+
+/** Detail shown on hover or focus: what the agent did, and when. */
+function detail(r: DeriveResult | undefined, now: number): string {
+  if (!r?.lastEventAt) return 'no activity yet'
+  const since = now - r.lastEventAt
+  if (r.quiet) return `quiet for ${ago(since).replace(' ago', '')}, maybe interrupted`
+  switch (r.state) {
+    case 'eat': return 'just finished a task'
+    case 'wave': return `waiting on you since ${ago(since)}`
+    case 'work': return `on a long run, last update ${ago(since)}`
+    case 'cheer': return 'a friend shipped'
+    case 'sleep': return `last seen ${ago(since)}`
+    default: return `last update ${ago(since)}`
+  }
+}
+
+// ---------- sprite cache: one tiny canvas per species/state/frame ----------
+const cache = new Map<string, HTMLCanvasElement>()
+export function spriteCanvas(species: Species, state: PetState, frame: number, quiet: boolean): HTMLCanvasElement {
+  const key = `${species}:${state}:${frame}:${quiet}`
+  let c = cache.get(key)
+  if (c) return c
+  c = document.createElement('canvas')
+  c.width = c.height = GRID
+  const ctx = c.getContext('2d')!
+  const colors = colorsFor(species)
+  petGrid(species, state, frame, quiet).forEach((row, y) =>
+    row.forEach((v, x) => {
+      if (!v) return
+      ctx.fillStyle = colors[v]!
+      ctx.fillRect(x, y, 1, 1)
+    }),
+  )
+  cache.set(key, c)
+  return c
+}
+
+function toCanvas(b: Buffer): HTMLCanvasElement {
+  const c = document.createElement('canvas')
+  c.width = b.w
+  c.height = b.h
+  c.getContext('2d')!.putImageData(new ImageData(b.data, b.w, b.h), 0, 0)
+  return c
+}
+
+// ---------- screen size in logical pixels ----------
+function useScreen() {
+  const [s, setS] = useState<{ S: number; W: number; H: number } | null>(null)
+  useEffect(() => {
+    const measure = () => {
+      const vw = innerWidth, vh = innerHeight
+      const S = Math.max(2, vw > vh ? Math.round(vh / 190) : Math.round(vw / 130))
+      setS({ S, W: Math.ceil(vw / S), H: Math.ceil(vh / S) })
+    }
+    measure()
+    addEventListener('resize', measure)
+    return () => removeEventListener('resize', measure)
+  }, [])
+  return s
+}
+
+interface Props {
+  members: Member[]
+  states: Map<string, DeriveResult>
+  /** serverNow - Date.now(), so "2m ago" uses the server's clock like derive does. */
+  offset: number
+  hour: number
+}
+
+export function PixelBurrow({ members, states, offset, hour }: Props) {
+  const screen = useScreen()
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [hover, setHover] = useState<string | null>(null)
+  const [, tick] = useState(0)
+
+  const L: GardenLayout | null = useMemo(() => (screen ? layoutGarden(screen.W, screen.H, members.length) : null), [screen, members.length])
+  const hourKey = Math.round(hour * 10) / 10
+  const pal: Palette = useMemo(() => paletteAt(hourKey), [hourKey])
+  const phase = useMemo(() => phaseAt(hourKey), [hourKey])
+  const layers = useMemo(() => (L ? { sky: toCanvas(bakeSky(L, pal, phase)), ground: toCanvas(bakeGround(L, pal, phase)) } : null), [L, pal, phase])
+
+  // Mutable animation state lives in a ref so the loop never re-renders React.
+  const live = useRef({
+    members, states, hover: null as string | null,
+    boops: new Map<string, number>(),
+    seenStops: new Map<string, number>(),
+    ripples: [] as Array<{ x: number; y: number; t: number }>,
+    hearts: [] as Array<{ x: number; y: number; vx: number; vy: number; life: number }>,
+    leaves: [] as Array<{ x: number; y: number; ground: number; rest: number; seed: number }>,
+    flies: [] as Array<{ x: number; y: number; s: number }>,
+    koi: [{ t: 0, speed: 0.35, color: '#f0823c', spot: '#ffffff' }, { t: Math.PI, speed: 0.28, color: '#f4efe6', spot: '#e2483f' }],
+    clouds: [] as Array<{ x: number; y: number; w: number; speed: number }>,
+  })
+  live.current.members = members
+  live.current.states = states
+  live.current.hover = hover
+
+  // A ripple crosses the pond each time a pet finishes a task.
+  useEffect(() => {
+    if (!L) return
+    const now = Date.now() + offset
+    members.forEach((m, i) => {
+      const lastStop = m.events.reduce((t, e) => (e.type === 'stop' ? Math.max(t, e.t) : t), 0)
+      const seen = live.current.seenStops.get(m.petId)
+      live.current.seenStops.set(m.petId, lastStop)
+      if (seen === undefined || lastStop <= seen || now - lastStop > TIMING.eatMs) return
+      const [x] = L.spots[i] ?? [L.pond.cx]
+      const side = Math.sign(x - L.pond.cx) * Math.min(L.pond.rx - 8, Math.abs(x - L.pond.cx))
+      live.current.ripples.push({ x: L.pond.cx + side, y: L.pond.cy, t: 0 })
+    })
+  }, [members, L, offset])
+
+  // Refresh "2m ago" style details once a minute.
+  useEffect(() => {
+    const t = setInterval(() => tick((n) => n + 1), 30_000)
+    return () => clearInterval(t)
+  }, [])
+
+  // The draw loop.
+  useEffect(() => {
+    const cv = canvasRef.current
+    if (!cv || !L || !layers) return
+    const ctx = cv.getContext('2d')!
+    const st = live.current
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
+    st.clouds = Array.from({ length: L.portrait ? 2 : 3 }, (_, i) => ({ x: ((i + 0.3) * L.width) / 3, y: 10 + i * 9, w: 18 + i * 6, speed: 0.6 + i * 0.25 }))
+    const sun = sunPosition(L)
+    const { cx, cy, rx, ry } = L.pond
+    const inPond = (x: number, y: number) => ((x - cx) / (rx - 1)) ** 2 + ((y - cy) / (ry - 1)) ** 2 <= 1
+    // Soft light or shadow in stacked translucent bands, every edge on the pixel grid.
+    const glow = (gx: number, gy: number, grx: number, gry: number, color: string, strength: number) => {
+      ctx.fillStyle = color
+      for (const [band, a] of [[1, 0.35], [0.6, 0.3], [0.3, 0.35]] as const) {
+        ctx.globalAlpha = a * strength
+        for (let y = Math.floor(gy - gry); y <= gy + gry; y++)
+          for (let x = Math.floor(gx - grx); x <= gx + grx; x++)
+            if (((x - gx) / grx) ** 2 + ((y - gy) / gry) ** 2 <= band) ctx.fillRect(x, y, 1, 1)
+      }
+      ctx.globalAlpha = 1
+    }
+    const HEART = ['.R.R.', 'RRRRR', 'RRRRR', '.RRR.', '..R..']
+
+    let raf = 0
+    let last = performance.now()
+    const frame = (now: number) => {
+      const dt = Math.min(50, now - last)
+      last = now
+      ctx.clearRect(0, 0, L.width, L.height)
+      ctx.drawImage(layers.sky, 0, 0)
+      if (phase.night) {
+        for (let i = 0; i < L.width * 0.35; i++) {
+          const sx = Math.floor(hash(i, 1) * L.width), sy = Math.floor(hash(i, 2) * L.horizon * 0.8)
+          if (Math.abs(sx - sun.x) < 10 && Math.abs(sy - sun.y) < 10) continue
+          ctx.fillStyle = reduce || Math.sin(now / 600 + i) > 0.3 ? '#ffffff' : '#9fb0d8'
+          ctx.fillRect(sx, sy, 1, 1)
+        }
+      } else {
+        for (const c of st.clouds) {
+          if (!reduce) c.x += (c.speed * dt * 3) / 1000
+          if (c.x - c.w > L.width) c.x = -c.w
+          const x = Math.round(c.x), y = Math.round(c.y)
+          ctx.fillStyle = pal.cloudD
+          ctx.fillRect(x - c.w / 2, y + 1, c.w, 3)
+          ctx.fillStyle = pal.cloud
+          ctx.fillRect(x - c.w / 2 + 1, y, c.w - 2, 3)
+          for (const [dx, r] of [[-c.w / 5, 3], [0, 5], [c.w / 5, 4]] as const)
+            for (let yy = -r; yy <= 0; yy++) {
+              const half = Math.round(Math.sqrt(r * r - yy * yy))
+              ctx.fillRect(Math.round(x + dx - half), y + yy, half * 2, 1)
+            }
+        }
+      }
+      ctx.drawImage(layers.ground, 0, 0)
+
+      // pond life
+      for (let i = 0; i < 14; i++) {
+        const k = Math.floor(now / 700)
+        const x = Math.round(cx - rx + hash(i, k) * rx * 2), y = Math.round(cy - ry + hash(i, k + 1) * ry * 2)
+        if (inPond(x, y) && inPond(x + 2, y)) { ctx.fillStyle = pal.waterH; ctx.fillRect(x, y, 2, 1) }
+      }
+      for (const k of st.koi) {
+        if (!reduce) k.t += (k.speed * dt) / 1000
+        const x = Math.round(cx + Math.cos(k.t) * (rx - 10)), y = Math.round(cy + Math.sin(k.t) * (ry - 5))
+        const dir = -Math.sin(k.t) >= 0 ? 1 : -1
+        ctx.fillStyle = k.color
+        ctx.fillRect(x - 2, y, 5, 2)
+        ctx.fillRect(x - 3 * dir - (dir < 0 ? 1 : 0), y + (Math.floor(now / 200) % 2), 1, 1)
+        ctx.fillStyle = k.spot
+        ctx.fillRect(x + (dir > 0 ? 1 : -1), y, 1, 1)
+      }
+      st.ripples = st.ripples.filter((r) => (r.t += dt / 1000) < 1.4)
+      ctx.fillStyle = pal.waterH
+      for (const r of st.ripples) {
+        const R = 2 + r.t * 16
+        for (let a = 0; a < Math.PI * 2; a += 0.08) {
+          const x = Math.round(r.x + Math.cos(a) * R), y = Math.round(r.y + Math.sin(a) * R * 0.32)
+          if (inPond(x, y) && (r.t < 1 || hash(x, y) > 0.5)) ctx.fillRect(x, y, 1, 1)
+        }
+      }
+      if (phase.night) {
+        const fl = 0.85 + Math.sin(now / 90) * 0.1 + Math.sin(now / 37) * 0.05
+        glow(L.lantern.x, L.lantern.y - 13, 22, 16, '#ffd27a', 0.45 * fl)
+        glow(L.lantern.x, L.lantern.y + 1, 16, 4, '#ffd27a', 0.5 * fl)
+      }
+
+      // pets, back to front
+      const order = st.members.map((m, i) => ({ m, i })).filter(({ i }) => L.spots[i]).sort((a, b) => L.spots[a.i]![1] - L.spots[b.i]![1])
+      for (const { m, i } of order) {
+        const [x, y] = L.spots[i]!
+        const r = st.states.get(m.petId)
+        const state = r?.state ?? 'sleep'
+        const f = reduce ? 0 : Math.floor((now / 1000) * FPS[state] + i * 1.7) % FRAMES[state]
+        const boopT = (now - (st.boops.get(m.petId) ?? -1e9)) / 1000
+        const hop = boopT < 0.45 ? Math.round(Math.sin((boopT / 0.45) * Math.PI) * 5) : 0
+        glow(x, y, hop ? 6 : 9, 2, '#1b1426', 0.45)
+        ctx.drawImage(spriteCanvas(m.species, state, f, !!r?.quiet), x - CX, y - BOT - 1 - hop)
+        if (st.hover === m.petId) {
+          // a soft selection ring on the stone
+          ctx.fillStyle = '#ffffff'
+          for (let a = 0; a < Math.PI * 2; a += 0.22) ctx.fillRect(Math.round(x + Math.cos(a) * 13), Math.round(y + 1 + Math.sin(a) * 4), 1, 1)
+        }
+      }
+
+      // falling maple leaves that rest on the gravel for a while
+      if (!reduce && Math.random() < dt / 2200 && st.leaves.length < 10)
+        st.leaves.push({ x: L.maple.x + (Math.random() - 0.5) * 50, y: L.maple.y - 30, ground: L.gravelTop + 4 + Math.random() * (L.height - L.gravelTop - 10), rest: 0, seed: Math.random() * 10 })
+      st.leaves = st.leaves.filter((l) => {
+        if (l.y < l.ground) { l.y += (dt / 1000) * 9; l.x += Math.sin(now / 500 + l.seed) * 0.15 } else l.rest += dt
+        ctx.fillStyle = l.y < l.ground && Math.floor(now / 250 + l.seed) % 2 ? pal.mapleH : pal.maple
+        ctx.fillRect(Math.round(l.x), Math.round(l.y), 2, 1)
+        return l.rest < 9000
+      })
+      if (phase.night && !reduce) {
+        if (st.flies.length < 9) st.flies.push({ x: Math.random() * L.width, y: L.gravelTop - 4 + Math.random() * 30, s: Math.random() * 10 })
+        ctx.fillStyle = '#f7e78a'
+        for (const fl of st.flies) {
+          fl.x += Math.sin(now / 900 + fl.s) * 0.08
+          fl.y += Math.cos(now / 1100 + fl.s) * 0.05
+          if (Math.sin(now / 300 + fl.s * 3) > 0.2) ctx.fillRect(Math.round(fl.x), Math.round(fl.y), 1, 1)
+        }
+      } else st.flies = []
+      st.hearts = st.hearts.filter((h) => (h.life += dt / 16) < 70)
+      ctx.fillStyle = '#ff6f91'
+      for (const h of st.hearts) {
+        h.x += h.vx
+        h.y += h.vy
+        if (h.life < 50 || Math.floor(h.life / 6) % 2) HEART.forEach((row, j) => [...row].forEach((c, k) => { if (c !== '.') ctx.fillRect(Math.round(h.x) - 2 + k, Math.round(h.y) + j, 1, 1) }))
+      }
+      raf = requestAnimationFrame(frame)
+    }
+    const start = () => { if (!raf) { last = performance.now(); raf = requestAnimationFrame(frame) } }
+    const stop = () => { cancelAnimationFrame(raf); raf = 0 }
+    const onVisibility = () => (document.hidden ? stop() : start())
+    document.addEventListener('visibilitychange', onVisibility)
+    start()
+    return () => { stop(); document.removeEventListener('visibilitychange', onVisibility) }
+  }, [L, layers, pal, phase])
+
+  if (!screen || !L) return null
+  const S = screen.S
+  const now = Date.now() + offset
+
+  const boop = (petId: string, i: number) => {
+    const [x, y] = L.spots[i]!
+    live.current.boops.set(petId, performance.now())
+    for (let k = 0; k < 3; k++) live.current.hearts.push({ x: x + (k - 1) * 5, y: y - 24, vx: (k - 1) * 0.15, vy: -0.35 - k * 0.05, life: 0 })
+  }
+  const petAt = (mx: number, my: number) => L.spots.findIndex(([x, y], i) => i < members.length && mx > x - 12 && mx < x + 12 && my > y - 22 && my < y + 3)
+  const onPond = (mx: number, my: number) => ((mx - L.pond.cx) / L.pond.rx) ** 2 + ((my - L.pond.cy) / L.pond.ry) ** 2 <= 1
+  const local = (e: React.MouseEvent) => {
+    const r = (e.currentTarget as HTMLElement).getBoundingClientRect()
+    return [(e.clientX - r.left) / S, (e.clientY - r.top) / S] as const
+  }
+
+  return (
+    <div className="relative" style={{ width: L.width * S, height: L.height * S }}>
+      <canvas
+        ref={canvasRef}
+        width={L.width}
+        height={L.height}
+        className={`absolute inset-0 [image-rendering:pixelated] ${hover ? 'cursor-pointer' : ''}`}
+        style={{ width: L.width * S, height: L.height * S }}
+        aria-hidden="true"
+        onMouseMove={(e) => {
+          const [mx, my] = local(e)
+          const i = petAt(mx, my)
+          setHover(i >= 0 ? members[i]!.petId : onPond(mx, my) ? 'pond' : null)
+        }}
+        onMouseLeave={() => setHover(null)}
+        onClick={(e) => {
+          const [mx, my] = local(e)
+          const i = petAt(mx, my)
+          if (i >= 0) return boop(members[i]!.petId, i)
+          if (onPond(mx, my)) {
+            live.current.ripples.push({ x: Math.round(mx), y: Math.round(my), t: 0 })
+            live.current.koi.forEach((k) => (k.speed *= 3))
+            setTimeout(() => live.current.koi.forEach((k) => (k.speed /= 3)), 900)
+          }
+        }}
+      />
+      {members.map((m, i) => {
+        const spot = L.spots[i]
+        if (!spot) return null
+        const r = states.get(m.petId)
+        const state = r?.state ?? 'sleep'
+        const verb = r?.quiet ? 'quiet' : VERB[state]
+        const open = hover === m.petId
+        return (
+          <button
+            key={m.petId}
+            type="button"
+            className={`tag chip absolute -translate-x-1/2 ${phase.night ? 'chip-night' : ''} ${state === 'wave' ? 'tag-alert' : ''} ${open ? 'tag-open' : ''}`}
+            style={{ left: spot[0] * S, top: (spot[1] + 6) * S }}
+            onMouseEnter={() => setHover(m.petId)}
+            onMouseLeave={() => setHover(null)}
+            onFocus={() => setHover(m.petId)}
+            onBlur={() => setHover(null)}
+            onClick={() => boop(m.petId, i)}
+            aria-label={`${m.name} is ${verb}: ${detail(r, now)}. Press to boop.`}
+          >
+            {m.name}
+            <i>{verb}</i>
+            {open && <b className="tag-more">{detail(r, now)}</b>}
+          </button>
+        )
+      })}
+    </div>
+  )
+}

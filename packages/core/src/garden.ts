@@ -1,116 +1,78 @@
-export interface Spot {
-  /** Stone center in the layout's viewBox. */
-  x: number
-  y: number
-  /** Depth scale: stones nearer the wall are smaller. */
-  scale: number
-}
-
-export type GardenLayout = 'wide' | 'tall'
-
-export interface GardenGeometry {
-  w: number
-  h: number
-  /** Top of the garden wall. */
-  wallY: number
-  /** Where the raked gravel starts. */
-  gravelY: number
-  pond: { cx: number; cy: number; rx: number; ry: number }
-  lantern: { x: number; y: number; scale: number }
-  maple: { x: number; y: number; scale: number }
-  moss: ReadonlyArray<{ x: number; y: number; rx: number; ry: number }>
-  /** Front spots first, so a small burrow fills the foreground. */
-  spots: readonly Spot[]
-}
-
-export const GARDEN_LAYOUTS: Record<GardenLayout, GardenGeometry> = {
-  // Desktop and landscape: pond in the middle, stones around it.
-  wide: {
-    w: 1600,
-    h: 1000,
-    wallY: 420,
-    gravelY: 470,
-    pond: { cx: 800, cy: 700, rx: 250, ry: 82 },
-    lantern: { x: 1480, y: 640, scale: 1 },
-    maple: { x: 1330, y: 470, scale: 1 },
-    moss: [
-      { x: 120, y: 640, rx: 90, ry: 26 },
-      { x: 1300, y: 960, rx: 120, ry: 30 },
-    ],
-    spots: [
-      { x: 380, y: 700, scale: 1 },
-      { x: 1220, y: 700, scale: 1 },
-      { x: 640, y: 870, scale: 1.05 },
-      { x: 980, y: 880, scale: 1.05 },
-      { x: 190, y: 880, scale: 1.05 },
-      { x: 1420, y: 880, scale: 1.05 },
-      { x: 560, y: 545, scale: 0.82 },
-      { x: 1050, y: 545, scale: 0.82 },
-      { x: 805, y: 525, scale: 0.76 },
-    ],
-  },
-  // Phones and portrait: one pet front and center above the pond, the rest down the path.
-  tall: {
-    w: 800,
-    h: 1400,
-    wallY: 360,
-    gravelY: 410,
-    pond: { cx: 400, cy: 760, rx: 210, ry: 70 },
-    lantern: { x: 640, y: 690, scale: 0.8 },
-    maple: { x: 640, y: 410, scale: 0.72 },
-    moss: [
-      { x: 170, y: 470, rx: 70, ry: 20 },
-      { x: 560, y: 1375, rx: 100, ry: 24 },
-    ],
-    spots: [
-      { x: 400, y: 580, scale: 1 },
-      { x: 190, y: 960, scale: 1 },
-      { x: 610, y: 960, scale: 1 },
-      { x: 400, y: 1150, scale: 1.05 },
-      { x: 180, y: 1300, scale: 1.05 },
-      { x: 620, y: 1300, scale: 1.05 },
-      { x: 175, y: 520, scale: 0.85 },
-    ],
-  },
-}
-
-export function spotsFor(count: number, layout: GardenLayout = 'wide'): Spot[] {
-  return GARDEN_LAYOUTS[layout].spots.slice(0, Math.max(0, count))
-}
-
 /** Spec §5: members per burrow at launch. */
 export const MAX_MEMBERS = 24
 
-function extraSpot(layout: GardenLayout, k: number): Spot {
-  // Rows below the base scene, alternating so stones never line up into a grid.
-  if (layout === 'wide') {
-    const row = Math.floor(k / 4)
-    const col = k % 4
-    const xs = row % 2 ? [440, 800, 1160, 1440] : [260, 620, 980, 1340]
-    return { x: xs[col]!, y: 1080 + row * 200, scale: 1.05 }
-  }
-  const row = Math.floor(k / 2)
-  const col = k % 2
-  return { x: (row % 2 ? [300, 560] : [190, 610])[col]!, y: 1300 + (row + 1) * 210, scale: 1.05 }
+export interface GardenLayout {
+  /** Logical (pre-scale) pixel size of the scene. `height` grows past the screen for big burrows. */
+  width: number
+  height: number
+  portrait: boolean
+  horizon: number
+  gravelTop: number
+  pond: { cx: number; cy: number; rx: number; ry: number }
+  lantern: { x: number; y: number }
+  maple: { x: number; y: number }
+  fuji: { x: number; peak: number }
+  /** One [x, y] per member in join order; y is where the pet's feet touch its stone. */
+  spots: Array<[number, number]>
 }
 
 /**
- * The garden for `count` members: exactly that many spots (up to MAX_MEMBERS), a height that
- * grows to fit them, and a lone pet promoted to the focal point. `minHeight` extends the gravel so
- * the scene matches the viewport's proportions instead of being cropped at the sides.
+ * The zen garden for a `W`x`H` logical-pixel screen and `count` members. Deterministic: the first
+ * members always get the same spots, and later rows extend the gravel downward (the page scrolls).
  */
-export function gardenFor(count: number, layout: GardenLayout, minHeight = 0): GardenGeometry {
-  const base = GARDEN_LAYOUTS[layout]
+export function layoutGarden(W: number, H: number, count: number): GardenLayout {
+  const portrait = H > W
   const n = Math.max(0, Math.min(count, MAX_MEMBERS))
-  const spots: Spot[] = base.spots.slice(0, n).map((s) => ({ ...s }))
-  for (let k = 0; spots.length < n; k++) spots.push(extraSpot(layout, k))
+  const horizon = portrait ? Math.round(Math.min(96, H * 0.27)) : Math.round(Math.min(92, H * 0.47))
+  const gravelTop = horizon + 17
+  const pond = portrait
+    ? { cx: Math.round(W * 0.5), cy: Math.round(gravelTop + (H - gravelTop) * 0.42), rx: Math.round(Math.min(46, W * 0.3)), ry: 12 }
+    : { cx: Math.round(W * 0.53), cy: Math.round(gravelTop + (H - gravelTop) * 0.4), rx: Math.round(Math.min(48, W * 0.15)), ry: 13 }
+  const front = H - 16
+  const pondFront = pond.cy + pond.ry
 
-  if (n === 1) spots[0] = layout === 'wide' ? { x: 330, y: 760, scale: 1.5 } : { x: 400, y: 600, scale: 1.4 }
-  if (n === 2) for (const s of spots) s.scale *= 1.2
+  // The first screenful, best spots first.
+  const base: Array<[number, number]> = portrait
+    ? [
+        [W * 0.5, pond.cy - pond.ry - 16],
+        [W * 0.24, pondFront + 24],
+        [W * 0.76, pondFront + 24],
+        [W * 0.5, pondFront + 54],
+        [W * 0.2, front],
+        [W * 0.8, front],
+      ]
+    : [
+        [W * 0.24, pond.cy - 2],
+        [W * 0.82, pond.cy - 8],
+        [W * 0.4, front],
+        [W * 0.64, front],
+        [W * 0.12, front],
+        [W * 0.88, front],
+      ]
+  const spots: Array<[number, number]> = base
+    .map(([x, y]) => [Math.round(x), Math.round(Math.min(front, y))] as [number, number])
+    .slice(0, n)
 
-  const lowest = Math.max(base.pond.cy + base.pond.ry, ...spots.map((s) => s.y))
-  const minH = layout === 'tall' ? base.pond.cy + base.pond.ry + 200 : base.h
-  const h = Math.max(minH, lowest + 120, Math.round(minHeight))
-  const moss = base.moss.map((m, i) => (i === base.moss.length - 1 ? { ...m, y: h - m.ry - 18 } : m))
-  return { ...base, h, spots, moss }
+  // Further rows below the first screen, alternating so stones never line up into a grid.
+  const lastBaseY = Math.max(...base.map(([, y]) => Math.min(front, Math.round(y))))
+  for (let k = 0; spots.length < n; k++) {
+    const row = Math.floor(k / (portrait ? 2 : 4))
+    const col = k % (portrait ? 2 : 4)
+    const xs = portrait ? (row % 2 ? [0.32, 0.68] : [0.2, 0.8]) : row % 2 ? [0.26, 0.5, 0.74, 0.92] : [0.1, 0.36, 0.62, 0.86]
+    spots.push([Math.round(W * xs[col]!), lastBaseY + 36 * (row + 1)])
+  }
+
+  const lowest = spots.reduce((m, [, y]) => Math.max(m, y), 0)
+  return {
+    width: W,
+    height: Math.max(H, lowest + 16),
+    portrait,
+    horizon,
+    gravelTop,
+    pond,
+    lantern: { x: Math.round(W * (portrait ? 0.86 : 0.93)), y: gravelTop + (portrait ? 30 : 24) },
+    maple: { x: Math.round(W * (portrait ? 0.8 : 0.78)), y: horizon + 13 },
+    fuji: { x: Math.round(W * (portrait ? 0.32 : 0.3)), peak: Math.round(horizon * 0.38) },
+    spots,
+  }
 }
