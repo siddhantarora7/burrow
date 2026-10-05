@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { useEffect, useState, useSyncExternalStore } from 'react'
-import { gardenFor, PET_COLORS, TIMING, type GardenGeometry, type GardenLayout, type Member, type PetState, type Spot } from '@burrow/core'
+import { GARDEN_LAYOUTS, gardenFor, PET_COLORS, TIMING, type GardenGeometry, type GardenLayout, type Member, type PetState, type Spot } from '@burrow/core'
 import { Garden, Ripples, Stone } from './Garden'
 import { Pet } from './Pet'
 import { season, skyAt } from '@/lib/sky'
@@ -98,6 +98,8 @@ export function BurrowView({ id }: { id: string }) {
   const sky = skyAt(clock.hour)
   const autumn = season(clock.month) === 'autumn'
   const g = gardenFor(members.length, layout, GARDEN_WIDTH[layout] * ratio)
+  // One screen tall until members make the garden longer; only then does the page scroll.
+  const grown = g.h > Math.max(GARDEN_LAYOUTS[layout].h, Math.round(GARDEN_WIDTH[layout] * ratio))
   const placed = members.slice(0, g.spots.length).map((m, i) => ({ m, spot: g.spots[i]! }))
   const shadowDx = layout === 'wide' ? 18 : 14
 
@@ -111,7 +113,7 @@ export function BurrowView({ id }: { id: string }) {
     <main className="relative w-full overflow-x-hidden" style={{ background: sky.top }}>
       {header(sky.night)}
       {/* The stage keeps the garden's aspect ratio and grows taller (and scrolls) as members join. */}
-      <div className="relative w-full overflow-hidden" style={{ aspectRatio: `${g.w} / ${g.h}`, minHeight: '100dvh' }}>
+      <div className="relative w-full overflow-hidden" style={grown ? { aspectRatio: `${g.w} / ${g.h}` } : { height: '100dvh' }}>
         <Garden g={g} sky={sky} leaf={LEAF[season(clock.month)]} fallen={autumn}>
           {placed.map(({ spot }, i) => <Stone key={i} {...spot} night={sky.night} shadowDx={shadowDx} />)}
         </Garden>
