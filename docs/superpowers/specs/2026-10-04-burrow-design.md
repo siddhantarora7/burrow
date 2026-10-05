@@ -9,7 +9,7 @@ burrow gives each developer a small pet that reacts live to their AI coding agen
 | Area | Decision | Why |
 |---|---|---|
 | Name | burrow; npm package `burrow-pets` (`burrow` is squatted) | Domain TBD: burrow.party or getburrow.dev |
-| Visual world | B's pets, type, and glass discipline, set in **environments**. Main env: **zen garden** (see §9). No underground/soil scenes | The user rejected the literal dirt burrow; "burrow" names the crew's shared space, not a hole |
+| Visual world | **Pixel art**, cozy 16-bit palette, inside modern glass UI chrome. Main env: **zen garden** (see §9). No underground/soil scenes | Code-drawn vector scenes read as generic; pixel art reads as authored, covers the user's retro/pixel vocabulary, and day/dusk/night come from palette swaps. Chosen after a spike (`design/pixel-spike`) |
 | Environments | Data-driven scenes: background layers + pet spots + day/night lighting. Launch: zen garden (default), tatami room (milestone 2) | One rig, many places; owner picks per burrow |
 | Species | mochi, tofu, onigiri | All three ship at launch |
 | Realtime + storage | Cloudflare Workers + Durable Objects | Never pauses (Supabase free tier pauses after 7 idle days, fatal for a portfolio link); hibernating WebSockets make idle tabs ~free; one object per burrow matches the product |
@@ -18,7 +18,7 @@ burrow gives each developer a small pet that reacts live to their AI coding agen
 | GitHub login | Deferred past launch | Only adds cross-machine claim; `npx burrow-pets link` covers it |
 | Hook transport | Local `command` hook script, `async: true` | Claude Code's `http` hook type would POST the full hook JSON (prompt, cwd, transcript path, tool input). Never use it |
 | State machine | One pure function shared by browser, server, and OG renderer | Deterministic, unit-testable, no server timers |
-| Pet animation | SVG + CSS keyframes (transform/opacity only) | Proven on the directions board; no Motion, no Rive |
+| Pet animation | Canvas sprites at a low internal resolution, integer-scaled with `image-rendering: pixelated`; 2–4 frame cycles per state; pets outlined and kept brighter than the scene | One canvas, cached sprites: cheap at 24 pets; pets must never blend into the background |
 | TypeScript | `typescript` 6.0.x (not 7.x) | 7.x is the native Go port; Next.js and vitest tooling expect the 6.x JS API |
 
 ### Dependencies (approved)
@@ -91,7 +91,8 @@ All entries: `{"type":"command","command":"node \"$HOME/.burrow/hook.mjs\" <even
 |---|---|---|
 | `SessionStart` | (all) | `session_start` |
 | `UserPromptSubmit` | (all) | `prompt` |
-| `PostToolBatch` | (all) | `heartbeat` (throttled to ≤ 1/min/session via `~/.burrow/hb/<session>` mtime) |
+| `PreToolUse` | (all) | `heartbeat` (throttled, shared with PostToolBatch) |
+| `PostToolBatch` | (all) | `heartbeat` (throttled to ≤ 1/min/session via `~/.burrow/sessions/<session>.json`) |
 | `Notification` | (all; script filters) | `needs_input` when `notification_type` ∈ `permission_prompt, agent_needs_input, elicitation_dialog`; otherwise nothing is sent |
 | `Stop` | (all) | `stop` |
 | `StopFailure` | (all) | `error` |
@@ -149,7 +150,7 @@ type PetState = 'idle' | 'eat' | 'wave' | 'work' | 'sleep' | 'cheer'
 derive(input: { events: Ev[]; friendStops?: number[]; now: number }): { state: PetState; lastEventAt: number | null; nextChangeAt: number | null }
 ```
 
-Events are grouped by `session`. Per session, the latest event decides its phase: `prompt`/`heartbeat`/`session_start` → running; `needs_input`/`error` → waiting; `stop` → done; `session_end` → ended. A running session with no event for 10 min is stale (treated as ended).
+Events are grouped by `session`. Per session, the latest event decides its phase: `prompt`/`heartbeat`/`session_start` → running; `needs_input`/`error` → waiting; `stop` → done; `session_end` → ended. A running session with no event for 4 min is stale (treated as ended).
 
 Pet state, first match wins:
 
@@ -162,7 +163,7 @@ Pet state, first match wins:
 | 5 | idle | any event within the last 20 min |
 | 6 | sleep | otherwise |
 
-Waiting sessions older than 60 min and running sessions silent for 10 min are ignored. A run resumed after a permission prompt counts from its latest `prompt`, so it is already work.
+Waiting sessions older than 20 min and running sessions silent for 4 min are ignored. A working pet whose run has been silent for 2 min is shown as **quiet** (dozing at the laptop, tag "quiet for Nm"), because Claude Code fires no hook when the user presses Esc (verified 2026-10-04 against Claude Code 2.1.289: no hook on Esc mid-run or at a permission prompt; `idle_prompt` follows only a normal `Stop`). A run resumed after a permission prompt counts from its latest `prompt`, so it is already work.
 
 `nextChangeAt` is the earliest future instant at which the result could change without a new event (eat expiring, work debounce maturing, stale cutoff, idle → sleep). Callers schedule one timer for it. Constants live in one exported `TIMING` object.
 
@@ -179,9 +180,9 @@ Growth: `stageFor(mealsTotal)`: hatchling 0–9, sprout 10–49, grown 50+. Visu
 | `/p/[id]` | static shell + `next/og` image | Pet card for sharing |
 | `/claim` | client | Reads `#code`, exchanges it, stores the token in localStorage, redirects to the burrow |
 
-Scene layout: each environment declares an ordered list of spots (normalized x/y + scale) for desktop and for mobile; `spotsFor(env, memberCount, viewport)` in `core` assigns members to spots deterministically by join order. Garden desktop: stepping stones around a pond, extending along a gravel path beyond 8 members; mobile: one column down the path. Sky follows the viewer's local clock.
+Scene layout: the scene is drawn at a low internal resolution (about 180 px tall on desktop, 130 px wide on phones) and scaled by an integer. `layoutGarden(width, height, memberCount)` in `core` places the pond, lantern, maple and one stepping stone per member deterministically by join order; beyond the first screenful the gravel extends downward and the page scrolls. Sky and lighting follow the viewer's local clock (palette swap across day, dusk and night).
 
-Performance budget: 60 fps with 24 pets. Only transform/opacity animate; no SVG filters on pets; off-screen pets pause animations (`content-visibility` + IntersectionObserver); hidden tab stops timers; one `derive` timer per pet.
+Performance budget: 60 fps with 24 pets. Static layers (sky, ground) are baked once per size and palette; each frame draws the baked layers, cached pet sprites and a few particles. No backdrop blur may sit over a region that repaints every frame without its own compositing layer (measured: 2 fps otherwise). The loop pauses when the tab is hidden; reduced motion shows the first frame of each state.
 
 Accessibility: each pet has a text label ("mika is eating. Agent finished a task 2 min ago."); your own pet's `wave` is announced in a polite live region; reduced motion shows static key poses; visible focus on every control; dark mode via `prefers-color-scheme` with a manual toggle.
 
@@ -195,9 +196,9 @@ Accessibility: each pet has a text label ("mika is eating. Agent finished a task
 
 ## 9. Visual direction contract
 
-THESIS: a calm shared garden where every friend's pet sits on its own stepping stone under the real sky, and the agent's state reads from across the room. It refuses the category defaults: pets wandering a generic meadow, a dashboard of status chips, and (per the user) any underground or dirt scene.
+THESIS: a calm, living pixel-art garden where every friend's pet sits on its own stepping stone under the real sky, and the agent's state reads from across the room. It refuses the category defaults: pets wandering a generic meadow, a dashboard of status chips, and (per the user) any underground or dirt scene.
 
-OWN-WORLD: day gravel #E6E4DA with raked lines #D3CFC2, night gravel #23262C; sumi ink #26241F; moss #8EA35C; stones #A3A099 / #85827B; pond reflects the sky gradient; maple follows the season (October: momiji #C9573B used only on leaves); stone lantern (toro) glows #FFD58A at night. Pets matte sakura #EFA9BC, matcha #98B062, rice #F4EFE4 with soft top-left light, no outlines. Glass only on UI chrome: name tags, nav, command pill. Zen Maru Gothic (display, pet voice) + Zen Kaku Gothic New (body), Geist Mono for commands. Lowercase voice.
+OWN-WORLD: pixel art in a cozy 16-bit palette; every environment colour has day, dusk and night variants interpolated by the clock, with ordered (Bayer) dithering for skies and soft light. Zen garden: Mt Fuji behind a forest band, a tiled wall with white plaster lines, a momiji maple, raked gravel with concentric rings around the pond, stones and lantern, a koi pond, flowering bushes and moss. Ambient life: koi, drifting clouds, falling leaves, fireflies and a flickering stone lantern at night. Pets are 32 px sprites with a 1 px dark-plum (#2A2033) outline, rim light from the upper left, big glinting eyes, blush and tiny feet, always brighter than the scene. UI chrome stays modern: frosted name tags, nav and command pill in Zen Maru Gothic; Geist Mono for commands. Lowercase voice.
 
 STORY: a visitor sees friends' pets working, eating, and waving in real time, understands "my agent's status, and my friends', at a glance", trusts the one-line privacy payload, and runs one command.
 
