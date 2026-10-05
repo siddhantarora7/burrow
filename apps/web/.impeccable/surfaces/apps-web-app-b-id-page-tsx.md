@@ -28,3 +28,5 @@ LIVE-PAGE AMENDMENT (2026-10-04, after finish review): the live burrow page is a
 FORM: the glass-burrow direction (candidate 1, IMPECCABLE'S PICK, seed key e3e1e07e) with its environment replaced by the user: zen garden main env, tatami room second. Raised from the declined op-art direction: the garden extends seamlessly as members join, no visible tiling.
 
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance.
+
+PIXEL AMENDMENT (2026-10-04): after a spike the user chose pixel art (cozy 16-bit). The OWN-WORLD block in the spec (§9) now governs: canvas scene at ~180 px tall scaled by an integer, palette-swapped day/dusk/night, outlined 32 px pets brighter than the scene, ambient life (koi, clouds, leaves, fireflies, lantern), frosted HTML chrome and tags. The vector garden is retired.
