@@ -9,6 +9,7 @@ export class SettingsError extends Error {}
 export const HOOKS: ReadonlyArray<readonly [string, HookArg]> = [
   ['SessionStart', 'session_start'],
   ['UserPromptSubmit', 'prompt'],
+  ['PreToolUse', 'heartbeat'],
   ['PostToolBatch', 'heartbeat'],
   ['Notification', 'notify'],
   ['Stop', 'stop'],

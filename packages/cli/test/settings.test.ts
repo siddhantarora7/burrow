@@ -14,6 +14,13 @@ const userSettings = {
   permissions: { allow: ['Bash(npm test)'] },
 }
 
+describe('HOOKS', () => {
+  it('counts tool starts as a heartbeat too, so a silent long run is noticed sooner', () => {
+    expect(HOOKS).toContainEqual(['PreToolUse', 'heartbeat'])
+    expect(HOOKS).toContainEqual(['PostToolBatch', 'heartbeat'])
+  })
+})
+
 describe('addHooks', () => {
   it('adds one async command hook per event and keeps everything else', () => {
     const { settings, added } = addHooks(structuredClone(userSettings), SCRIPT)
@@ -22,7 +29,8 @@ describe('addHooks', () => {
     expect(hooks.Stop).toHaveLength(2)
     expect(hooks.Stop![0]).toEqual(userSettings.hooks.Stop[0])
     expect(hooks.Stop![1]!.hooks[0]).toEqual({ type: 'command', command: hookCommand(SCRIPT, 'stop'), async: true, timeout: 5 })
-    expect(hooks.PreToolUse).toEqual(userSettings.hooks.PreToolUse)
+    expect(hooks.PreToolUse![0]).toEqual(userSettings.hooks.PreToolUse[0])
+    expect(hooks.PreToolUse).toHaveLength(2)
     expect(settings.model).toBe('opus')
     expect(settings.permissions).toEqual(userSettings.permissions)
   })
@@ -88,7 +96,7 @@ describe('updateSettingsFile', () => {
 
 describe('round trips and links', () => {
   const fourSpace = JSON.stringify(
-    { model: 'opus', hooks: { Stop: [{ hooks: [{ type: 'command', command: 'say done' }] }], PreToolUse: [] }, statusLine: { type: 'command', command: 'x' } },
+    { model: 'opus', hooks: { Stop: [{ hooks: [{ type: 'command', command: 'say done' }] }], PreCompact: [] }, statusLine: { type: 'command', command: 'x' } },
     null,
     4,
   )

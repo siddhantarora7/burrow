@@ -9,7 +9,7 @@ const at = (events: Ev[], now: number, friendStops: number[] = []) => derive({ e
 
 describe('derive: single rules', () => {
   it('no events: asleep, nothing scheduled', () => {
-    expect(at([], T0)).toEqual({ state: 'sleep', lastEventAt: null, nextChangeAt: null })
+    expect(at([], T0)).toEqual({ state: 'sleep', quiet: false, lastEventAt: null, nextChangeAt: null })
   })
   it('session_start alone is activity, not work', () => {
     expect(at([ev('session_start', T0)], T0 + S).state).toBe('idle')
@@ -23,12 +23,18 @@ describe('derive: single rules', () => {
     expect(at([ev('prompt', T0)], T0 + 15 * S).state).toBe('work')
   })
   it('heartbeats keep a long run working', () => {
-    const events = [ev('prompt', T0), ev('heartbeat', T0 + 8 * MIN), ev('heartbeat', T0 + 17 * MIN)]
-    expect(at(events, T0 + 26 * MIN).state).toBe('work')
+    const events = [ev('prompt', T0), ev('heartbeat', T0 + 3 * MIN), ev('heartbeat', T0 + 6 * MIN), ev('heartbeat', T0 + 9 * MIN)]
+    expect(at(events, T0 + 10 * MIN)).toMatchObject({ state: 'work', quiet: false })
   })
-  it('a running session silent for 10 min is stale: idle, then asleep at 20 min', () => {
+  it('a run silent for 2 min is shown as quiet (Claude may have been interrupted with Esc)', () => {
     const events = [ev('prompt', T0)]
-    expect(at(events, T0 + 10 * MIN).state).toBe('idle')
+    const early = at(events, T0 + MIN)
+    expect(early).toMatchObject({ state: 'work', quiet: false, nextChangeAt: T0 + 2 * MIN })
+    expect(at(events, T0 + 3 * MIN)).toMatchObject({ state: 'work', quiet: true })
+  })
+  it('a running session silent for 4 min is stale: idle, then asleep at 20 min', () => {
+    const events = [ev('prompt', T0)]
+    expect(at(events, T0 + 4 * MIN)).toMatchObject({ state: 'idle', quiet: false })
     expect(at(events, T0 + 20 * MIN).state).toBe('sleep')
   })
   it('stop: eats for 6 s, then idles', () => {
@@ -43,10 +49,10 @@ describe('derive: single rules', () => {
   it('error waves too: the agent needs you', () => {
     expect(at([ev('prompt', T0), ev('error', T0 + 20 * S)], T0 + 21 * S).state).toBe('wave')
   })
-  it('a wave left unanswered for 60 min stops (crashed or abandoned session)', () => {
+  it('a wave left for 20 min stops (rejected with Esc, crashed, or abandoned)', () => {
     const events = [ev('needs_input', T0)]
-    expect(at(events, T0 + 59 * MIN).state).toBe('wave')
-    expect(at(events, T0 + 60 * MIN).state).toBe('sleep')
+    expect(at(events, T0 + 19 * MIN).state).toBe('wave')
+    expect(at(events, T0 + 20 * MIN).state).toBe('sleep')
   })
   it('session_end is activity: idle, asleep after 20 min', () => {
     const events = [ev('stop', T0), ev('session_end', T0 + MIN)]
@@ -69,7 +75,7 @@ describe('derive: priorities and sessions', () => {
   })
   it('permission granted after a wave: back to work immediately, no new debounce', () => {
     const events = [ev('prompt', T0), ev('needs_input', T0 + MIN), ev('heartbeat', T0 + 2 * MIN)]
-    expect(at(events, T0 + 2 * MIN + S).state).toBe('work')
+    expect(at(events, T0 + 2 * MIN + S)).toMatchObject({ state: 'work', quiet: false })
   })
   it('ignores events from the future', () => {
     expect(at([ev('stop', T0 + MIN)], T0).state).toBe('sleep')
@@ -140,8 +146,10 @@ describe('derive: nextChangeAt is never late (property)', () => {
       const horizon = r.nextChangeAt ?? now + 24 * 60 * MIN
       expect(horizon).toBeGreaterThan(now)
       for (const p of [now + 1, Math.floor((now + horizon) / 2), horizon - 1]) {
-        const s: PetState = at(events, p, friendStops).state
+        const later = at(events, p, friendStops)
+        const s: PetState = later.state
         expect(s, `trial ${trial} at +${p - now}ms`).toBe(r.state)
+        expect(later.quiet, `trial ${trial} quiet at +${p - now}ms`).toBe(r.quiet)
       }
     }
   })

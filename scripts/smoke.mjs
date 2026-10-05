@@ -13,7 +13,7 @@ const run = (args, input) => execFileSync('node', args, { env, input, encoding: 
 run(['packages/cli/dist/cli.mjs', 'init', '--name', 'smoke', '--species', 'onigiri'])
 const cfg = JSON.parse(readFileSync(join(home, 'config.json'), 'utf8'))
 const settings = JSON.parse(readFileSync(env.CLAUDE_SETTINGS, 'utf8'))
-if (Object.keys(settings.hooks).length !== 7) throw new Error('expected 7 hook events in settings')
+if (Object.keys(settings.hooks).length !== 8) throw new Error('expected 8 hook events in settings')
 
 const ws = new WebSocket(`${API.replace(/^http/, 'ws')}/v1/burrows/${cfg.burrows[0]}/ws`)
 const got = []
