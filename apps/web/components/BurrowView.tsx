@@ -1,12 +1,12 @@
 'use client'
 import Link from 'next/link'
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
-import { PixelBurrow, spriteCanvas, VERB } from './PixelBurrow'
+import { PixelBurrow, spriteCanvas } from './PixelBurrow'
 import { paletteAt, phaseAt } from '@/lib/pixel/palette'
 import { useBurrow } from '@/lib/useBurrow'
 import type { BurrowState } from '@/lib/burrowState'
 import { usePetStates } from '@/lib/usePetStates'
-import { burrowTitle } from '@/lib/status'
+import { burrowTitle, VERB } from '@/lib/status'
 
 const COMMAND = 'npx burrow-pets init'
 

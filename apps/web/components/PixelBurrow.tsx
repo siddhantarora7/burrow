@@ -5,13 +5,10 @@ import { heartsAt, heartVisible, liveRipples, stepFly, stepHeart, stepLeaf, type
 import { hash, paletteAt, phaseAt, type Palette } from '@/lib/pixel/palette'
 import { bakeGlow, bakeGround, bakeLantern, bakeSky, sunPosition, type Buffer } from '@/lib/pixel/scene'
 import { colorsFor, FPS, FRAMES, GRID, petGrid, toneOf } from '@/lib/pixel/sprites'
+import { tagLabel, VERB } from '@/lib/status'
 
 const BOT = 28
 const CX = 16
-
-export const VERB: Record<PetState, string> = {
-  idle: 'hanging out', eat: 'eating', wave: 'needs you', work: 'working', sleep: 'asleep', cheer: 'cheering',
-}
 
 function span(ms: number) {
   const m = Math.max(0, Math.round(ms / 60_000))
@@ -380,7 +377,7 @@ export function PixelBurrow({ members, states, offset, hour }: Props) {
               doneHint()
               boop(m.petId, i)
             }}
-            aria-label={`${m.name} is ${verb}: ${detail(r, now)}. Press to boop.`}
+            aria-label={tagLabel(m.name, verb, detail(r, now))}
           >
             {m.name}
             <i>{verb}</i>
