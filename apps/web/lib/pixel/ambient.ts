@@ -4,12 +4,15 @@
 export interface Heart { x: number; y: number; vx: number; vy: number; life: number }
 export interface Leaf { x: number; y: number; ground: number; rest: number; seed: number }
 export interface Fly { x: number; y: number; s: number }
+/** `born` is a performance.now() timestamp, so a ripple's age is wall time, not frames drawn. */
+export interface Ripple { x: number; y: number; born: number }
 
 export const HEART_MS = 1120
 /** Hearts hold steady, then blink out over their last 320 ms. */
 export const heartVisible = (h: Heart) => h.life < 800 || Math.floor(h.life / 96) % 2 === 1
 export const LEAF_FALL = 9
 export const LEAF_REST_MS = 9000
+export const RIPPLE_MS = 1400
 
 /** Three hearts rising from a booped pet's head. */
 export function heartsAt(x: number, y: number): Heart[] {
@@ -39,3 +42,10 @@ export function stepFly(f: Fly, dt: number, now: number): void {
   f.y += (Math.cos(now / 1100 + f.s) * 3 * dt) / 1000
 }
 
+/**
+ * Ripples still running at `now`, with their age in seconds. Ageing by the clock (not by frames
+ * drawn) drops a ripple queued while the tab was hidden instead of playing it minutes later.
+ */
+export function liveRipples(ripples: readonly Ripple[], now: number): Array<Ripple & { age: number }> {
+  return ripples.map((r) => ({ ...r, age: Math.max(0, now - r.born) / 1000 })).filter((r) => r.age * 1000 < RIPPLE_MS)
+}

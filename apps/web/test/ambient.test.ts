@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { heartsAt, stepFly, stepHeart, stepLeaf, type Fly, type Heart, type Leaf } from '../lib/pixel/ambient'
+import { heartsAt, liveRipples, stepFly, stepHeart, stepLeaf, type Fly, type Heart, type Leaf } from '../lib/pixel/ambient'
 
 // Run a stepper for `ms` of wall time at a given refresh rate.
 function run(hz: number, ms: number, step: (dt: number, now: number) => void) {
@@ -45,5 +45,18 @@ describe('ambient motion is tied to time, not frame rate', () => {
     run(120, 3000, (dt, now) => stepFly(b, dt, now))
     expect(b.x).toBeCloseTo(a.x, 1)
     expect(b.y).toBeCloseTo(a.y, 1)
+  })
+})
+
+describe('liveRipples', () => {
+  it('ages a ripple by the clock', () => {
+    const [r] = liveRipples([{ x: 1, y: 2, born: 1000 }], 1700)
+    expect(r?.age).toBeCloseTo(0.7)
+  })
+  it('drops a ripple queued while the tab was hidden instead of playing it minutes later', () => {
+    expect(liveRipples([{ x: 1, y: 2, born: 1000 }], 1000 + 3 * 60_000)).toEqual([])
+  })
+  it('treats a ripple born just after the frame started as brand new', () => {
+    expect(liveRipples([{ x: 1, y: 2, born: 1005 }], 1000)[0]?.age).toBe(0)
   })
 })

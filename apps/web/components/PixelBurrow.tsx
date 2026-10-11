@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { bottomReserve, layoutGarden, pixelScale, tagGap, TIMING, type DeriveResult, type GardenLayout, type Member, type PetState, type Species } from '@burrow/core'
-import { heartsAt, heartVisible, stepFly, stepHeart, stepLeaf, type Fly, type Heart, type Leaf } from '@/lib/pixel/ambient'
+import { heartsAt, heartVisible, liveRipples, stepFly, stepHeart, stepLeaf, type Fly, type Heart, type Leaf, type Ripple } from '@/lib/pixel/ambient'
 import { hash, paletteAt, phaseAt, type Palette } from '@/lib/pixel/palette'
 import { bakeGlow, bakeGround, bakeLantern, bakeSky, sunPosition, type Buffer } from '@/lib/pixel/scene'
 import { colorsFor, FPS, FRAMES, GRID, petGrid } from '@/lib/pixel/sprites'
@@ -153,7 +153,7 @@ export function PixelBurrow({ members, states, offset, hour }: Props) {
     members, states, hover: null as string | null,
     boops: new Map<string, number>(),
     seenStops: new Map<string, number>(),
-    ripples: [] as Array<{ x: number; y: number; t: number }>,
+    ripples: [] as Ripple[],
     hearts: [] as Heart[],
     leaves: [] as Leaf[],
     flies: [] as Fly[],
@@ -175,7 +175,7 @@ export function PixelBurrow({ members, states, offset, hour }: Props) {
       if (seen === undefined || lastStop <= seen || now - lastStop > TIMING.eatMs) return
       const [x] = L.spots[i] ?? [L.pond.cx]
       const side = Math.sign(x - L.pond.cx) * Math.min(L.pond.rx - 8, Math.abs(x - L.pond.cx))
-      live.current.ripples.push({ x: L.pond.cx + side, y: L.pond.cy, t: 0 })
+      live.current.ripples.push({ x: L.pond.cx + side, y: L.pond.cy, born: performance.now() })
     })
   }, [members, L, offset])
 
@@ -246,13 +246,14 @@ export function PixelBurrow({ members, states, offset, hour }: Props) {
         ctx.fillStyle = k.spot
         ctx.fillRect(x + (dir > 0 ? 1 : -1), y, 1, 1)
       }
-      st.ripples = st.ripples.filter((r) => (r.t += dt / 1000) < 1.4)
+      const ripples = liveRipples(st.ripples, now)
+      st.ripples = ripples
       ctx.fillStyle = pal.waterH
-      for (const r of st.ripples) {
-        const R = 2 + r.t * 16
+      for (const r of ripples) {
+        const R = 2 + r.age * 16
         for (let a = 0; a < Math.PI * 2; a += 0.08) {
           const x = Math.round(r.x + Math.cos(a) * R), y = Math.round(r.y + Math.sin(a) * R * 0.32)
-          if (inPond(x, y) && (r.t < 1 || hash(x, y) > 0.5)) ctx.fillRect(x, y, 1, 1)
+          if (inPond(x, y) && (r.age < 1 || hash(x, y) > 0.5)) ctx.fillRect(x, y, 1, 1)
         }
       }
       if (phase.night) {
@@ -352,7 +353,7 @@ export function PixelBurrow({ members, states, offset, hour }: Props) {
           }
           if (onPond(mx, my)) {
             doneHint()
-            live.current.ripples.push({ x: Math.round(mx), y: Math.round(my), t: 0 })
+            live.current.ripples.push({ x: Math.round(mx), y: Math.round(my), born: performance.now() })
             live.current.koi.forEach((k) => (k.speed *= 3))
             setTimeout(() => live.current.koi.forEach((k) => (k.speed /= 3)), 900)
           }
