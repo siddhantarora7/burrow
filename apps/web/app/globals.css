@@ -39,9 +39,8 @@ body { background: var(--paper); color: var(--ink); font-family: var(--font-sans
 .tag-alert i { color: #f0c64e; opacity: 1; }
 @media (prefers-reduced-motion: reduce) { .tag { transition: none; } }
 
-
-
-::selection { background: #efa9bc; color: #26241f; }
+/* the sakura pet's rim light */
+::selection { background: #fcd2df; color: #26241f; }
 
 /* The garden follows its sky, not the OS: its day ring stays blue even in OS dark mode. */
 .garden { --focus: #2e4a7d; }
