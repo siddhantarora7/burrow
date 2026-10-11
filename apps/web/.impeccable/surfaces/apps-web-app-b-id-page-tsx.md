@@ -2,7 +2,7 @@
 version: 1
 slug: "apps-web-app-b-id-page-tsx"
 primary_target: "apps/web/app/b/[id]/page.tsx"
-related_targets: ["apps/web/components/BurrowView.tsx","apps/web/components/Garden.tsx"]
+related_targets: ["apps/web/components/BurrowView.tsx","apps/web/components/PixelBurrow.tsx"]
 ---
 
 # Surface: burrow page (/b/[id])
