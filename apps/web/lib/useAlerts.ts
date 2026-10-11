@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { DeriveResult, Member, PetState } from '@burrow/core'
 import { alertChip, alertsFor, pokeAlerts, type Alert } from './alerts'
+import { notify } from './notify'
 
 const KEY = 'burrow:alerts'
 
@@ -47,6 +48,7 @@ export function useAlerts({ me, members, states, pokes }: {
     }
     setPermission(permissionNow())
     const unlock = () => {
+      if (typeof AudioContext === 'undefined') return
       audio.current ??= new AudioContext()
       audio.current.resume().then(() => setSoundReady(audio.current?.state === 'running'), () => {})
     }
@@ -63,13 +65,7 @@ export function useAlerts({ me, members, states, pokes }: {
     for (const a of alerts) {
       if (audio.current?.state === 'running') chime(audio.current)
       // the title and the chime are enough while you are looking at the garden
-      if (permissionNow() === 'granted' && (document.hidden || !document.hasFocus())) {
-        const n = new Notification(a.title, { body: a.body, tag: 'burrow' })
-        n.onclick = () => {
-          focus()
-          n.close()
-        }
-      }
+      if (document.hidden || !document.hasFocus()) notify(a.title, a.body)
     }
   }, [on])
 
