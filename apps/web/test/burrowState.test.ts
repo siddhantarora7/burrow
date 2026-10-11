@@ -42,3 +42,31 @@ describe('burrow reducer', () => {
     expect(reduce(live, { kind: 'msg', clientNow: 0, msg: { t: 'event', petId: 'zz', ev: ev('stop', 1), serverNow: 1 } })).toEqual(live)
   })
 })
+
+describe('burrow reducer: sign-in, pokes and today', () => {
+  const live = () => reduce(initialState, { kind: 'msg', clientNow: 0, msg: { t: 'snapshot', burrow, members: [member('p1'), member('p2')], serverNow: 0 } })
+  it('nobody is signed in until the server welcomes a token', () => {
+    expect(live().me).toBeNull()
+    expect(reduce(live(), { kind: 'msg', clientNow: 0, msg: { t: 'welcome', me: 'p1' } }).me).toBe('p1')
+  })
+  it('forgets a token the server no longer knows', () => {
+    const s = reduce(live(), { kind: 'msg', clientNow: 0, msg: { t: 'welcome', me: 'p1' } })
+    expect(reduce(s, { kind: 'msg', clientNow: 0, msg: { t: 'welcome', me: null } }).me).toBeNull()
+  })
+  it('a reconnect snapshot keeps who you are', () => {
+    const s = reduce(live(), { kind: 'msg', clientNow: 0, msg: { t: 'welcome', me: 'p1' } })
+    expect(reduce(s, { kind: 'msg', clientNow: 0, msg: { t: 'snapshot', burrow, members: [member('p1')], serverNow: 5 } }).me).toBe('p1')
+  })
+  it('records pokes, newest last, at most ten', () => {
+    let s = live()
+    for (let i = 0; i < 12; i++) s = reduce(s, { kind: 'msg', clientNow: 0, msg: { t: 'poke', from: 'p2', to: 'p1', serverNow: i } })
+    expect(s.pokes).toHaveLength(10)
+    expect(s.pokes.at(-1)).toEqual({ from: 'p2', to: 'p1', t: 11 })
+  })
+  it('an event carries the member\'s day so far', () => {
+    const today = { day: '2026-10-11', waitedMs: 120_000, meals: 3 }
+    const s = reduce(live(), { kind: 'msg', clientNow: 0, msg: { t: 'event', petId: 'p2', ev: ev('prompt', 10), today, serverNow: 10 } })
+    expect(s.members[1]!.today).toEqual(today)
+    expect(s.members[0]!.today).toBeUndefined()
+  })
+})

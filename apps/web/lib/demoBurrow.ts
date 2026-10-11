@@ -44,5 +44,5 @@ export function useDemoBurrow(count: number): BurrowState {
     const timer = setInterval(tick, 1000)
     return () => clearInterval(timer)
   }, [n])
-  return { status: members.length ? 'live' : 'connecting', burrow: { id: 'demo', name: 'demo garden', env: 'garden', createdAt: 0, createdBy: 'demo' }, members, offset: 0 }
+  return { status: members.length ? 'live' : 'connecting', burrow: { id: 'demo', name: 'demo garden', env: 'garden', createdAt: 0, createdBy: 'demo' }, members, offset: 0, me: null, pokes: [] }
 }

@@ -8,9 +8,13 @@ export interface BurrowState {
   members: Member[]
   /** serverNow - clientNow at the last message: add to Date.now() to get server time. */
   offset: number
+  /** The pet this browser speaks for, once the server has welcomed its web token. */
+  me: string | null
+  /** Recent pokes, newest last; `t` is server time. */
+  pokes: Array<{ from: string; to: string; t: number }>
 }
 
-export const initialState: BurrowState = { status: 'connecting', burrow: null, members: [], offset: 0 }
+export const initialState: BurrowState = { status: 'connecting', burrow: null, members: [], offset: 0, me: null, pokes: [] }
 
 export type Action = { kind: 'msg'; msg: ServerMsg; clientNow: number } | { kind: 'status'; status: Status }
 
@@ -19,7 +23,7 @@ export function reduce(state: BurrowState, action: Action): BurrowState {
   const { msg, clientNow } = action
   switch (msg.t) {
     case 'snapshot':
-      return { status: 'live', burrow: msg.burrow, members: msg.members, offset: msg.serverNow - clientNow }
+      return { ...state, status: 'live', burrow: msg.burrow, members: msg.members, offset: msg.serverNow - clientNow }
     case 'member':
       if (state.members.some((m) => m.petId === msg.member.petId)) return state
       return { ...state, members: [...state.members, msg.member], offset: msg.serverNow - clientNow }
@@ -28,14 +32,20 @@ export function reduce(state: BurrowState, action: Action): BurrowState {
       const members = state.members.map((m) =>
         m.petId !== msg.petId
           ? m
-          : { ...m, events: [...m.events, msg.ev].slice(-MAX_MEMBER_EVENTS), mealsTotal: m.mealsTotal + (msg.ev.type === 'stop' ? 1 : 0) },
+          : {
+              ...m,
+              events: [...m.events, msg.ev].slice(-MAX_MEMBER_EVENTS),
+              mealsTotal: m.mealsTotal + (msg.ev.type === 'stop' ? 1 : 0),
+              ...(msg.today ? { today: msg.today } : {}),
+            },
       )
       return { ...state, members, offset: msg.serverNow - clientNow }
     }
     case 'error':
       return { ...initialState, status: 'not_found' }
     case 'welcome':
+      return { ...state, me: msg.me }
     case 'poke':
-      return state
+      return { ...state, pokes: [...state.pokes, { from: msg.from, to: msg.to, t: msg.serverNow }].slice(-10) }
   }
 }
