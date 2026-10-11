@@ -34,20 +34,27 @@ export function clearMe(): void {
   }
 }
 
+// Shared by every caller, so a second mount (React re-running an effect) waits for the first redemption.
+let redeeming: Promise<void> = Promise.resolve()
+
 /**
  * If the URL carries a claim, strip it from the address bar (so it is never bookmarked or shared) and
- * trade it for a web token. A used or expired claim leaves any existing sign-in alone.
+ * trade it for a web token. A used or expired claim leaves any existing sign-in alone. Resolves once
+ * any redemption in flight has finished.
  */
-export async function redeemClaimInUrl(apiUrl: string): Promise<void> {
+export function redeemClaimInUrl(apiUrl: string): Promise<void> {
   const claim = claimInHash(location.hash)
-  if (!claim) return
+  if (!claim) return redeeming
   history.replaceState(null, '', location.pathname + location.search)
-  try {
-    const res = await fetch(`${apiUrl}/v1/claim`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ claim }) })
-    if (!res.ok) return
-    const body = (await res.json()) as Partial<Me>
-    if (typeof body.petId === 'string' && typeof body.token === 'string') writeMe({ petId: body.petId, token: body.token })
-  } catch {
-    // offline: the page still works as a plain viewer
-  }
+  redeeming = (async () => {
+    try {
+      const res = await fetch(`${apiUrl}/v1/claim`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ claim }) })
+      if (!res.ok) return
+      const body = (await res.json()) as Partial<Me>
+      if (typeof body.petId === 'string' && typeof body.token === 'string') writeMe({ petId: body.petId, token: body.token })
+    } catch {
+      // offline: the page still works as a plain viewer
+    }
+  })()
+  return redeeming
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { PET_STATES } from '@burrow/core'
-import { burrowTitle, tagLabel, VERB } from '../lib/status'
+import { burrowTitle, tagLabel, VERB, waitedLine } from '../lib/status'
 
 const p = (name: string, state: Parameters<typeof burrowTitle>[0][number]['state']) => ({ name, state })
 
@@ -27,7 +27,24 @@ describe('tagLabel', () => {
     expect(label.startsWith(`ada ${VERB[state]}`)).toBe(true)
     expect(label).toContain('last update 2m ago')
   })
+  it("on a friend's waiting pet, pressing pokes them", () => {
+    expect(tagLabel('jun', 'needs you', 'waiting on you for 3m', 'poke')).toBe('jun needs you: waiting on you for 3m. press to poke.')
+  })
   it('works for the quiet verb too', () => {
     expect(tagLabel('kiwi', 'quiet', 'quiet for 3m, maybe interrupted')).toBe('kiwi quiet: quiet for 3m, maybe interrupted. press to boop.')
+  })
+})
+
+describe('waitedLine', () => {
+  const day = '2026-10-11'
+  it('says how long the agent waited on its human today', () => {
+    expect(waitedLine({ day, waitedMs: 41 * 60_000, meals: 3 }, day)).toBe('waited on you 41m today')
+    expect(waitedLine({ day, waitedMs: 65 * 60_000, meals: 3 }, day)).toBe('waited on you 1h 5m today')
+    expect(waitedLine({ day, waitedMs: 120 * 60_000, meals: 3 }, day)).toBe('waited on you 2h today')
+  })
+  it('stays out of the way under a minute, for another day, or with no data', () => {
+    expect(waitedLine({ day, waitedMs: 59_000, meals: 0 }, day)).toBeNull()
+    expect(waitedLine({ day: '2026-10-10', waitedMs: 41 * 60_000, meals: 0 }, day)).toBeNull()
+    expect(waitedLine(undefined, day)).toBeNull()
   })
 })

@@ -6,6 +6,7 @@ import { paletteAt, phaseAt } from '@/lib/pixel/palette'
 import { useBurrow } from '@/lib/useBurrow'
 import type { BurrowState } from '@/lib/burrowState'
 import { usePetStates } from '@/lib/usePetStates'
+import { useAlerts } from '@/lib/useAlerts'
 import { burrowTitle, VERB } from '@/lib/status'
 
 const COMMAND = 'npx burrow-pets init'
@@ -46,8 +47,9 @@ export function BurrowView({ id }: { id: string }) {
 }
 
 /** The garden page for any source of members: the live WebSocket, or the synthetic demo. */
-export function BurrowScreen({ status, burrow, members, offset, label, statusLabel }: BurrowState & { label?: string; statusLabel?: string }) {
+export function BurrowScreen({ status, burrow, members, offset, me, pokes, poke, label, statusLabel }: BurrowState & { poke?: (to: string) => void; label?: string; statusLabel?: string }) {
   const states = usePetStates(members, offset)
+  const alerts = useAlerts({ me, members, states, pokes })
   const hour = useHour()
 
   // A background tab still answers "is it done, or waiting on me?"
@@ -68,11 +70,16 @@ export function BurrowScreen({ status, burrow, members, offset, label, statusLab
         </span>
         <nav className={`chip ${night ? 'chip-night' : ''} ml-auto flex items-center gap-3 rounded-full py-1 pl-3 pr-1 text-xs font-medium`}>
           <Link href="/privacy" className="underline-offset-4 hover:underline">privacy</Link>
+          {me && (
+            <button type="button" onClick={alerts.press} className="underline-offset-4 hover:underline" title="alerts when your agent waits on you, or a friend pokes you">
+              {alerts.label}
+            </button>
+          )}
           <span role="status" className="chip-solid rounded-full px-2.5 py-1">{statusText}</span>
         </nav>
       </header>
 
-      {hour !== null && <PixelBurrow members={members} states={states} offset={offset} hour={hour} />}
+      {hour !== null && <PixelBurrow members={members} states={states} offset={offset} hour={hour} me={me} pokes={pokes} onPoke={poke} />}
 
       {status === 'not_found' ? (
         <Notice night={night} title="this burrow doesn't exist." body="check the link for typos, or start your own garden:" />

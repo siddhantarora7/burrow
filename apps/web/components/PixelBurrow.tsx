@@ -1,11 +1,11 @@
 'use client'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { bottomReserve, layoutGarden, pixelScale, tagGap, TIMING, type DeriveResult, type GardenLayout, type Member, type PetColor, type PetState, type Species } from '@burrow/core'
+import { bottomReserve, layoutGarden, pixelScale, POKE_GAP_MS, tagGap, TIMING, type DeriveResult, type GardenLayout, type Member, type PetColor, type PetState, type Species } from '@burrow/core'
 import { heartsAt, heartVisible, liveRipples, stepFly, stepHeart, stepLeaf, type Fly, type Heart, type Leaf, type Ripple } from '@/lib/pixel/ambient'
 import { hash, paletteAt, phaseAt, type Palette } from '@/lib/pixel/palette'
 import { bakeGlow, bakeGround, bakeLantern, bakeSky, sunPosition, type Buffer } from '@/lib/pixel/scene'
 import { colorsFor, FPS, FRAMES, GRID, petGrid, toneOf } from '@/lib/pixel/sprites'
-import { tagLabel, VERB } from '@/lib/status'
+import { tagLabel, VERB, waitedLine } from '@/lib/status'
 
 const BOT = 28
 const CX = 16
@@ -101,9 +101,13 @@ interface Props {
   /** serverNow - Date.now(), so "2m ago" uses the server's clock like derive does. */
   offset: number
   hour: number
+  /** The pet this browser speaks for (signed in), if any. */
+  me?: string | null
+  pokes?: ReadonlyArray<{ from: string; to: string; t: number }>
+  onPoke?: (petId: string) => void
 }
 
-export function PixelBurrow({ members, states, offset, hour }: Props) {
+export function PixelBurrow({ members, states, offset, hour, me = null, pokes = [], onPoke }: Props) {
   const screen = useScreen()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [hover, setHover] = useState<string | null>(null)
@@ -178,6 +182,15 @@ export function PixelBurrow({ members, states, offset, hour }: Props) {
       live.current.ripples.push({ x: L.pond.cx + side, y: L.pond.cy, born: performance.now() })
     })
   }, [members, L, offset])
+
+  // A poke makes its target hop on every screen in the burrow.
+  const seenPoke = useRef(0)
+  useEffect(() => {
+    for (const p of pokes) if (p.t > seenPoke.current) live.current.boops.set(p.to, performance.now())
+    seenPoke.current = Math.max(seenPoke.current, ...pokes.map((p) => p.t))
+  }, [pokes])
+  // Pokes you sent recently, so the tag can say so instead of offering another.
+  const [poked, setPoked] = useState<Record<string, number>>({})
 
   // Refresh "2m ago" style details once a minute.
   useEffect(() => {
@@ -315,6 +328,7 @@ export function PixelBurrow({ members, states, offset, hour }: Props) {
   if (!screen || !L) return null
   const S = screen.S
   const now = Date.now() + offset
+  const todayKey = new Date().toLocaleDateString('en-CA')
 
   const boop = (petId: string, i: number) => {
     const [x, y] = L.spots[i]!
@@ -366,6 +380,11 @@ export function PixelBurrow({ members, states, offset, hour }: Props) {
         const state = r?.state ?? 'sleep'
         const verb = r?.quiet ? 'quiet' : VERB[state]
         const open = hover === m.petId
+        // a signed-in friend can poke a waiting pet, once a minute
+        const pokable = !!onPoke && !!me && me !== m.petId && state === 'wave'
+        const justPoked = Date.now() - (poked[m.petId] ?? -Infinity) < POKE_GAP_MS
+        const info = [me === m.petId ? 'you' : null, detail(r, now), waitedLine(m.today, todayKey)].filter(Boolean).join(' · ')
+        const more = pokable ? `${info} · ${justPoked ? 'poked' : 'press to poke'}` : info
         return (
           <button
             key={m.petId}
@@ -378,13 +397,16 @@ export function PixelBurrow({ members, states, offset, hour }: Props) {
             onBlur={() => setHover(null)}
             onClick={() => {
               doneHint()
-              boop(m.petId, i)
+              if (pokable && !justPoked) {
+                onPoke(m.petId)
+                setPoked((p) => ({ ...p, [m.petId]: Date.now() }))
+              } else boop(m.petId, i)
             }}
-            aria-label={tagLabel(m.name, verb, detail(r, now))}
+            aria-label={tagLabel(m.name, verb, info, pokable && !justPoked ? 'poke' : 'boop')}
           >
             {m.name}
             <i>{verb}</i>
-            {open && <b className="tag-more">{detail(r, now)}</b>}
+            {open && <b className="tag-more">{more}</b>}
           </button>
         )
       })}
