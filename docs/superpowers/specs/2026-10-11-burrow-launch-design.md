@@ -46,6 +46,7 @@ The browser needs to know which pet is yours (for alerts) and to prove it (for p
 - A chip in the nav, shown only when signed in, toggles alerts: `alerts on` / `alerts off`. Turning them on asks for notification permission; if denied, the chime and title still work and the chip says `chime only`. The choice persists in localStorage.
 - No alert on page load for a pet that is already waving (only transitions), and none while the page is the focused, visible tab except the chime (you are looking at it).
 - Reduced motion does not affect alerts; muting is the chip.
+- Browsers keep Web Audio locked until the page gets a click or key press, and a second-screen tab is often reloaded and never touched. The first click or key anywhere on the page unlocks sound; until then, with alerts on, the chip reads `click for sound` so a silent chime is never a surprise. Notifications (once permitted) are not affected by this lock, so they still arrive.
 
 ## 6. Pokes
 
