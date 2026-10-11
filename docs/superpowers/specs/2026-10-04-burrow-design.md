@@ -147,7 +147,7 @@ Events: 120/min per pet (excess dropped with 429). Social: 1 per 10 s per sender
 
 ```ts
 type PetState = 'idle' | 'eat' | 'wave' | 'work' | 'sleep' | 'cheer'
-derive(input: { events: Ev[]; friendStops?: number[]; now: number }): { state: PetState; lastEventAt: number | null; nextChangeAt: number | null }
+derive(input: { events: Ev[]; friendStops?: number[]; now: number }): { state: PetState; quiet: boolean; lastEventAt: number | null; nextChangeAt: number | null }
 ```
 
 Events are grouped by `session`. Per session, the latest event decides its phase: `prompt`/`heartbeat`/`session_start` → running; `needs_input`/`error` → waiting; `stop` → done; `session_end` → ended. A running session with no event for 4 min is stale (treated as ended).
