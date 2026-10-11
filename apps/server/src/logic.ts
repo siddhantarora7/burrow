@@ -48,6 +48,23 @@ export function localDate(t: number, tz: string): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(t)
 }
 
+/** A one-time browser sign-in: `<petId>.<code>`, code 16 Crockford chars. */
+export const CLAIM_CODE_LEN = 16
+const CODE_RE = new RegExp(`^[0-9a-hjkmnp-tv-z]{${CLAIM_CODE_LEN}}$`)
+export interface Claim { hash: string; exp: number }
+
+export function parseClaim(s: unknown): { petId: string; code: string } | null {
+  if (typeof s !== 'string') return null
+  const [petId, code, ...rest] = s.split('.')
+  return rest.length === 0 && isId(petId) && code !== undefined && CODE_RE.test(code) ? { petId, code } : null
+}
+
+/** Unexpired claims, newest five. */
+export const pruneClaims = (claims: Claim[], now: number): Claim[] => capList(claims.filter((c) => c.exp > now), 5)
+
+/** The newest n items of a list kept oldest-first. */
+export const capList = <T>(xs: T[], n: number): T[] => xs.slice(Math.max(0, xs.length - n))
+
 export function json(body: unknown, status = 200, headers: HeadersInit = {}): Response {
   return new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json', ...headers } })
 }

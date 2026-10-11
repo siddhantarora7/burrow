@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Ev } from '@burrow/core'
-import { allowRate, localDate, pruneEvents, sha256Hex, validateHatch } from '../src/logic'
+import { allowRate, capList, localDate, parseClaim, pruneClaims, pruneEvents, sha256Hex, validateHatch } from '../src/logic'
 
 describe('sha256Hex', () => {
   it('matches the known vector', async () => {
@@ -62,5 +62,29 @@ describe('localDate', () => {
     const t = Date.UTC(2026, 9, 5, 3, 0) // 03:00 UTC on Oct 5 = Oct 4 in Denver
     expect(localDate(t, 'America/Denver')).toBe('2026-10-04')
     expect(localDate(t, 'UTC')).toBe('2026-10-05')
+  })
+})
+
+describe('parseClaim', () => {
+  it('splits a claim into pet and code', () => {
+    expect(parseClaim('abcdefgh12.0123456789abcdef')).toEqual({ petId: 'abcdefgh12', code: '0123456789abcdef' })
+  })
+  it.each(['abcdefgh12', 'abcdefgh12.0123', 'abcdefgh12.0123456789abcdefgh', 'short.0123456789abcdef', 'abcdefgh12.0123456789abcdeu', 42, null])('rejects %j', (c) => {
+    expect(parseClaim(c)).toBeNull()
+  })
+})
+
+describe('pruneClaims', () => {
+  it('drops expired claims and keeps the newest five', () => {
+    const claims = Array.from({ length: 8 }, (_, i) => ({ hash: `h${i}`, exp: 1000 + i }))
+    expect(pruneClaims(claims, 1001).map((c) => c.hash)).toEqual(['h3', 'h4', 'h5', 'h6', 'h7'])
+    expect(pruneClaims(claims, 1007).map((c) => c.hash)).toEqual([])
+  })
+})
+
+describe('capList', () => {
+  it('keeps the newest n', () => {
+    expect(capList([1, 2, 3, 4], 2)).toEqual([3, 4])
+    expect(capList([1], 2)).toEqual([1])
   })
 })

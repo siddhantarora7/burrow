@@ -1,5 +1,5 @@
 import { DurableObject } from 'cloudflare:workers'
-import { MAX_MEMBERS, type BurrowInfo, type Ev, type Member, type MemberProfile, type ServerMsg, type Today } from '@burrow/core'
+import { canPoke, MAX_MEMBERS, parseToken, type BurrowInfo, type ClientMsg, type Ev, type Member, type MemberProfile, type ServerMsg, type Today } from '@burrow/core'
 import { pruneEvents } from './logic'
 
 export class BurrowDO extends DurableObject<Env> {
@@ -66,8 +66,33 @@ export class BurrowDO extends DurableObject<Env> {
     return new Response(null, { status: 101, webSocket: client })
   }
 
-  override async webSocketMessage(): Promise<void> {
-    // Milestone 1 clients send nothing but auto-answered pings.
+  override async webSocketMessage(ws: WebSocket, data: string | ArrayBuffer): Promise<void> {
+    let msg: ClientMsg
+    try {
+      msg = JSON.parse(typeof data === 'string' ? data : new TextDecoder().decode(data)) as ClientMsg
+    } catch {
+      return
+    }
+    if (msg.t === 'hello') {
+      // A web token proves which pet this browser speaks for; the attachment survives hibernation.
+      const tok = parseToken(msg.token)
+      const me = tok && (await this.env.PET.get(this.env.PET.idFromName(tok.petId)).checkWeb(tok.secret)) ? tok.petId : null
+      ws.serializeAttachment({ me })
+      ws.send(JSON.stringify({ t: 'welcome', me } satisfies ServerMsg))
+      return
+    }
+    if (msg.t === 'poke' && typeof msg.to === 'string') {
+      const from = (ws.deserializeAttachment() as { me?: string | null } | null)?.me ?? null
+      const now = Date.now()
+      const members = (await this.ctx.storage.get<Member[]>('members')) ?? []
+      const pokes = (await this.ctx.storage.get<Record<string, number>>('pokes')) ?? {}
+      const key = `${from}>${msg.to}`
+      if (!canPoke({ from, to: msg.to, members, now, lastPokeAt: pokes[key] })) return
+      // keep only recent entries so the map stays small
+      const fresh = Object.fromEntries(Object.entries(pokes).filter(([, t]) => now - t < 60_000))
+      await this.ctx.storage.put('pokes', { ...fresh, [key]: now })
+      this.broadcast({ t: 'poke', from: from!, to: msg.to, serverNow: now })
+    }
   }
 
   override async webSocketClose(ws: WebSocket, code: number): Promise<void> {

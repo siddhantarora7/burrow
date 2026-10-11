@@ -1,5 +1,5 @@
 import { burrowName, isId, newId, parseToken, SECRET_LEN } from '@burrow/core'
-import { json, sha256Hex, validateHatch } from './logic'
+import { json, parseClaim, sha256Hex, validateHatch } from './logic'
 
 export { PetDO } from './pet'
 export { BurrowDO } from './burrow'
@@ -46,7 +46,8 @@ export default {
       if (!invited) await b.create({ id: burrowId, name: burrowName(profile.name), env: 'garden', createdAt: now, createdBy: petId })
       await b.join(profile, now)
       await pet(env, petId).addBurrow(burrowId)
-      return json({ petId, token: `${petId}.${secret}`, burrowId }, 201, cors)
+      const claim = await pet(env, petId).newClaim(now)
+      return json({ petId, token: `${petId}.${secret}`, burrowId, claim }, 201, cors)
     }
 
     if (req.method === 'POST' && url.pathname === '/v1/events') {
@@ -56,6 +57,23 @@ export default {
       if (r.status === 204) return new Response(null, { status: 204 })
       if (r.status === 400) return json({ error: r.error }, 400)
       return json({ error: r.status === 401 ? 'bad token' : 'slow down' }, r.status)
+    }
+
+    // A fresh sign-in link for `npx burrow-pets open`.
+    if (req.method === 'POST' && url.pathname === '/v1/claims') {
+      const tok = bearer(req)
+      if (!tok || !(await pet(env, tok.petId).auth(tok.secret))) return json({ error: 'bad token' }, 401)
+      return json({ claim: await pet(env, tok.petId).newClaim(now) }, 201)
+    }
+
+    // The browser trades a one-time claim from the link's fragment for a web token.
+    if (req.method === 'POST' && url.pathname === '/v1/claim') {
+      const body = (await readJson(req)) as { claim?: unknown } | undefined
+      const c = parseClaim(body?.claim)
+      if (!c) return json({ error: 'bad claim' }, 400, cors)
+      const r = await pet(env, c.petId).redeem(c.code, now)
+      if (!r) return json({ error: 'this sign-in link was already used or has expired' }, 401, cors)
+      return json({ petId: c.petId, token: r.token }, 200, cors)
     }
 
     const join = url.pathname.match(/^\/v1\/burrows\/([^/]+)\/join$/)

@@ -1,6 +1,6 @@
 import { DurableObject } from 'cloudflare:workers'
-import { emptyLedger, foldWait, parseWireEvent, type Ev, type MemberProfile, type Today, type WaitLedger } from '@burrow/core'
-import { allowRate, localDate, sha256Hex, type Hatch } from './logic'
+import { CLAIM_TTL_MS, emptyLedger, foldWait, newId, parseWireEvent, SECRET_LEN, type Ev, type MemberProfile, type Today, type WaitLedger } from '@burrow/core'
+import { allowRate, capList, CLAIM_CODE_LEN, localDate, pruneClaims, sha256Hex, type Claim, type Hatch } from './logic'
 
 interface Profile extends MemberProfile {
   tz: string
@@ -16,6 +16,7 @@ export type EventResult = { status: 204 } | { status: 400; error: string } | { s
 
 export class PetDO extends DurableObject<Env> {
   private stamps: number[] = []
+  private redeemStamps: number[] = []
 
   async hatch(petId: string, h: Hatch, secretHash: string, now: number): Promise<MemberProfile> {
     const profile: Profile = { petId, name: h.name, species: h.species, color: h.color, tz: h.tz, createdAt: now }
@@ -35,6 +36,35 @@ export class PetDO extends DurableObject<Env> {
     if (!tokens.includes(await sha256Hex(secret))) return null
     const p = (await this.ctx.storage.get<Profile>('profile'))!
     return { petId: p.petId, name: p.name, species: p.species, color: p.color }
+  }
+
+  /** A one-time browser sign-in, valid for 10 minutes: `<petId>.<code>`. Only its hash is kept. */
+  async newClaim(now: number): Promise<string> {
+    const p = (await this.ctx.storage.get<Profile>('profile'))!
+    const code = newId(CLAIM_CODE_LEN)
+    const claims = pruneClaims((await this.ctx.storage.get<Claim[]>('claims')) ?? [], now)
+    await this.ctx.storage.put('claims', capList([...claims, { hash: await sha256Hex(code), exp: now + CLAIM_TTL_MS }], 5))
+    return `${p.petId}.${code}`
+  }
+
+  /** Spends a claim once and mints a web token, which can say hello and poke but never post events. */
+  async redeem(code: string, now: number): Promise<{ token: string } | null> {
+    const rate = allowRate(this.redeemStamps, now, 10, 60_000)
+    this.redeemStamps = rate.stamps
+    if (!rate.ok) return null
+    const claims = pruneClaims((await this.ctx.storage.get<Claim[]>('claims')) ?? [], now)
+    const hash = await sha256Hex(code)
+    if (!claims.some((c) => c.hash === hash)) return null
+    const p = await this.ctx.storage.get<Profile>('profile')
+    if (!p) return null
+    const secret = newId(SECRET_LEN)
+    const web = (await this.ctx.storage.get<string[]>('webTokens')) ?? []
+    await this.ctx.storage.put({ claims: claims.filter((c) => c.hash !== hash), webTokens: capList([...web, await sha256Hex(secret)], 10) })
+    return { token: `${p.petId}.${secret}` }
+  }
+
+  async checkWeb(secret: string): Promise<boolean> {
+    return ((await this.ctx.storage.get<string[]>('webTokens')) ?? []).includes(await sha256Hex(secret))
   }
 
   async addBurrow(burrowId: string): Promise<void> {
