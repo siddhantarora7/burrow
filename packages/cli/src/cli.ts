@@ -12,8 +12,11 @@ import { removeHooks, SettingsError, updateSettingsFile } from './settings'
 import { bold, dim, FACE, green, hookTable, privacyBlock } from './ui'
 
 const here = dirname(fileURLToPath(import.meta.url))
-const DEFAULT_API = 'http://127.0.0.1:8787'
-const DEFAULT_WEB = 'http://localhost:3000'
+// baked in by build.mjs: production for the published package, the dev servers otherwise
+declare const __BURROW_API__: string
+declare const __BURROW_WEB__: string
+const DEFAULT_API = __BURROW_API__
+const DEFAULT_WEB = __BURROW_WEB__
 
 const { positionals, values } = parseArgs({
   allowPositionals: true,

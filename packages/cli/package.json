@@ -9,6 +9,7 @@
   "engines": { "node": ">=20" },
   "scripts": {
     "build": "node build.mjs",
+    "prepublishOnly": "node build.mjs",
     "typecheck": "tsc -p tsconfig.json"
   },
   "devDependencies": {
