@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { PET_STATES, SPECIES } from '@burrow/core'
+import { DEFAULT_COLOR, PET_COLORS, PET_STATES, SPECIES, type PetColor } from '@burrow/core'
 import { paletteAt, phaseAt } from '../lib/pixel/palette'
-import { C, FRAMES, GRID, petGrid } from '../lib/pixel/sprites'
+import { C, colorsFor, FRAMES, GRID, PET_INK, PET_TONES, petGrid, toneOf } from '../lib/pixel/sprites'
 
 describe('phaseAt', () => {
   it('is day at noon, night at 22:00, dusk around 18:40', () => {
@@ -117,5 +117,34 @@ describe('round-two fixes', () => {
         }))
       }
     }
+  })
+})
+
+describe('pet colours', () => {
+  const lum = (hex: string) => {
+    const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4))
+    return 0.2126 * r! + 0.7152 * g! + 0.0722 * b!
+  }
+  const contrast = (a: string, b: string) => (Math.max(lum(a), lum(b)) + 0.05) / (Math.min(lum(a), lum(b)) + 0.05)
+  const colors = Object.keys(PET_COLORS) as PetColor[]
+
+  it('the body takes the member colour, not the species', () => {
+    expect(colorsFor('sora')[C.B]).toBe(PET_TONES.sora.base)
+    expect(colorsFor('fuji')[C.H]).toBe(PET_TONES.fuji.hi)
+    expect(colorsFor('yuzu')[C.S]).toBe(PET_TONES.yuzu.shade)
+  })
+  it('falls back to the species colour when a member has none or an unknown one', () => {
+    expect(toneOf('tofu', 'sora')).toBe('sora')
+    for (const s of SPECIES) {
+      expect(toneOf(s, undefined)).toBe(DEFAULT_COLOR[s])
+      expect(toneOf(s, 'neon')).toBe(DEFAULT_COLOR[s])
+    }
+  })
+  it.each(colors)('%s: brighter than the night garden and clear of its own outline (Brighter Pet Rule)', (c) => {
+    const t = PET_TONES[c]
+    expect(lum(t.hi)).toBeGreaterThan(lum(t.base))
+    expect(lum(t.base)).toBeGreaterThan(lum(t.shade))
+    expect(contrast(t.base, paletteAt(22).gravel)).toBeGreaterThanOrEqual(4.5)
+    expect(contrast(t.shade, PET_INK)).toBeGreaterThanOrEqual(4.5)
   })
 })

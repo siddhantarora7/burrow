@@ -1,4 +1,4 @@
-import type { PetState, Species } from '@burrow/core'
+import { DEFAULT_COLOR, isPetColor, type PetColor, type PetState, type Species } from '@burrow/core'
 
 // Pets are rasterised from simple shapes into a 32x32 grid of colour codes, then shaded,
 // outlined, given a face and props. Pure: the canvas side only maps codes to colours.
@@ -13,15 +13,22 @@ export const FRAMES: Record<PetState, number> = { idle: 4, eat: 4, wave: 2, work
 export const FPS: Record<PetState, number> = { idle: 3, eat: 5, wave: 4, work: 6, sleep: 1.5, cheer: 8 }
 
 export const PET_INK = '#2a2033'
-export const PET_TONES: Record<Species, { base: string; hi: string; shade: string }> = {
-  mochi: { base: '#f4a3bc', hi: '#fcd2df', shade: '#d77898' },
-  tofu: { base: '#9fc36a', hi: '#c8e196', shade: '#729744' },
-  onigiri: { base: '#f7f2e6', hi: '#ffffff', shade: '#d6cdb9' },
+/** Body tones for each pet colour: fixed, saturated, never relit by the clock. */
+export const PET_TONES: Record<PetColor, { base: string; hi: string; shade: string }> = {
+  sakura: { base: '#f4a3bc', hi: '#fcd2df', shade: '#d77898' },
+  matcha: { base: '#9fc36a', hi: '#c8e196', shade: '#729744' },
+  rice: { base: '#f7f2e6', hi: '#ffffff', shade: '#d6cdb9' },
+  yuzu: { base: '#f5c94f', hi: '#fbe59a', shade: '#d49a2e' },
+  sora: { base: '#a6cbef', hi: '#d3e7fb', shade: '#7099d1' },
+  fuji: { base: '#c3aee6', hi: '#e3d7f7', shade: '#9a80ca' },
 }
 
-/** Colour for each code, for a given species. */
-export function colorsFor(species: Species): Record<number, string> {
-  const t = PET_TONES[species]
+/** The member's own colour, or the species default if it is missing or unknown. */
+export const toneOf = (species: Species, color: unknown): PetColor => (isPetColor(color) ? color : DEFAULT_COLOR[species])
+
+/** Colour for each code, for a given pet colour. */
+export function colorsFor(color: PetColor): Record<number, string> {
+  const t = PET_TONES[color]
   return {
     [C.O]: PET_INK, [C.B]: t.base, [C.H]: t.hi, [C.S]: t.shade, [C.F]: PET_INK, [C.W]: '#ffffff', [C.P]: '#ff8fa8',
     [C.N]: '#2f3b30', [C.L1]: '#dfe4ec', [C.L2]: '#9aa3b2', [C.A]: '#e2383f', [C.K1]: '#f0c64e', [C.K2]: '#7fc4e8',

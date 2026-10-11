@@ -36,7 +36,7 @@ function Mark() {
     if (!c) return
     const ctx = c.getContext('2d')!
     ctx.clearRect(0, 0, 32, 32)
-    ctx.drawImage(spriteCanvas('mochi', 'idle', 0, false), 0, 0)
+    ctx.drawImage(spriteCanvas('mochi', 'sakura', 'idle', 0, false), 0, 0)
   }, [])
   return <canvas ref={ref} width={32} height={32} className="h-8 w-8 [image-rendering:pixelated]" aria-hidden="true" />
 }
