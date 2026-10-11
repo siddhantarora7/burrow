@@ -55,6 +55,7 @@ export function petGrid(species: Species, state: PetState, frame: number, quiet 
   let arm: 'out' | 'up' | null = null, armL: 'up' | null = null
   if ((state === 'idle' && frame % 4 === 1) || (state === 'sleep' && frame % 3 === 1)) { sx = 1.06; sy = 0.92 }
   if (state === 'eat' && frame === 2) { sx = 1.12; sy = 0.86 }
+  if (state === 'work' && frame === 1) { sx = 1.04; sy = 0.94 } // even busy pets breathe
   if (state === 'cheer') {
     if (frame === 0) { sx = 1.12; sy = 0.86 }
     dy = [0, -3, -5, -2][frame] ?? 0
@@ -127,11 +128,13 @@ export function petGrid(species: Species, state: PetState, frame: number, quiet 
   const put = (sprite: string[], ox: number, oy: number, map: Record<string, Code>) =>
     sprite.forEach((row, y) => [...row].forEach((ch, x) => { if (ch !== '.' && out[oy + y] && ox + x >= 0 && ox + x < GRID) out[oy + y]![ox + x] = map[ch]! }))
   if (state === 'work') {
-    put(['OOOOOOOOOOOO', 'O1111111111O', 'O1111221111O', 'O1111111111O', 'OOOOOOOOOOOO', '.O22222222O.'], CX - 6, BOT - 5, { O: C.O, 1: C.L1, 2: C.L2 })
+    // A low lid (4 rows) keeps a band of body colour between the eyes and the laptop.
+    // the lid's top edge is grey, not ink, so it never reads as a wide mouth from across the room
+    put(['2222222222222'.slice(1), 'O1111221111O', 'O1111111111O', 'OOOOOOOOOOOO', '.O22222222O.'], CX - 6, BOT - 3, { O: C.O, 1: C.L1, 2: C.L2 })
     const paw = dozing ? 0 : frame % 2
-    // paws rest on the lid's corners, clear of the eyes
-    put(['SS'], CX - 7, BOT - 6 - paw, { S: C.S })
-    put(['SS'], CX + 5, BOT - 6 - (dozing ? 0 : 1 - paw), { S: C.S })
+    // paws tap the lid's top edge, between the blush and the mouth
+    put(['SS'], CX - 4, BOT - 3 - paw, { S: C.S })
+    put(['SS'], CX + 3, BOT - 3 - (dozing ? 0 : 1 - paw), { S: C.S })
     if (dozing) put(['ZZ', '.Z', 'ZZ'], 24, 9 - (frame % 2), { Z: C.Z })
   }
   if (state === 'wave') put(['.OOOO.', 'OWWAWO', 'OWWAWO', 'OWWWWO', 'OWWAWO', '.OOOO.', '.O....'], 23, 3 + (frame % 2), { O: C.O, W: C.W, A: C.A })

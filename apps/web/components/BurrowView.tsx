@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { PixelBurrow, spriteCanvas, VERB } from './PixelBurrow'
 import { paletteAt, phaseAt } from '@/lib/pixel/palette'
 import { useBurrow } from '@/lib/useBurrow'
+import type { BurrowState } from '@/lib/burrowState'
 import { usePetStates } from '@/lib/usePetStates'
 import { burrowTitle } from '@/lib/status'
 
@@ -41,7 +42,11 @@ function Mark() {
 }
 
 export function BurrowView({ id }: { id: string }) {
-  const { status, burrow, members, offset } = useBurrow(id)
+  return <BurrowScreen {...useBurrow(id)} />
+}
+
+/** The garden page for any source of members: the live WebSocket, or the synthetic demo. */
+export function BurrowScreen({ status, burrow, members, offset, label }: BurrowState & { label?: string }) {
   const states = usePetStates(members, offset)
   const hour = useHour()
 
@@ -59,7 +64,7 @@ export function BurrowView({ id }: { id: string }) {
         <span className={`chip ${night ? 'chip-night' : ''} flex items-center gap-1.5 rounded-full py-0.5 pl-1.5 pr-4 font-display text-lg font-bold`}>
           <Mark />
           burrow
-          {burrow && <span className="ml-1 hidden text-sm font-medium opacity-70 sm:inline">{burrow.name}</span>}
+          {(label ?? burrow?.name) && <span className="ml-1 hidden text-sm font-medium opacity-70 sm:inline">{label ?? burrow?.name}</span>}
         </span>
         <nav className={`chip ${night ? 'chip-night' : ''} ml-auto flex items-center gap-3 rounded-full py-1 pl-3 pr-1 text-xs font-medium`}>
           <Link href="/privacy" className="underline-offset-4 hover:underline">privacy</Link>

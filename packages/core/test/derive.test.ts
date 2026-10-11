@@ -108,6 +108,19 @@ describe('derive: delivery order and clock skew', () => {
   })
 })
 
+describe('derive: quiet with several sessions', () => {
+  it('one silent session and one active session: working, not quiet', () => {
+    const events = [ev('prompt', T0, 'aaaaaaaaaaaa'), ev('prompt', T0, 'bbbbbbbbbbbb'), ev('heartbeat', T0 + 150 * S, 'bbbbbbbbbbbb')]
+    expect(at(events, T0 + 3 * MIN)).toMatchObject({ state: 'work', quiet: false })
+  })
+  it('quiet hands over to idle exactly when the run goes stale', () => {
+    const events = [ev('prompt', T0)]
+    const r = at(events, T0 + 3 * MIN)
+    expect(r).toMatchObject({ state: 'work', quiet: true, nextChangeAt: T0 + 4 * MIN })
+    expect(at(events, T0 + 4 * MIN)).toMatchObject({ state: 'idle', quiet: false })
+  })
+})
+
 describe('derive: cheer', () => {
   it('cheers for 3 s when a friend ships while idle or working', () => {
     expect(at([ev('session_start', T0)], T0 + 10 * S, [T0 + 9 * S]).state).toBe('cheer')
@@ -152,5 +165,31 @@ describe('derive: nextChangeAt is never late (property)', () => {
         expect(later.quiet, `trial ${trial} quiet at +${p - now}ms`).toBe(r.quiet)
       }
     }
-  })
+  }, 30_000)
+  it('holds for dense, heartbeat-heavy runs where work and quiet actually happen', () => {
+    const rand = rng(7)
+    const DENSE: EventType[] = ['prompt', 'heartbeat', 'heartbeat', 'heartbeat', 'needs_input', 'stop']
+    let sawQuiet = 0, sawLoud = 0
+    for (let trial = 0; trial < 3000; trial++) {
+      const events: Ev[] = []
+      let t = T0
+      const n = 1 + Math.floor(rand() * 8)
+      for (let i = 0; i < n; i++) {
+        t += Math.floor(rand() * 5 * MIN)
+        events.push(ev(DENSE[Math.floor(rand() * DENSE.length)]!, t, rand() < 0.5 ? 'aaaaaaaaaaaa' : 'bbbbbbbbbbbb'))
+      }
+      const now = t + Math.floor(rand() * 6 * MIN)
+      const r = at(events, now)
+      if (r.quiet) sawQuiet++
+      else if (r.state === 'work') sawLoud++
+      const horizon = r.nextChangeAt ?? now + 24 * 60 * MIN
+      for (const p of [now + 1, Math.floor((now + horizon) / 2), horizon - 1]) {
+        const later = at(events, p)
+        expect(later.state, `trial ${trial}`).toBe(r.state)
+        expect(later.quiet, `trial ${trial}`).toBe(r.quiet)
+      }
+    }
+    expect(sawQuiet).toBeGreaterThan(100)
+    expect(sawLoud).toBeGreaterThan(100)
+  }, 30_000)
 })

@@ -76,3 +76,22 @@ describe('scene baking', () => {
     expect(lit(12)).not.toBe('#ffd27a')
   })
 })
+
+describe('the working pose (the state people see most)', () => {
+  it.each(SPECIES)('%s: the face stays readable above the laptop', (species) => {
+    for (const f of [0, 1]) {
+      const g = petGrid(species, 'work', f, false)
+      const rows = (v: number) => g.map((r, y) => (r.includes(v as never) ? y : -1)).filter((y) => y >= 0)
+      const lidTop = Math.min(...rows(C.L1)) - 1 // the lid outline sits just above its first light row
+      const eyeBottom = Math.max(...g.map((r, y) => (r.some((v, x) => v === C.F && x < 15) ? y : -1)).filter((y) => y < lidTop))
+      expect(rows(C.W).length, `${species} f${f} glints`).toBeGreaterThanOrEqual(1)
+      expect(g.flat().filter((v) => v === C.W)).toHaveLength(2)
+      expect(lidTop - eyeBottom, `${species} f${f}: body between eyes and lid`).toBeGreaterThanOrEqual(2)
+      expect(g.flat().some((v) => v === C.P), `${species} f${f}: blush`).toBe(true)
+    }
+  })
+  it('breathes: one frame squashes, like idle does', () => {
+    const height = (g: number[][]) => g.findIndex((r) => r.some((v) => v !== C.E))
+    expect(height(petGrid('mochi', 'work', 0))).not.toBe(height(petGrid('mochi', 'work', 1)))
+  })
+})

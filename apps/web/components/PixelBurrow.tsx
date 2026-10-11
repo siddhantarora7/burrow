@@ -1,8 +1,8 @@
 'use client'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { layoutGarden, TIMING, type DeriveResult, type GardenLayout, type Member, type PetState, type Species } from '@burrow/core'
+import { layoutGarden, pixelScale, tagGap, TIMING, type DeriveResult, type GardenLayout, type Member, type PetState, type Species } from '@burrow/core'
 import { hash, paletteAt, phaseAt, type Palette } from '@/lib/pixel/palette'
-import { bakeGround, bakeSky, sunPosition, type Buffer } from '@/lib/pixel/scene'
+import { bakeGlow, bakeGround, bakeLantern, bakeSky, sunPosition, type Buffer } from '@/lib/pixel/scene'
 import { colorsFor, FPS, FRAMES, GRID, petGrid } from '@/lib/pixel/sprites'
 
 const BOT = 28
@@ -12,19 +12,20 @@ export const VERB: Record<PetState, string> = {
   idle: 'hanging out', eat: 'eating', wave: 'needs you', work: 'working', sleep: 'asleep', cheer: 'cheering',
 }
 
-function ago(ms: number) {
+function span(ms: number) {
   const m = Math.max(0, Math.round(ms / 60_000))
-  return m < 1 ? 'just now' : m < 60 ? `${m}m ago` : `${Math.round(m / 60)}h ago`
+  return m < 1 ? 'a moment' : m < 60 ? `${m}m` : `${Math.round(m / 60)}h`
 }
+const ago = (ms: number) => (ms < 60_000 ? 'just now' : `${span(ms)} ago`)
 
 /** Detail shown on hover or focus: what the agent did, and when. */
 function detail(r: DeriveResult | undefined, now: number): string {
   if (!r?.lastEventAt) return 'no activity yet'
   const since = now - r.lastEventAt
-  if (r.quiet) return `quiet for ${ago(since).replace(' ago', '')}, maybe interrupted`
+  if (r.quiet) return `quiet for ${span(since)}, maybe interrupted`
   switch (r.state) {
     case 'eat': return 'just finished a task'
-    case 'wave': return `waiting on you since ${ago(since)}`
+    case 'wave': return `waiting on you for ${span(since)}`
     case 'work': return `on a long run, last update ${ago(since)}`
     case 'cheer': return 'a friend shipped'
     case 'sleep': return `last seen ${ago(since)}`
@@ -62,20 +63,39 @@ function toCanvas(b: Buffer): HTMLCanvasElement {
 }
 
 // ---------- screen size in logical pixels ----------
+// Re-laying out the garden re-bakes it, so resizes settle first, unchanged sizes are ignored, and on
+// touch screens the URL bar showing or hiding (a small height-only change) never moves the garden.
 function useScreen() {
   const [s, setS] = useState<{ S: number; W: number; H: number } | null>(null)
   useEffect(() => {
+    const touch = matchMedia('(pointer: coarse)').matches
+    let timer: ReturnType<typeof setTimeout> | undefined
     const measure = () => {
-      const vw = innerWidth, vh = innerHeight
-      const S = Math.max(2, vw > vh ? Math.round(vh / 190) : Math.round(vw / 130))
-      setS({ S, W: Math.ceil(vw / S), H: Math.ceil(vh / S) })
+      const vw = document.documentElement.clientWidth, vh = innerHeight
+      const S = pixelScale(vw, vh)
+      // width rounds up (overflow is clipped); height rounds down so the page never scrolls by a pixel
+      const next = { S, W: Math.ceil(vw / S), H: Math.floor(vh / S) }
+      setS((prev) => {
+        if (prev && prev.S === next.S && prev.W === next.W && prev.H === next.H) return prev
+        if (prev && touch && prev.W === next.W && Math.abs(prev.H - next.H) / prev.H < 0.15) return prev
+        return next
+      })
+    }
+    const onResize = () => {
+      clearTimeout(timer)
+      timer = setTimeout(measure, 120)
     }
     measure()
-    addEventListener('resize', measure)
-    return () => removeEventListener('resize', measure)
+    addEventListener('resize', onResize)
+    return () => {
+      clearTimeout(timer)
+      removeEventListener('resize', onResize)
+    }
   }, [])
   return s
 }
+
+const HINT_KEY = 'burrow:hint-done'
 
 interface Props {
   members: Member[]
@@ -91,11 +111,40 @@ export function PixelBurrow({ members, states, offset, hour }: Props) {
   const [hover, setHover] = useState<string | null>(null)
   const [, tick] = useState(0)
 
-  const L: GardenLayout | null = useMemo(() => (screen ? layoutGarden(screen.W, screen.H, members.length) : null), [screen, members.length])
+  const L: GardenLayout | null = useMemo(() => (screen ? layoutGarden(screen.W, screen.H, members.length, tagGap(screen.S)) : null), [screen, members.length])
   const hourKey = Math.round(hour * 10) / 10
   const pal: Palette = useMemo(() => paletteAt(hourKey), [hourKey])
   const phase = useMemo(() => phaseAt(hourKey), [hourKey])
-  const layers = useMemo(() => (L ? { sky: toCanvas(bakeSky(L, pal, phase)), ground: toCanvas(bakeGround(L, pal, phase)) } : null), [L, pal, phase])
+  const layers = useMemo(
+    () =>
+      L
+        ? {
+            sky: toCanvas(bakeSky(L, pal, phase)),
+            ground: toCanvas(bakeGround(L, pal, phase)),
+            lantern: toCanvas(bakeLantern(L, pal, phase)),
+            glow: toCanvas(bakeGlow(26, 20, '#ffd27a', 0.75)),
+          }
+        : null,
+    [L, pal, phase],
+  )
+
+  // A one-time cue that the garden answers back; gone after the first boop or pond tap.
+  const [hint, setHint] = useState(false)
+  useEffect(() => {
+    try {
+      setHint(localStorage.getItem(HINT_KEY) !== '1')
+    } catch {
+      setHint(true)
+    }
+  }, [])
+  const doneHint = () => {
+    setHint(false)
+    try {
+      localStorage.setItem(HINT_KEY, '1')
+    } catch {
+      // private mode: the hint simply comes back next visit
+    }
+  }
 
   // Mutable animation state lives in a ref so the loop never re-renders React.
   const live = useRef({
@@ -145,17 +194,6 @@ export function PixelBurrow({ members, states, offset, hour }: Props) {
     const sun = sunPosition(L)
     const { cx, cy, rx, ry } = L.pond
     const inPond = (x: number, y: number) => ((x - cx) / (rx - 1)) ** 2 + ((y - cy) / (ry - 1)) ** 2 <= 1
-    // Soft light or shadow in stacked translucent bands, every edge on the pixel grid.
-    const glow = (gx: number, gy: number, grx: number, gry: number, color: string, strength: number) => {
-      ctx.fillStyle = color
-      for (const [band, a] of [[1, 0.35], [0.6, 0.3], [0.3, 0.35]] as const) {
-        ctx.globalAlpha = a * strength
-        for (let y = Math.floor(gy - gry); y <= gy + gry; y++)
-          for (let x = Math.floor(gx - grx); x <= gx + grx; x++)
-            if (((x - gx) / grx) ** 2 + ((y - gy) / gry) ** 2 <= band) ctx.fillRect(x, y, 1, 1)
-      }
-      ctx.globalAlpha = 1
-    }
     const HEART = ['.R.R.', 'RRRRR', 'RRRRR', '.RRR.', '..R..']
 
     let raf = 0
@@ -216,9 +254,14 @@ export function PixelBurrow({ members, states, offset, hour }: Props) {
         }
       }
       if (phase.night) {
-        const fl = 0.85 + Math.sin(now / 90) * 0.1 + Math.sin(now / 37) * 0.05
-        glow(L.lantern.x, L.lantern.y - 13, 22, 16, '#ffd27a', 0.45 * fl)
-        glow(L.lantern.x, L.lantern.y + 1, 16, 4, '#ffd27a', 0.5 * fl)
+        // additive, dithered halo; the lantern is redrawn on top so its silhouette and window survive
+        const fl = reduce ? 0.9 : 0.85 + Math.sin(now / 90) * 0.1 + Math.sin(now / 37) * 0.05
+        ctx.globalCompositeOperation = 'lighter'
+        ctx.globalAlpha = 0.38 * fl
+        ctx.drawImage(layers.glow, L.lantern.x - 26, L.lantern.y - 12 - 20)
+        ctx.globalAlpha = 1
+        ctx.globalCompositeOperation = 'source-over'
+        ctx.drawImage(layers.lantern, 0, 0)
       }
 
       // pets, back to front
@@ -230,7 +273,6 @@ export function PixelBurrow({ members, states, offset, hour }: Props) {
         const f = reduce ? 0 : Math.floor((now / 1000) * FPS[state] + i * 1.7) % FRAMES[state]
         const boopT = (now - (st.boops.get(m.petId) ?? -1e9)) / 1000
         const hop = boopT < 0.45 ? Math.round(Math.sin((boopT / 0.45) * Math.PI) * 5) : 0
-        glow(x, y, hop ? 6 : 9, 2, '#1b1426', 0.45)
         ctx.drawImage(spriteCanvas(m.species, state, f, !!r?.quiet), x - CX, y - BOT - 1 - hop)
         if (st.hover === m.petId) {
           // a soft selection ring on the stone
@@ -297,7 +339,8 @@ export function PixelBurrow({ members, states, offset, hour }: Props) {
         width={L.width}
         height={L.height}
         className={`absolute inset-0 [image-rendering:pixelated] ${hover ? 'cursor-pointer' : ''}`}
-        style={{ width: L.width * S, height: L.height * S }}
+        // own compositing layer: the frosted chrome above must not re-blur it every frame
+        style={{ width: L.width * S, height: L.height * S, willChange: 'transform' }}
         aria-hidden="true"
         onMouseMove={(e) => {
           const [mx, my] = local(e)
@@ -308,8 +351,12 @@ export function PixelBurrow({ members, states, offset, hour }: Props) {
         onClick={(e) => {
           const [mx, my] = local(e)
           const i = petAt(mx, my)
-          if (i >= 0) return boop(members[i]!.petId, i)
+          if (i >= 0) {
+            doneHint()
+            return boop(members[i]!.petId, i)
+          }
           if (onPond(mx, my)) {
+            doneHint()
             live.current.ripples.push({ x: Math.round(mx), y: Math.round(my), t: 0 })
             live.current.koi.forEach((k) => (k.speed *= 3))
             setTimeout(() => live.current.koi.forEach((k) => (k.speed /= 3)), 900)
@@ -333,7 +380,10 @@ export function PixelBurrow({ members, states, offset, hour }: Props) {
             onMouseLeave={() => setHover(null)}
             onFocus={() => setHover(m.petId)}
             onBlur={() => setHover(null)}
-            onClick={() => boop(m.petId, i)}
+            onClick={() => {
+              doneHint()
+              boop(m.petId, i)
+            }}
             aria-label={`${m.name} is ${verb}: ${detail(r, now)}. Press to boop.`}
           >
             {m.name}
@@ -342,6 +392,11 @@ export function PixelBurrow({ members, states, offset, hour }: Props) {
           </button>
         )
       })}
+      {hint && members.length > 0 && (
+        <p className={`hint chip ${phase.night ? 'chip-night' : ''} fixed bottom-[4.5rem] left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-full px-4 py-2 text-xs font-medium sm:bottom-4 sm:left-auto sm:right-6 sm:translate-x-0`}>
+          tap a pet to boop it, or tap the pond
+        </p>
+      )}
     </div>
   )
 }

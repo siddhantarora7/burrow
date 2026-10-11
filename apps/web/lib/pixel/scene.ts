@@ -162,7 +162,7 @@ export function bakeGround(L: GardenLayout, pal: Palette, phase: Phase): Buffer 
     } else blob(b, bx, L.gravelTop + 1, 6 + Math.round(kind * 6), 4 + Math.round(kind * 2), pal.bush, pal.bushH, pal.mossD, 30 + bx, kind > 0.55 ? pal.bloom : undefined)
   }
   const moss = L.portrait
-    ? [[W * 0.14, L.gravelTop + 8, 14, 4], [W * 0.62, H - 8, 18, 4]]
+    ? [[W * 0.14, L.gravelTop + 8, 14, 4], [W * 0.9, H - 30, 14, 4]]
     : [[W * 0.05, L.pond.cy + 10, 16, 5], [W * 0.95, H - 12, 18, 5], [W * 0.52, H - 5, 14, 3]]
   for (const [x, y, rx, ry] of moss) if (!L.spots.some(([sx, sy]) => Math.abs(sx - x!) < 20 && Math.abs(sy - y!) < 10)) blob(b, Math.round(x!), Math.round(y!), rx!, ry!, pal.moss, pal.mossH, pal.mossD, 21)
   // pond: stone rim, water with a reflected-sky dither, lily pad
@@ -193,9 +193,38 @@ export function bakeGround(L: GardenLayout, pal: Palette, phase: Phase): Buffer 
         else if (side <= 1) px(b, x, y, pal.stoneD)
       }
   }
-  // stone lantern, its window lit at night
+  // dithered contact shadows where each pet stands
+  const shade = mix(pal.stoneD, '#1b1426', 0.45)
+  for (const [sx, sy] of L.spots)
+    for (let y = sy - 2; y <= sy + 2; y++)
+      for (let x = sx - 9; x <= sx + 9; x++) {
+        const e = ((x - sx) / 9) ** 2 + ((y - sy) / 2.2) ** 2
+        if (e <= 1 && dither(x, y, (1 - e) * 0.9 + 0.15)) px(b, x, y, shade)
+      }
+  drawLantern(b, L, pal, phase)
+  return b
+}
+
+function drawLantern(b: Buffer, L: GardenLayout, pal: Palette, phase: Phase) {
   const ox = L.lantern.x - 7, oy = L.lantern.y - LANTERN.length + 1
   const map: Record<string, string> = { K: pal.stoneD, S: pal.stone, H: pal.stoneH, D: pal.stoneD, L: phase.night ? '#ffd27a' : pal.stoneD }
   LANTERN.forEach((row, y) => [...row].forEach((ch, x) => { if (ch !== '.') px(b, ox + x, oy + y, map[ch]!) }))
+}
+
+/** The lantern alone, so it can be redrawn on top of its own glow. */
+export function bakeLantern(L: GardenLayout, pal: Palette, phase: Phase): Buffer {
+  const b = makeBuffer(L.width, L.height)
+  drawLantern(b, L, pal, phase)
+  return b
+}
+
+/** An ordered-dither halo: solid near the centre, thinning to scattered pixels at the edge. */
+export function bakeGlow(rx: number, ry: number, color: string, strength: number): Buffer {
+  const b = makeBuffer(rx * 2 + 1, ry * 2 + 1)
+  for (let y = -ry; y <= ry; y++)
+    for (let x = -rx; x <= rx; x++) {
+      const e = (x / rx) ** 2 + (y / ry) ** 2
+      if (e <= 1 && dither(x + rx, y + ry, (1 - e) ** 2.2 * strength)) px(b, x + rx, y + ry, color)
+    }
   return b
 }

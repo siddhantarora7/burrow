@@ -37,11 +37,12 @@ body { background: var(--washi); color: var(--sumi); font-family: var(--font-san
   border-radius: 999px;
   white-space: nowrap;
   cursor: pointer;
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: translate 0.2s cubic-bezier(0.16, 1, 0.3, 1), scale 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .tag i { font-style: normal; font-weight: 500; opacity: 0.75; margin-left: 0.45em; }
 .tag-more { display: block; margin-top: 0.4em; font-weight: 500; font-size: 0.85em; opacity: 0.8; }
-.tag-open { transform: translate(-50%, -2px) scale(1.04); z-index: 5; }
+/* Tailwind's -translate-x-1/2 uses the `translate` property, so lift with `translate` too (a transform would add a second -50%). */
+.tag-open { translate: -50% -2px; scale: 1.04; z-index: 5; }
 .tag-alert { color: #f7f4ec !important; background: rgba(38, 36, 31, 0.92) !important; border-color: transparent !important; box-shadow: 0 0 0 3px rgba(240, 198, 78, 0.8), 0 6px 20px rgba(20, 18, 30, 0.25) !important; }
 .tag-alert i { color: #f0c64e; opacity: 1; }
 @media (prefers-reduced-motion: reduce) { .tag { transition: none; } }
@@ -56,3 +57,8 @@ body { background: var(--washi); color: var(--sumi); font-family: var(--font-san
 .chip-night { color: #f1eee6; background: rgba(24, 26, 32, 0.76); border-color: rgba(255, 255, 255, 0.16); }
 .chip-night .chip-solid { background: #f1eee6; color: #26241f; }
 @media (prefers-reduced-transparency: reduce) { .chip { backdrop-filter: none; -webkit-backdrop-filter: none; background: #faf9f5; } .chip-night { background: #181a20; } }
+
+.hint { animation: hint-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+/* opacity only: the hint is centred with `translate`, which an animated translate would override */
+@keyframes hint-in { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .hint { animation: none; } }
