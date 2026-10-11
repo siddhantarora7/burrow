@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { layoutGarden, pixelScale, tagGap, TIMING, type DeriveResult, type GardenLayout, type Member, type PetState, type Species } from '@burrow/core'
+import { bottomReserve, layoutGarden, pixelScale, tagGap, TIMING, type DeriveResult, type GardenLayout, type Member, type PetState, type Species } from '@burrow/core'
 import { hash, paletteAt, phaseAt, type Palette } from '@/lib/pixel/palette'
 import { bakeGlow, bakeGround, bakeLantern, bakeSky, sunPosition, type Buffer } from '@/lib/pixel/scene'
 import { colorsFor, FPS, FRAMES, GRID, petGrid } from '@/lib/pixel/sprites'
@@ -111,7 +111,7 @@ export function PixelBurrow({ members, states, offset, hour }: Props) {
   const [hover, setHover] = useState<string | null>(null)
   const [, tick] = useState(0)
 
-  const L: GardenLayout | null = useMemo(() => (screen ? layoutGarden(screen.W, screen.H, members.length, tagGap(screen.S)) : null), [screen, members.length])
+  const L: GardenLayout | null = useMemo(() => (screen ? layoutGarden(screen.W, screen.H, members.length, tagGap(screen.S), bottomReserve(screen.S, screen.H > screen.W)) : null), [screen, members.length])
   const hourKey = Math.round(hour * 10) / 10
   const pal: Palette = useMemo(() => paletteAt(hourKey), [hourKey])
   const phase = useMemo(() => phaseAt(hourKey), [hourKey])
@@ -122,7 +122,8 @@ export function PixelBurrow({ members, states, offset, hour }: Props) {
             sky: toCanvas(bakeSky(L, pal, phase)),
             ground: toCanvas(bakeGround(L, pal, phase)),
             lantern: toCanvas(bakeLantern(L, pal, phase)),
-            glow: toCanvas(bakeGlow(26, 20, '#ffd27a', 0.75)),
+            // warm lamplight: full-colour gold pixels on a dither pattern, two densities for the flicker
+            glow: [toCanvas(bakeGlow(26, 20, '#ffd27a', 0.42)), toCanvas(bakeGlow(26, 20, '#ffd27a', 0.5))],
           }
         : null,
     [L, pal, phase],
@@ -255,12 +256,8 @@ export function PixelBurrow({ members, states, offset, hour }: Props) {
       }
       if (phase.night) {
         // additive, dithered halo; the lantern is redrawn on top so its silhouette and window survive
-        const fl = reduce ? 0.9 : 0.85 + Math.sin(now / 90) * 0.1 + Math.sin(now / 37) * 0.05
-        ctx.globalCompositeOperation = 'lighter'
-        ctx.globalAlpha = 0.38 * fl
-        ctx.drawImage(layers.glow, L.lantern.x - 26, L.lantern.y - 12 - 20)
-        ctx.globalAlpha = 1
-        ctx.globalCompositeOperation = 'source-over'
+        const bright = reduce || Math.sin(now / 90) + Math.sin(now / 37) * 0.5 > -0.2
+        ctx.drawImage(layers.glow[bright ? 1 : 0]!, L.lantern.x - 26, L.lantern.y - 12 - 20)
         ctx.drawImage(layers.lantern, 0, 0)
       }
 

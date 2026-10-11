@@ -155,6 +155,8 @@ export function bakeGround(L: GardenLayout, pal: Palette, phase: Phase): Buffer 
   // bushes and mossy rocks along the wall, moss islands on the gravel
   for (let bx = 8 + Math.round(hash(1, 4) * 20); bx < W; bx += 26 + Math.round(hash(bx, 5) * 34)) {
     if (Math.abs(bx - mx) < 14 || Math.abs(bx - L.lantern.x) < 12) continue
+    // never behind a pet's head
+    if (L.spots.some(([sx, sy]) => Math.abs(sx - bx) < 22 && sy - L.gravelTop < 40)) continue
     const kind = hash(bx, 6)
     if (kind < 0.22) {
       blob(b, bx, L.gravelTop + 3, 5, 3, pal.stone, pal.stoneH, pal.stoneD, 50 + bx)
@@ -164,7 +166,8 @@ export function bakeGround(L: GardenLayout, pal: Palette, phase: Phase): Buffer 
   const moss = L.portrait
     ? [[W * 0.14, L.gravelTop + 8, 14, 4], [W * 0.9, H - 30, 14, 4]]
     : [[W * 0.05, L.pond.cy + 10, 16, 5], [W * 0.95, H - 12, 18, 5], [W * 0.52, H - 5, 14, 3]]
-  for (const [x, y, rx, ry] of moss) if (!L.spots.some(([sx, sy]) => Math.abs(sx - x!) < 20 && Math.abs(sy - y!) < 10)) blob(b, Math.round(x!), Math.round(y!), rx!, ry!, pal.moss, pal.mossH, pal.mossD, 21)
+  // moss keeps clear of pets: nothing growing out of a head or under a tag
+  for (const [x, y, rx, ry] of moss) if (!L.spots.some(([sx, sy]) => Math.abs(sx - x!) < rx! + 16 && y! - sy < 16 && sy - y! < 36)) blob(b, Math.round(x!), Math.round(y!), rx!, ry!, pal.moss, pal.mossH, pal.mossD, 21)
   // pond: stone rim, water with a reflected-sky dither, lily pad
   const { cx, cy, rx, ry } = L.pond
   for (let y = cy - ry - 3; y <= cy + ry + 3; y++)

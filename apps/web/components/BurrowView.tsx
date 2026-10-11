@@ -46,7 +46,7 @@ export function BurrowView({ id }: { id: string }) {
 }
 
 /** The garden page for any source of members: the live WebSocket, or the synthetic demo. */
-export function BurrowScreen({ status, burrow, members, offset, label }: BurrowState & { label?: string }) {
+export function BurrowScreen({ status, burrow, members, offset, label, statusLabel }: BurrowState & { label?: string; statusLabel?: string }) {
   const states = usePetStates(members, offset)
   const hour = useHour()
 
@@ -56,7 +56,7 @@ export function BurrowScreen({ status, burrow, members, offset, label }: BurrowS
   }, [members, states])
 
   const night = hour !== null && phaseAt(hour).night
-  const statusText = status === 'live' ? 'live' : status === 'not_found' ? 'not found' : status === 'reconnecting' ? 'reconnecting…' : 'connecting…'
+  const statusText = statusLabel ?? (status === 'live' ? 'live' : status === 'not_found' ? 'not found' : status === 'reconnecting' ? 'reconnecting…' : 'connecting…')
 
   return (
     <main className="relative min-h-[100dvh] w-full overflow-x-hidden" style={{ background: hour === null ? 'var(--washi)' : paletteAt(hour).gravel }}>

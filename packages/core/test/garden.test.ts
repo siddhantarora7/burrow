@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { layoutGarden, MAX_MEMBERS, pixelScale, tagGap } from '../src/garden'
+import { bottomReserve, layoutGarden, MAX_MEMBERS, pixelScale, tagGap } from '../src/garden'
 
 // Real browser windows: innerWidth x innerHeight with browser chrome taken out, phones to wide desktops.
 const WINDOWS: Array<[number, number]> = []
@@ -18,7 +18,8 @@ describe('layoutGarden on real window sizes', () => {
       const { S, W, H } = screen(vw, vh)
       const gap = tagGap(S)
       for (const n of [1, 2, 4, 6, 9, 13, 24]) {
-        const g = layoutGarden(W, H, n, gap)
+        const reserve = bottomReserve(S, H > W)
+        const g = layoutGarden(W, H, n, gap, reserve)
         const where = `${vw}x${vh} n=${n}`
         if (g.spots.length !== n) failures.push(`${where}: ${g.spots.length} spots`)
         for (const [x, y] of g.spots) {
@@ -26,6 +27,8 @@ describe('layoutGarden on real window sizes', () => {
           if (x < margin || x > W - margin) failures.push(`${where}: x ${x} too close to the edge`)
           if (y < g.gravelTop + 12) failures.push(`${where}: y ${y} on the wall`)
           if (y + 16 > g.height) failures.push(`${where}: no room for the tag`)
+          // on the first screen, tags stay above the fixed command pill and hint
+          if (y <= H && y > H - reserve) failures.push(`${where}: (${x},${y}) under the bottom chips`)
           const dx = (x - g.pond.cx) / (g.pond.rx + 12), dy = (y - g.pond.cy) / (g.pond.ry + 8)
           if (dx * dx + dy * dy <= 1) failures.push(`${where}: (${x},${y}) on the pond`)
         }

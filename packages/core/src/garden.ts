@@ -26,6 +26,14 @@ export function tagGap(scale: number): number {
   return Math.max(26, Math.ceil(150 / scale))
 }
 
+/**
+ * Garden pixels to keep free at the bottom of the first screen, so name tags clear the fixed
+ * command pill (and, on phones, the hint chip stacked above it).
+ */
+export function bottomReserve(scale: number, portrait: boolean): number {
+  return Math.ceil((portrait ? 130 : 70) / scale) + 12
+}
+
 const ROW = 36 // a pet (30 px) plus its tag never reaches the row below
 
 /**
@@ -34,7 +42,7 @@ const ROW = 36 // a pet (30 px) plus its tag never reaches the row below
  * gravel, off the pond, and clear of every pet already placed. Deterministic, and earlier members
  * keep their spots as others join. Rows past the first screen extend the gravel (the page scrolls).
  */
-export function layoutGarden(W: number, H: number, count: number, gap = 26): GardenLayout {
+export function layoutGarden(W: number, H: number, count: number, gap = 26, reserve = 28): GardenLayout {
   const portrait = H > W
   const n = Math.max(0, Math.min(count, MAX_MEMBERS))
   const horizon = portrait ? Math.round(Math.min(96, H * 0.27)) : Math.round(Math.min(92, H * 0.47))
@@ -43,12 +51,12 @@ export function layoutGarden(W: number, H: number, count: number, gap = 26): Gar
     ? // a lone pet sits front and centre mid-screen; larger burrows lift the pond to make room below
       { cx: Math.round(W * 0.5), cy: Math.round(gravelTop + (H - gravelTop) * (n <= 2 ? 0.45 : 0.32)), rx: Math.round(Math.min(46, W * 0.3)), ry: 12 }
     : { cx: Math.round(W * 0.53), cy: Math.round(gravelTop + Math.max(18, (H - gravelTop) * 0.3)), rx: Math.round(Math.min(48, W * 0.15)), ry: 11 }
-  // the last on-screen row keeps its name tag clear of the fixed command pill at the bottom
-  const front = H - 28
+  // the last on-screen row keeps its name tag clear of the fixed chips at the bottom
+  const front = H - reserve
   const pondFront = pond.cy + pond.ry
 
   const handpicked: Array<[number, number]> = portrait
-    ? [[W * 0.5, pondFront + 22], [W * 0.25, pond.cy - pond.ry - 14], [W * 0.75, pond.cy - pond.ry - 14]]
+    ? [[W * 0.5, Math.min(front, pondFront + 22)], [W * 0.25, pond.cy - pond.ry - 14], [W * 0.75, pond.cy - pond.ry - 14]]
     : [[W * 0.5, Math.min(front, pondFront + 22)], [W * 0.18, pond.cy], [W * 0.84, pond.cy - 6], [W * 0.3, front], [W * 0.72, front]]
 
   // the 32 px sprite and half a name tag must stay on screen
@@ -81,7 +89,9 @@ export function layoutGarden(W: number, H: number, count: number, gap = 26): Gar
     for (const x of rowXs(row)) tryAdd(x, y)
     lastRow = y
   }
-  for (let k = 1, row = 1; spots.length < n; k++, row++) for (const x of rowXs(row)) tryAdd(x, lastRow + ROW * k)
+  // past the first screen: never in the reserved strip, always below the fold
+  const below = Math.max(lastRow + ROW, H + 4)
+  for (let k = 0, row = 1; spots.length < n; k++, row++) for (const x of rowXs(row)) tryAdd(x, below + ROW * k)
 
   const lowest = spots.reduce((m, [, y]) => Math.max(m, y), 0)
   return {

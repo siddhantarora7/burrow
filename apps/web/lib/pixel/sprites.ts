@@ -44,7 +44,7 @@ const SHAPES: Record<Species, (x: number, y: number) => boolean> = {
     return !(y < 13 && Math.abs(x - CX) > 1)
   },
 }
-const FACE_Y: Record<Species, number> = { mochi: 21, tofu: 20, onigiri: 21 }
+const FACE_Y: Record<Species, number> = { mochi: 21, tofu: 20, onigiri: 20 }
 
 /**
  * The pixel grid for one frame. `quiet` is the work state when the run has gone silent
@@ -74,7 +74,8 @@ export function petGrid(species: Species, state: PetState, frame: number, quiet 
   if (arm === 'out') nub([[27, ay - 1], [28, ay - 2], [27, ay - 2], [28, ay - 3]])
   if (arm === 'up') nub([[26, ay - 4], [27, ay - 5], [27, ay - 6], [28, ay - 7], [27, ay - 4]])
   if (armL === 'up') nub([[6, ay - 4], [5, ay - 5], [5, ay - 6], [4, ay - 7], [5, ay - 4]])
-  if (species === 'onigiri') for (let y = 23; y <= BOT; y++) for (let x = 12; x <= 20; x++) if (g[y + dy]?.[x] === C.B) g[y + dy]![x] = C.N
+  // the nori band sits low, leaving rice between it and the face
+  if (species === 'onigiri') for (let y = BOT - 2; y <= BOT; y++) for (let x = 12; x <= 20; x++) if (g[y + dy]?.[x] === C.B) g[y + dy]![x] = C.N
 
   // Shading reads a snapshot of the silhouette, so a changed pixel never cascades.
   const mask = g.map((r) => r.map((v) => v === C.B || v === C.N))
@@ -127,6 +128,15 @@ export function petGrid(species: Species, state: PetState, frame: number, quiet 
   // props, drawn over the outline
   const put = (sprite: string[], ox: number, oy: number, map: Record<string, Code>) =>
     sprite.forEach((row, y) => [...row].forEach((ch, x) => { if (ch !== '.' && out[oy + y] && ox + x >= 0 && ox + x < GRID) out[oy + y]![ox + x] = map[ch]! }))
+  // A z with a dark outline reads over water, gravel or sky alike.
+  const putOutlined = (sprite: string[], ox: number, oy: number) => {
+    sprite.forEach((row, y) => [...row].forEach((ch, x) => {
+      if (ch === '.') return
+      for (const [a, b] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) if (out[oy + y + b]?.[ox + x + a] === C.E) out[oy + y + b]![ox + x + a] = C.O
+    }))
+    put(sprite, ox, oy, { Z: C.Z })
+  }
+  const ZED = ['ZZZ', '..Z', '.Z.', 'Z..', 'ZZZ']
   if (state === 'work') {
     // A low lid (4 rows) keeps a band of body colour between the eyes and the laptop.
     // the lid's top edge is grey, not ink, so it never reads as a wide mouth from across the room
@@ -135,12 +145,12 @@ export function petGrid(species: Species, state: PetState, frame: number, quiet 
     // paws tap the lid's top edge, between the blush and the mouth
     put(['SS'], CX - 4, BOT - 3 - paw, { S: C.S })
     put(['SS'], CX + 3, BOT - 3 - (dozing ? 0 : 1 - paw), { S: C.S })
-    if (dozing) put(['ZZ', '.Z', 'ZZ'], 24, 9 - (frame % 2), { Z: C.Z })
+    if (dozing) putOutlined(ZED, 24, 6 - (frame % 2))
   }
   if (state === 'wave') put(['.OOOO.', 'OWWAWO', 'OWWAWO', 'OWWWWO', 'OWWAWO', '.OOOO.', '.O....'], 23, 3 + (frame % 2), { O: C.O, W: C.W, A: C.A })
   if (state === 'eat' && frame === 0) put(['.K.', 'KYK', '.K.'], CX - 1, fy - 1, { K: C.K1, Y: C.K2 })
   if (state === 'eat' && frame === 2) { set(CX - 4, my + 2, C.K1); set(CX + 4, my + 1, C.K2) }
-  if (state === 'sleep') { const o = frame % 3; put(['ZZZ', '..Z', '.Z.', 'Z..', 'ZZZ'], 23 + o, 6 - o * 2, { Z: C.Z }) }
+  if (state === 'sleep') { const o = frame % 3; putOutlined(ZED, 23 + o, 6 - o * 2) }
   if (state === 'cheer') {
     const sp = ['..Y..', '..Y..', 'YY.YY', '..Y..', '..Y..']
     put(sp, frame % 2 ? 2 : 4, frame % 2 ? 6 : 3, { Y: C.Y })

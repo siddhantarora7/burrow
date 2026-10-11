@@ -95,3 +95,27 @@ describe('the working pose (the state people see most)', () => {
     expect(height(petGrid('mochi', 'work', 0))).not.toBe(height(petGrid('mochi', 'work', 1)))
   })
 })
+
+describe('round-two fixes', () => {
+  it('onigiri: the nori band starts below the face, so eyes and mouth stay on rice', () => {
+    for (const state of PET_STATES) {
+      const g = petGrid('onigiri', state, 0)
+      const noriTop = g.findIndex((r) => r.includes(C.N as never))
+      if (noriTop < 0) continue // hidden behind the laptop
+      const faceRows = g.map((r, y) => (r.some((v) => v === C.F) ? y : -1)).filter((y) => y >= 0 && y < noriTop)
+      const lastFace = Math.max(...faceRows)
+      expect(noriTop - lastFace, `${state}`).toBeGreaterThanOrEqual(2)
+    }
+  })
+  it('every z is outlined, so it reads over water, gravel or sky', () => {
+    for (const [state, quiet] of [['sleep', false], ['work', true]] as const) {
+      for (let f = 0; f < FRAMES[state]; f++) {
+        const g = petGrid('mochi', state, f, quiet)
+        g.forEach((row, y) => row.forEach((v, x) => {
+          if (v !== C.Z) return
+          for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) expect(g[y + dy]?.[x + dx], `${state} f${f} z at ${x},${y}`).not.toBe(C.E)
+        }))
+      }
+    }
+  })
+})
