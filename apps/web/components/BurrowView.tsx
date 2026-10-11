@@ -47,7 +47,7 @@ export function BurrowView({ id }: { id: string }) {
 }
 
 /** The garden page for any source of members: the live WebSocket, or the synthetic demo. */
-export function BurrowScreen({ status, burrow, members, offset, me, pokes, poke, label, statusLabel }: BurrowState & { poke?: (to: string) => void; label?: string; statusLabel?: string }) {
+export function BurrowScreen({ status, burrow, members, offset, me, pokes, poke, label, statusLabel, hero = false }: BurrowState & { poke?: (to: string) => void; label?: string; statusLabel?: string; hero?: boolean }) {
   const states = usePetStates(members, offset)
   const alerts = useAlerts({ me, members, states, pokes })
   const hour = useHour()
@@ -79,6 +79,8 @@ export function BurrowScreen({ status, burrow, members, offset, me, pokes, poke,
         </nav>
       </header>
 
+      {hero && <Hero night={night} />}
+
       {hour !== null && <PixelBurrow members={members} states={states} offset={offset} hour={hour} me={me} pokes={pokes} onPoke={poke} />}
 
       {status === 'not_found' ? (
@@ -92,10 +94,25 @@ export function BurrowScreen({ status, burrow, members, offset, me, pokes, poke,
       <ul className="sr-only">
         {members.map((m) => {
           const r = states.get(m.petId)
-          return <li key={m.petId}>{m.name} is {r?.quiet ? 'quiet' : VERB[r?.state ?? 'sleep']}.</li>
+          return <li key={m.petId}>{m.name}: {r?.quiet ? 'quiet' : VERB[r?.state ?? 'sleep']}.</li>
         })}
       </ul>
     </main>
+  )
+}
+
+/** The front door: what this is, over the sky of a demo garden. */
+function Hero({ night }: { night: boolean }) {
+  return (
+    <section className={`chip ${night ? 'chip-night' : ''} fixed inset-x-3 top-[4.25rem] z-10 max-w-md rounded-2xl p-5 sm:left-6 sm:right-auto sm:top-20`}>
+      <h1 className="font-display text-2xl font-bold leading-tight tracking-tight sm:text-3xl">everyone&apos;s agents, one burrow.</h1>
+      <p className="mt-2 text-sm opacity-80 sm:text-base">
+        a tiny pet reacts live to your Claude Code agent and chimes when it&apos;s waiting on you. your friends&apos; pets share the garden, and can poke you.
+      </p>
+      <p className="mt-3 text-xs opacity-70">
+        these pets are a demo. <Link href="/privacy" className="underline underline-offset-4">what gets sent</Link>: four fields, never your code.
+      </p>
+    </section>
   )
 }
 

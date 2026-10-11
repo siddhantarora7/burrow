@@ -384,12 +384,18 @@ The glance signal and a control.
 - **Content:** name in 700, verb in 500 at 75% opacity; on hover or focus it grows a second line of detail ("waiting on you for 3m", "quiet for 4m, maybe interrupted").
 - **Skins:** day chip, night chip, and the alert skin for the waiting state: dark ink fill, paper text, gold verb and a 3 px gold ring. Only one state ever gets the alert skin.
 - **Hover / Focus:** lifts 2 px and scales to 1.04 over 0.2s on `cubic-bezier(0.16, 1, 0.3, 1)`, using the `translate`/`scale` properties so it composes with the centring translate; a dotted white ring appears on the pet's stone. No transition with reduced motion.
+- **Detail line:** "you" on your own pet when signed in, then what the agent did, then "waited on you 41m today" when that is a minute or more for the current day, joined by ` · `.
+- **Poke:** when you are signed in and a friend's pet is waving, its detail ends "press to poke" and pressing pokes instead of booping (the accessible name ends "press to poke."); for a minute afterwards it says "poked". A poke makes its target hop on every screen.
 - **Behaviour:** a real `<button>`; activating it boops the pet. Its accessible name starts with exactly the visible text, then adds the detail ("ada needs you: waiting on you for 3m. press to boop."), so speech users can say what they see (WCAG 2.5.3).
 
 ### Chips (header, nav, status, hint)
 - **Style:** frosted pill (chip float). Header pairs the 32 px mochi mark with the wordmark and, from `sm`, the burrow name at 70%. Nav carries a `privacy` link (underline on hover) and a solid status pill (`live`, `connecting…`, `reconnecting…`, `demo`) with `role="status"`.
 - **Night:** dark frosted fill, solid pill inverts to paper with ink text.
+- **Alerts chip:** a text button in the nav, only when signed in. Its label is the state: `alerts on`, `alerts off`, `chime only` (no notification permission) or `click for sound` (the browser has not unlocked audio yet; any click or key press does). Pressing it does the next useful thing: turn alerts on, ask for notifications, or turn them off. The chime is two synthesised sine notes (660 then 880 Hz, half a second).
 - **Hint:** one time only ("click a pet to boop it, or click the pond" with a mouse or trackpad, "tap" on touch screens), fades in over 0.5s with opacity alone, gone after the first boop or pond tap.
+
+### Hero (landing only)
+- The front door at `/` is a five-pet demo garden, labelled `demo` in the status pill and in the hero's small print. A notice-style panel (16px corners, 20px padding, max-w-md) sits top-left under the header: the display h1 "everyone's agents, one burrow." (2xl, 3xl from `sm`), one body line, and small print linking to privacy. It takes the night skin with the sky, like every chip.
 
 ### Command pill
 - **Style:** frosted pill, "get a pet" in display bold (from `sm`), the command in Geist Mono, then a solid copy button in display bold 0.75rem that reads `copied` once used and presses to 0.97.
