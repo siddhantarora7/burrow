@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { bottomReserve, layoutGarden, pixelScale, tagGap, TIMING, type DeriveResult, type GardenLayout, type Member, type PetState, type Species } from '@burrow/core'
+import { heartsAt, heartVisible, stepFly, stepHeart, stepLeaf, type Fly, type Heart, type Leaf } from '@/lib/pixel/ambient'
 import { hash, paletteAt, phaseAt, type Palette } from '@/lib/pixel/palette'
 import { bakeGlow, bakeGround, bakeLantern, bakeSky, sunPosition, type Buffer } from '@/lib/pixel/scene'
 import { colorsFor, FPS, FRAMES, GRID, petGrid } from '@/lib/pixel/sprites'
@@ -153,9 +154,9 @@ export function PixelBurrow({ members, states, offset, hour }: Props) {
     boops: new Map<string, number>(),
     seenStops: new Map<string, number>(),
     ripples: [] as Array<{ x: number; y: number; t: number }>,
-    hearts: [] as Array<{ x: number; y: number; vx: number; vy: number; life: number }>,
-    leaves: [] as Array<{ x: number; y: number; ground: number; rest: number; seed: number }>,
-    flies: [] as Array<{ x: number; y: number; s: number }>,
+    hearts: [] as Heart[],
+    leaves: [] as Leaf[],
+    flies: [] as Fly[],
     koi: [{ t: 0, speed: 0.35, color: '#f0823c', spot: '#ffffff' }, { t: Math.PI, speed: 0.28, color: '#f4efe6', spot: '#e2483f' }],
     clouds: [] as Array<{ x: number; y: number; w: number; speed: number }>,
   })
@@ -282,26 +283,23 @@ export function PixelBurrow({ members, states, offset, hour }: Props) {
       if (!reduce && Math.random() < dt / 2200 && st.leaves.length < 10)
         st.leaves.push({ x: L.maple.x + (Math.random() - 0.5) * 50, y: L.maple.y - 30, ground: L.gravelTop + 4 + Math.random() * (L.height - L.gravelTop - 10), rest: 0, seed: Math.random() * 10 })
       st.leaves = st.leaves.filter((l) => {
-        if (l.y < l.ground) { l.y += (dt / 1000) * 9; l.x += Math.sin(now / 500 + l.seed) * 0.15 } else l.rest += dt
+        const alive = stepLeaf(l, dt, now)
         ctx.fillStyle = l.y < l.ground && Math.floor(now / 250 + l.seed) % 2 ? pal.mapleH : pal.maple
         ctx.fillRect(Math.round(l.x), Math.round(l.y), 2, 1)
-        return l.rest < 9000
+        return alive
       })
       if (phase.night && !reduce) {
         if (st.flies.length < 9) st.flies.push({ x: Math.random() * L.width, y: L.gravelTop - 4 + Math.random() * 30, s: Math.random() * 10 })
         ctx.fillStyle = '#f7e78a'
         for (const fl of st.flies) {
-          fl.x += Math.sin(now / 900 + fl.s) * 0.08
-          fl.y += Math.cos(now / 1100 + fl.s) * 0.05
+          stepFly(fl, dt, now)
           if (Math.sin(now / 300 + fl.s * 3) > 0.2) ctx.fillRect(Math.round(fl.x), Math.round(fl.y), 1, 1)
         }
       } else st.flies = []
-      st.hearts = st.hearts.filter((h) => (h.life += dt / 16) < 70)
+      st.hearts = st.hearts.filter((h) => stepHeart(h, dt))
       ctx.fillStyle = '#ff6f91'
       for (const h of st.hearts) {
-        h.x += h.vx
-        h.y += h.vy
-        if (h.life < 50 || Math.floor(h.life / 6) % 2) HEART.forEach((row, j) => [...row].forEach((c, k) => { if (c !== '.') ctx.fillRect(Math.round(h.x) - 2 + k, Math.round(h.y) + j, 1, 1) }))
+        if (heartVisible(h)) HEART.forEach((row, j) => [...row].forEach((c, k) => { if (c !== '.') ctx.fillRect(Math.round(h.x) - 2 + k, Math.round(h.y) + j, 1, 1) }))
       }
       raf = requestAnimationFrame(frame)
     }
@@ -320,7 +318,7 @@ export function PixelBurrow({ members, states, offset, hour }: Props) {
   const boop = (petId: string, i: number) => {
     const [x, y] = L.spots[i]!
     live.current.boops.set(petId, performance.now())
-    for (let k = 0; k < 3; k++) live.current.hearts.push({ x: x + (k - 1) * 5, y: y - 24, vx: (k - 1) * 0.15, vy: -0.35 - k * 0.05, life: 0 })
+    live.current.hearts.push(...heartsAt(x, y))
   }
   const petAt = (mx: number, my: number) => L.spots.findIndex(([x, y], i) => i < members.length && mx > x - 12 && mx < x + 12 && my > y - 22 && my < y + 3)
   const onPond = (mx: number, my: number) => ((mx - L.pond.cx) / L.pond.rx) ** 2 + ((my - L.pond.cy) / L.pond.ry) ** 2 <= 1
