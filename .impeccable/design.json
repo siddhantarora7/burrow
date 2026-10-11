@@ -1,0 +1,2172 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-11T18:25:16.179Z",
+  "title": "Design System: burrow",
+  "extensions": {
+    "colorMeta": {
+      "sky0-day": {
+        "role": "neutral",
+        "displayName": "Zenith Sky (day)",
+        "canonical": "#5b8fd1",
+        "sceneRole": "sky0",
+        "variants": {
+          "day": "#5b8fd1",
+          "dusk": "#45467f",
+          "night": "#0c1230"
+        },
+        "tonalRamp": [
+          "#0c1230",
+          "#45467f",
+          "#5b8fd1"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "sky0-dusk": {
+        "role": "neutral",
+        "displayName": "Zenith Sky (dusk)",
+        "canonical": "#45467f",
+        "sceneRole": "sky0",
+        "variants": {
+          "day": "#5b8fd1",
+          "dusk": "#45467f",
+          "night": "#0c1230"
+        },
+        "tonalRamp": [
+          "#0c1230",
+          "#45467f",
+          "#5b8fd1"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "sky0-night": {
+        "role": "neutral",
+        "displayName": "Zenith Sky (night)",
+        "canonical": "#0c1230",
+        "sceneRole": "sky0",
+        "variants": {
+          "day": "#5b8fd1",
+          "dusk": "#45467f",
+          "night": "#0c1230"
+        },
+        "tonalRamp": [
+          "#0c1230",
+          "#45467f",
+          "#5b8fd1"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "sky1-day": {
+        "role": "neutral",
+        "displayName": "Upper Sky (day)",
+        "canonical": "#77a7de",
+        "sceneRole": "sky1",
+        "variants": {
+          "day": "#77a7de",
+          "dusk": "#6f5596",
+          "night": "#141c42"
+        },
+        "tonalRamp": [
+          "#141c42",
+          "#6f5596",
+          "#77a7de"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "sky1-dusk": {
+        "role": "neutral",
+        "displayName": "Upper Sky (dusk)",
+        "canonical": "#6f5596",
+        "sceneRole": "sky1",
+        "variants": {
+          "day": "#77a7de",
+          "dusk": "#6f5596",
+          "night": "#141c42"
+        },
+        "tonalRamp": [
+          "#141c42",
+          "#6f5596",
+          "#77a7de"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "sky1-night": {
+        "role": "neutral",
+        "displayName": "Upper Sky (night)",
+        "canonical": "#141c42",
+        "sceneRole": "sky1",
+        "variants": {
+          "day": "#77a7de",
+          "dusk": "#6f5596",
+          "night": "#141c42"
+        },
+        "tonalRamp": [
+          "#141c42",
+          "#6f5596",
+          "#77a7de"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "sky2-day": {
+        "role": "neutral",
+        "displayName": "Lower Sky (day)",
+        "canonical": "#9cc2e6",
+        "sceneRole": "sky2",
+        "variants": {
+          "day": "#9cc2e6",
+          "dusk": "#c06c86",
+          "night": "#1c2752"
+        },
+        "tonalRamp": [
+          "#1c2752",
+          "#c06c86",
+          "#9cc2e6"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "sky2-dusk": {
+        "role": "neutral",
+        "displayName": "Lower Sky (dusk)",
+        "canonical": "#c06c86",
+        "sceneRole": "sky2",
+        "variants": {
+          "day": "#9cc2e6",
+          "dusk": "#c06c86",
+          "night": "#1c2752"
+        },
+        "tonalRamp": [
+          "#1c2752",
+          "#c06c86",
+          "#9cc2e6"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "sky2-night": {
+        "role": "neutral",
+        "displayName": "Lower Sky (night)",
+        "canonical": "#1c2752",
+        "sceneRole": "sky2",
+        "variants": {
+          "day": "#9cc2e6",
+          "dusk": "#c06c86",
+          "night": "#1c2752"
+        },
+        "tonalRamp": [
+          "#1c2752",
+          "#c06c86",
+          "#9cc2e6"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "sky3-day": {
+        "role": "neutral",
+        "displayName": "Horizon Haze (day)",
+        "canonical": "#cfe3ee",
+        "sceneRole": "sky3",
+        "variants": {
+          "day": "#cfe3ee",
+          "dusk": "#f0a878",
+          "night": "#273562"
+        },
+        "tonalRamp": [
+          "#273562",
+          "#f0a878",
+          "#cfe3ee"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "sky3-dusk": {
+        "role": "neutral",
+        "displayName": "Horizon Haze (dusk)",
+        "canonical": "#f0a878",
+        "sceneRole": "sky3",
+        "variants": {
+          "day": "#cfe3ee",
+          "dusk": "#f0a878",
+          "night": "#273562"
+        },
+        "tonalRamp": [
+          "#273562",
+          "#f0a878",
+          "#cfe3ee"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "sky3-night": {
+        "role": "neutral",
+        "displayName": "Horizon Haze (night)",
+        "canonical": "#273562",
+        "sceneRole": "sky3",
+        "variants": {
+          "day": "#cfe3ee",
+          "dusk": "#f0a878",
+          "night": "#273562"
+        },
+        "tonalRamp": [
+          "#273562",
+          "#f0a878",
+          "#cfe3ee"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "far-day": {
+        "role": "neutral",
+        "displayName": "Far Mountain (day)",
+        "canonical": "#93a9c6",
+        "sceneRole": "far",
+        "variants": {
+          "day": "#93a9c6",
+          "dusk": "#7d6d9a",
+          "night": "#121a3a"
+        },
+        "tonalRamp": [
+          "#121a3a",
+          "#7d6d9a",
+          "#93a9c6"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "far-dusk": {
+        "role": "neutral",
+        "displayName": "Far Mountain (dusk)",
+        "canonical": "#7d6d9a",
+        "sceneRole": "far",
+        "variants": {
+          "day": "#93a9c6",
+          "dusk": "#7d6d9a",
+          "night": "#121a3a"
+        },
+        "tonalRamp": [
+          "#121a3a",
+          "#7d6d9a",
+          "#93a9c6"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "far-night": {
+        "role": "neutral",
+        "displayName": "Far Mountain (night)",
+        "canonical": "#121a3a",
+        "sceneRole": "far",
+        "variants": {
+          "day": "#93a9c6",
+          "dusk": "#7d6d9a",
+          "night": "#121a3a"
+        },
+        "tonalRamp": [
+          "#121a3a",
+          "#7d6d9a",
+          "#93a9c6"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "snow-day": {
+        "role": "neutral",
+        "displayName": "Fuji Snow (day)",
+        "canonical": "#f2f6f9",
+        "sceneRole": "snow",
+        "variants": {
+          "day": "#f2f6f9",
+          "dusk": "#f6d3cb",
+          "night": "#7f8fbb"
+        },
+        "tonalRamp": [
+          "#7f8fbb",
+          "#f6d3cb",
+          "#f2f6f9"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "snow-dusk": {
+        "role": "neutral",
+        "displayName": "Fuji Snow (dusk)",
+        "canonical": "#f6d3cb",
+        "sceneRole": "snow",
+        "variants": {
+          "day": "#f2f6f9",
+          "dusk": "#f6d3cb",
+          "night": "#7f8fbb"
+        },
+        "tonalRamp": [
+          "#7f8fbb",
+          "#f6d3cb",
+          "#f2f6f9"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "snow-night": {
+        "role": "neutral",
+        "displayName": "Fuji Snow (night)",
+        "canonical": "#7f8fbb",
+        "sceneRole": "snow",
+        "variants": {
+          "day": "#f2f6f9",
+          "dusk": "#f6d3cb",
+          "night": "#7f8fbb"
+        },
+        "tonalRamp": [
+          "#7f8fbb",
+          "#f6d3cb",
+          "#f2f6f9"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "forest-day": {
+        "role": "neutral",
+        "displayName": "Forest Band (day)",
+        "canonical": "#5e7d55",
+        "sceneRole": "forest",
+        "variants": {
+          "day": "#5e7d55",
+          "dusk": "#4c4c62",
+          "night": "#14223a"
+        },
+        "tonalRamp": [
+          "#14223a",
+          "#4c4c62",
+          "#5e7d55"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "forest-dusk": {
+        "role": "neutral",
+        "displayName": "Forest Band (dusk)",
+        "canonical": "#4c4c62",
+        "sceneRole": "forest",
+        "variants": {
+          "day": "#5e7d55",
+          "dusk": "#4c4c62",
+          "night": "#14223a"
+        },
+        "tonalRamp": [
+          "#14223a",
+          "#4c4c62",
+          "#5e7d55"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "forest-night": {
+        "role": "neutral",
+        "displayName": "Forest Band (night)",
+        "canonical": "#14223a",
+        "sceneRole": "forest",
+        "variants": {
+          "day": "#5e7d55",
+          "dusk": "#4c4c62",
+          "night": "#14223a"
+        },
+        "tonalRamp": [
+          "#14223a",
+          "#4c4c62",
+          "#5e7d55"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "forestHi-day": {
+        "role": "neutral",
+        "displayName": "Forest Crown (day)",
+        "canonical": "#789a63",
+        "sceneRole": "forestHi",
+        "variants": {
+          "day": "#789a63",
+          "dusk": "#64607a",
+          "night": "#1d2d47"
+        },
+        "tonalRamp": [
+          "#1d2d47",
+          "#64607a",
+          "#789a63"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "forestHi-dusk": {
+        "role": "neutral",
+        "displayName": "Forest Crown (dusk)",
+        "canonical": "#64607a",
+        "sceneRole": "forestHi",
+        "variants": {
+          "day": "#789a63",
+          "dusk": "#64607a",
+          "night": "#1d2d47"
+        },
+        "tonalRamp": [
+          "#1d2d47",
+          "#64607a",
+          "#789a63"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "forestHi-night": {
+        "role": "neutral",
+        "displayName": "Forest Crown (night)",
+        "canonical": "#1d2d47",
+        "sceneRole": "forestHi",
+        "variants": {
+          "day": "#789a63",
+          "dusk": "#64607a",
+          "night": "#1d2d47"
+        },
+        "tonalRamp": [
+          "#1d2d47",
+          "#64607a",
+          "#789a63"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "plaster-day": {
+        "role": "neutral",
+        "displayName": "Wall Plaster (day)",
+        "canonical": "#dccaa6",
+        "sceneRole": "plaster",
+        "variants": {
+          "day": "#dccaa6",
+          "dusk": "#c99e88",
+          "night": "#3c394b"
+        },
+        "tonalRamp": [
+          "#3c394b",
+          "#c99e88",
+          "#dccaa6"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "plaster-dusk": {
+        "role": "neutral",
+        "displayName": "Wall Plaster (dusk)",
+        "canonical": "#c99e88",
+        "sceneRole": "plaster",
+        "variants": {
+          "day": "#dccaa6",
+          "dusk": "#c99e88",
+          "night": "#3c394b"
+        },
+        "tonalRamp": [
+          "#3c394b",
+          "#c99e88",
+          "#dccaa6"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "plaster-night": {
+        "role": "neutral",
+        "displayName": "Wall Plaster (night)",
+        "canonical": "#3c394b",
+        "sceneRole": "plaster",
+        "variants": {
+          "day": "#dccaa6",
+          "dusk": "#c99e88",
+          "night": "#3c394b"
+        },
+        "tonalRamp": [
+          "#3c394b",
+          "#c99e88",
+          "#dccaa6"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "plasterLine-day": {
+        "role": "neutral",
+        "displayName": "Plaster Line (day)",
+        "canonical": "#f3ecdc",
+        "sceneRole": "plasterLine",
+        "variants": {
+          "day": "#f3ecdc",
+          "dusk": "#e2bcaa",
+          "night": "#4c4860"
+        },
+        "tonalRamp": [
+          "#4c4860",
+          "#e2bcaa",
+          "#f3ecdc"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "plasterLine-dusk": {
+        "role": "neutral",
+        "displayName": "Plaster Line (dusk)",
+        "canonical": "#e2bcaa",
+        "sceneRole": "plasterLine",
+        "variants": {
+          "day": "#f3ecdc",
+          "dusk": "#e2bcaa",
+          "night": "#4c4860"
+        },
+        "tonalRamp": [
+          "#4c4860",
+          "#e2bcaa",
+          "#f3ecdc"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "plasterLine-night": {
+        "role": "neutral",
+        "displayName": "Plaster Line (night)",
+        "canonical": "#4c4860",
+        "sceneRole": "plasterLine",
+        "variants": {
+          "day": "#f3ecdc",
+          "dusk": "#e2bcaa",
+          "night": "#4c4860"
+        },
+        "tonalRamp": [
+          "#4c4860",
+          "#e2bcaa",
+          "#f3ecdc"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "tile-day": {
+        "role": "neutral",
+        "displayName": "Roof Tile (day)",
+        "canonical": "#3f4454",
+        "sceneRole": "tile",
+        "variants": {
+          "day": "#3f4454",
+          "dusk": "#372f47",
+          "night": "#1a1c2a"
+        },
+        "tonalRamp": [
+          "#1a1c2a",
+          "#372f47",
+          "#3f4454"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "tile-dusk": {
+        "role": "neutral",
+        "displayName": "Roof Tile (dusk)",
+        "canonical": "#372f47",
+        "sceneRole": "tile",
+        "variants": {
+          "day": "#3f4454",
+          "dusk": "#372f47",
+          "night": "#1a1c2a"
+        },
+        "tonalRamp": [
+          "#1a1c2a",
+          "#372f47",
+          "#3f4454"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "tile-night": {
+        "role": "neutral",
+        "displayName": "Roof Tile (night)",
+        "canonical": "#1a1c2a",
+        "sceneRole": "tile",
+        "variants": {
+          "day": "#3f4454",
+          "dusk": "#372f47",
+          "night": "#1a1c2a"
+        },
+        "tonalRamp": [
+          "#1a1c2a",
+          "#372f47",
+          "#3f4454"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "tileHi-day": {
+        "role": "neutral",
+        "displayName": "Tile Edge (day)",
+        "canonical": "#5d6375",
+        "sceneRole": "tileHi",
+        "variants": {
+          "day": "#5d6375",
+          "dusk": "#55496a",
+          "night": "#2a2d40"
+        },
+        "tonalRamp": [
+          "#2a2d40",
+          "#55496a",
+          "#5d6375"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "tileHi-dusk": {
+        "role": "neutral",
+        "displayName": "Tile Edge (dusk)",
+        "canonical": "#55496a",
+        "sceneRole": "tileHi",
+        "variants": {
+          "day": "#5d6375",
+          "dusk": "#55496a",
+          "night": "#2a2d40"
+        },
+        "tonalRamp": [
+          "#2a2d40",
+          "#55496a",
+          "#5d6375"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "tileHi-night": {
+        "role": "neutral",
+        "displayName": "Tile Edge (night)",
+        "canonical": "#2a2d40",
+        "sceneRole": "tileHi",
+        "variants": {
+          "day": "#5d6375",
+          "dusk": "#55496a",
+          "night": "#2a2d40"
+        },
+        "tonalRamp": [
+          "#2a2d40",
+          "#55496a",
+          "#5d6375"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "gravel-day": {
+        "role": "neutral",
+        "displayName": "Raked Gravel (day)",
+        "canonical": "#e2ddcd",
+        "sceneRole": "gravel",
+        "variants": {
+          "day": "#e2ddcd",
+          "dusk": "#d6b6a3",
+          "night": "#383b51"
+        },
+        "tonalRamp": [
+          "#383b51",
+          "#d6b6a3",
+          "#e2ddcd"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "gravel-dusk": {
+        "role": "neutral",
+        "displayName": "Raked Gravel (dusk)",
+        "canonical": "#d6b6a3",
+        "sceneRole": "gravel",
+        "variants": {
+          "day": "#e2ddcd",
+          "dusk": "#d6b6a3",
+          "night": "#383b51"
+        },
+        "tonalRamp": [
+          "#383b51",
+          "#d6b6a3",
+          "#e2ddcd"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "gravel-night": {
+        "role": "neutral",
+        "displayName": "Raked Gravel (night)",
+        "canonical": "#383b51",
+        "sceneRole": "gravel",
+        "variants": {
+          "day": "#e2ddcd",
+          "dusk": "#d6b6a3",
+          "night": "#383b51"
+        },
+        "tonalRamp": [
+          "#383b51",
+          "#d6b6a3",
+          "#e2ddcd"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "rakeD-day": {
+        "role": "neutral",
+        "displayName": "Rake Furrow (day)",
+        "canonical": "#cdc6b2",
+        "sceneRole": "rakeD",
+        "variants": {
+          "day": "#cdc6b2",
+          "dusk": "#c19f8f",
+          "night": "#2d3046"
+        },
+        "tonalRamp": [
+          "#2d3046",
+          "#c19f8f",
+          "#cdc6b2"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "rakeD-dusk": {
+        "role": "neutral",
+        "displayName": "Rake Furrow (dusk)",
+        "canonical": "#c19f8f",
+        "sceneRole": "rakeD",
+        "variants": {
+          "day": "#cdc6b2",
+          "dusk": "#c19f8f",
+          "night": "#2d3046"
+        },
+        "tonalRamp": [
+          "#2d3046",
+          "#c19f8f",
+          "#cdc6b2"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "rakeD-night": {
+        "role": "neutral",
+        "displayName": "Rake Furrow (night)",
+        "canonical": "#2d3046",
+        "sceneRole": "rakeD",
+        "variants": {
+          "day": "#cdc6b2",
+          "dusk": "#c19f8f",
+          "night": "#2d3046"
+        },
+        "tonalRamp": [
+          "#2d3046",
+          "#c19f8f",
+          "#cdc6b2"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "rakeL-day": {
+        "role": "neutral",
+        "displayName": "Rake Crest (day)",
+        "canonical": "#f2efe5",
+        "sceneRole": "rakeL",
+        "variants": {
+          "day": "#f2efe5",
+          "dusk": "#e6cdbd",
+          "night": "#454a63"
+        },
+        "tonalRamp": [
+          "#454a63",
+          "#e6cdbd",
+          "#f2efe5"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "rakeL-dusk": {
+        "role": "neutral",
+        "displayName": "Rake Crest (dusk)",
+        "canonical": "#e6cdbd",
+        "sceneRole": "rakeL",
+        "variants": {
+          "day": "#f2efe5",
+          "dusk": "#e6cdbd",
+          "night": "#454a63"
+        },
+        "tonalRamp": [
+          "#454a63",
+          "#e6cdbd",
+          "#f2efe5"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "rakeL-night": {
+        "role": "neutral",
+        "displayName": "Rake Crest (night)",
+        "canonical": "#454a63",
+        "sceneRole": "rakeL",
+        "variants": {
+          "day": "#f2efe5",
+          "dusk": "#e6cdbd",
+          "night": "#454a63"
+        },
+        "tonalRamp": [
+          "#454a63",
+          "#e6cdbd",
+          "#f2efe5"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "stone-day": {
+        "role": "neutral",
+        "displayName": "Garden Stone (day)",
+        "canonical": "#a09b90",
+        "sceneRole": "stone",
+        "variants": {
+          "day": "#a09b90",
+          "dusk": "#8f8083",
+          "night": "#4d4c5e"
+        },
+        "tonalRamp": [
+          "#4d4c5e",
+          "#8f8083",
+          "#a09b90"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "stone-dusk": {
+        "role": "neutral",
+        "displayName": "Garden Stone (dusk)",
+        "canonical": "#8f8083",
+        "sceneRole": "stone",
+        "variants": {
+          "day": "#a09b90",
+          "dusk": "#8f8083",
+          "night": "#4d4c5e"
+        },
+        "tonalRamp": [
+          "#4d4c5e",
+          "#8f8083",
+          "#a09b90"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "stone-night": {
+        "role": "neutral",
+        "displayName": "Garden Stone (night)",
+        "canonical": "#4d4c5e",
+        "sceneRole": "stone",
+        "variants": {
+          "day": "#a09b90",
+          "dusk": "#8f8083",
+          "night": "#4d4c5e"
+        },
+        "tonalRamp": [
+          "#4d4c5e",
+          "#8f8083",
+          "#a09b90"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "stoneD-day": {
+        "role": "neutral",
+        "displayName": "Stone Shadow (day)",
+        "canonical": "#77726a",
+        "sceneRole": "stoneD",
+        "variants": {
+          "day": "#77726a",
+          "dusk": "#685d65",
+          "night": "#353548"
+        },
+        "tonalRamp": [
+          "#353548",
+          "#685d65",
+          "#77726a"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "stoneD-dusk": {
+        "role": "neutral",
+        "displayName": "Stone Shadow (dusk)",
+        "canonical": "#685d65",
+        "sceneRole": "stoneD",
+        "variants": {
+          "day": "#77726a",
+          "dusk": "#685d65",
+          "night": "#353548"
+        },
+        "tonalRamp": [
+          "#353548",
+          "#685d65",
+          "#77726a"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "stoneD-night": {
+        "role": "neutral",
+        "displayName": "Stone Shadow (night)",
+        "canonical": "#353548",
+        "sceneRole": "stoneD",
+        "variants": {
+          "day": "#77726a",
+          "dusk": "#685d65",
+          "night": "#353548"
+        },
+        "tonalRamp": [
+          "#353548",
+          "#685d65",
+          "#77726a"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "stoneH-day": {
+        "role": "neutral",
+        "displayName": "Stone Light (day)",
+        "canonical": "#c7c2b6",
+        "sceneRole": "stoneH",
+        "variants": {
+          "day": "#c7c2b6",
+          "dusk": "#b8a6a4",
+          "night": "#66667c"
+        },
+        "tonalRamp": [
+          "#66667c",
+          "#b8a6a4",
+          "#c7c2b6"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "stoneH-dusk": {
+        "role": "neutral",
+        "displayName": "Stone Light (dusk)",
+        "canonical": "#b8a6a4",
+        "sceneRole": "stoneH",
+        "variants": {
+          "day": "#c7c2b6",
+          "dusk": "#b8a6a4",
+          "night": "#66667c"
+        },
+        "tonalRamp": [
+          "#66667c",
+          "#b8a6a4",
+          "#c7c2b6"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "stoneH-night": {
+        "role": "neutral",
+        "displayName": "Stone Light (night)",
+        "canonical": "#66667c",
+        "sceneRole": "stoneH",
+        "variants": {
+          "day": "#c7c2b6",
+          "dusk": "#b8a6a4",
+          "night": "#66667c"
+        },
+        "tonalRamp": [
+          "#66667c",
+          "#b8a6a4",
+          "#c7c2b6"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "moss-day": {
+        "role": "neutral",
+        "displayName": "Moss (day)",
+        "canonical": "#7f9c4f",
+        "sceneRole": "moss",
+        "variants": {
+          "day": "#7f9c4f",
+          "dusk": "#6f7c56",
+          "night": "#2c4639"
+        },
+        "tonalRamp": [
+          "#2c4639",
+          "#6f7c56",
+          "#7f9c4f"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "moss-dusk": {
+        "role": "neutral",
+        "displayName": "Moss (dusk)",
+        "canonical": "#6f7c56",
+        "sceneRole": "moss",
+        "variants": {
+          "day": "#7f9c4f",
+          "dusk": "#6f7c56",
+          "night": "#2c4639"
+        },
+        "tonalRamp": [
+          "#2c4639",
+          "#6f7c56",
+          "#7f9c4f"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "moss-night": {
+        "role": "neutral",
+        "displayName": "Moss (night)",
+        "canonical": "#2c4639",
+        "sceneRole": "moss",
+        "variants": {
+          "day": "#7f9c4f",
+          "dusk": "#6f7c56",
+          "night": "#2c4639"
+        },
+        "tonalRamp": [
+          "#2c4639",
+          "#6f7c56",
+          "#7f9c4f"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "mossD-day": {
+        "role": "neutral",
+        "displayName": "Moss Shadow (day)",
+        "canonical": "#617c3c",
+        "sceneRole": "mossD",
+        "variants": {
+          "day": "#617c3c",
+          "dusk": "#58613f",
+          "night": "#213529"
+        },
+        "tonalRamp": [
+          "#213529",
+          "#58613f",
+          "#617c3c"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "mossD-dusk": {
+        "role": "neutral",
+        "displayName": "Moss Shadow (dusk)",
+        "canonical": "#58613f",
+        "sceneRole": "mossD",
+        "variants": {
+          "day": "#617c3c",
+          "dusk": "#58613f",
+          "night": "#213529"
+        },
+        "tonalRamp": [
+          "#213529",
+          "#58613f",
+          "#617c3c"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "mossD-night": {
+        "role": "neutral",
+        "displayName": "Moss Shadow (night)",
+        "canonical": "#213529",
+        "sceneRole": "mossD",
+        "variants": {
+          "day": "#617c3c",
+          "dusk": "#58613f",
+          "night": "#213529"
+        },
+        "tonalRamp": [
+          "#213529",
+          "#58613f",
+          "#617c3c"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "mossH-day": {
+        "role": "neutral",
+        "displayName": "Moss Light (day)",
+        "canonical": "#a3bd67",
+        "sceneRole": "mossH",
+        "variants": {
+          "day": "#a3bd67",
+          "dusk": "#8e9a6a",
+          "night": "#3a5a45"
+        },
+        "tonalRamp": [
+          "#3a5a45",
+          "#8e9a6a",
+          "#a3bd67"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "mossH-dusk": {
+        "role": "neutral",
+        "displayName": "Moss Light (dusk)",
+        "canonical": "#8e9a6a",
+        "sceneRole": "mossH",
+        "variants": {
+          "day": "#a3bd67",
+          "dusk": "#8e9a6a",
+          "night": "#3a5a45"
+        },
+        "tonalRamp": [
+          "#3a5a45",
+          "#8e9a6a",
+          "#a3bd67"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "mossH-night": {
+        "role": "neutral",
+        "displayName": "Moss Light (night)",
+        "canonical": "#3a5a45",
+        "sceneRole": "mossH",
+        "variants": {
+          "day": "#a3bd67",
+          "dusk": "#8e9a6a",
+          "night": "#3a5a45"
+        },
+        "tonalRamp": [
+          "#3a5a45",
+          "#8e9a6a",
+          "#a3bd67"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "maple-day": {
+        "role": "neutral",
+        "displayName": "Momiji (day)",
+        "canonical": "#cf4f3c",
+        "sceneRole": "maple",
+        "variants": {
+          "day": "#cf4f3c",
+          "dusk": "#c04a48",
+          "night": "#5a2633"
+        },
+        "tonalRamp": [
+          "#5a2633",
+          "#c04a48",
+          "#cf4f3c"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "maple-dusk": {
+        "role": "neutral",
+        "displayName": "Momiji (dusk)",
+        "canonical": "#c04a48",
+        "sceneRole": "maple",
+        "variants": {
+          "day": "#cf4f3c",
+          "dusk": "#c04a48",
+          "night": "#5a2633"
+        },
+        "tonalRamp": [
+          "#5a2633",
+          "#c04a48",
+          "#cf4f3c"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "maple-night": {
+        "role": "neutral",
+        "displayName": "Momiji (night)",
+        "canonical": "#5a2633",
+        "sceneRole": "maple",
+        "variants": {
+          "day": "#cf4f3c",
+          "dusk": "#c04a48",
+          "night": "#5a2633"
+        },
+        "tonalRamp": [
+          "#5a2633",
+          "#c04a48",
+          "#cf4f3c"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "mapleH-day": {
+        "role": "neutral",
+        "displayName": "Momiji Light (day)",
+        "canonical": "#e9744a",
+        "sceneRole": "mapleH",
+        "variants": {
+          "day": "#e9744a",
+          "dusk": "#dd6a55",
+          "night": "#78313c"
+        },
+        "tonalRamp": [
+          "#78313c",
+          "#dd6a55",
+          "#e9744a"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "mapleH-dusk": {
+        "role": "neutral",
+        "displayName": "Momiji Light (dusk)",
+        "canonical": "#dd6a55",
+        "sceneRole": "mapleH",
+        "variants": {
+          "day": "#e9744a",
+          "dusk": "#dd6a55",
+          "night": "#78313c"
+        },
+        "tonalRamp": [
+          "#78313c",
+          "#dd6a55",
+          "#e9744a"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "mapleH-night": {
+        "role": "neutral",
+        "displayName": "Momiji Light (night)",
+        "canonical": "#78313c",
+        "sceneRole": "mapleH",
+        "variants": {
+          "day": "#e9744a",
+          "dusk": "#dd6a55",
+          "night": "#78313c"
+        },
+        "tonalRamp": [
+          "#78313c",
+          "#dd6a55",
+          "#e9744a"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "mapleD-day": {
+        "role": "neutral",
+        "displayName": "Momiji Shadow (day)",
+        "canonical": "#9b3330",
+        "sceneRole": "mapleD",
+        "variants": {
+          "day": "#9b3330",
+          "dusk": "#8a3039",
+          "night": "#3c1a26"
+        },
+        "tonalRamp": [
+          "#3c1a26",
+          "#8a3039",
+          "#9b3330"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "mapleD-dusk": {
+        "role": "neutral",
+        "displayName": "Momiji Shadow (dusk)",
+        "canonical": "#8a3039",
+        "sceneRole": "mapleD",
+        "variants": {
+          "day": "#9b3330",
+          "dusk": "#8a3039",
+          "night": "#3c1a26"
+        },
+        "tonalRamp": [
+          "#3c1a26",
+          "#8a3039",
+          "#9b3330"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "mapleD-night": {
+        "role": "neutral",
+        "displayName": "Momiji Shadow (night)",
+        "canonical": "#3c1a26",
+        "sceneRole": "mapleD",
+        "variants": {
+          "day": "#9b3330",
+          "dusk": "#8a3039",
+          "night": "#3c1a26"
+        },
+        "tonalRamp": [
+          "#3c1a26",
+          "#8a3039",
+          "#9b3330"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "trunk-day": {
+        "role": "neutral",
+        "displayName": "Maple Trunk (day)",
+        "canonical": "#4b3529",
+        "sceneRole": "trunk",
+        "variants": {
+          "day": "#4b3529",
+          "dusk": "#3f2c2d",
+          "night": "#1d1519"
+        },
+        "tonalRamp": [
+          "#1d1519",
+          "#3f2c2d",
+          "#4b3529"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "trunk-dusk": {
+        "role": "neutral",
+        "displayName": "Maple Trunk (dusk)",
+        "canonical": "#3f2c2d",
+        "sceneRole": "trunk",
+        "variants": {
+          "day": "#4b3529",
+          "dusk": "#3f2c2d",
+          "night": "#1d1519"
+        },
+        "tonalRamp": [
+          "#1d1519",
+          "#3f2c2d",
+          "#4b3529"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "trunk-night": {
+        "role": "neutral",
+        "displayName": "Maple Trunk (night)",
+        "canonical": "#1d1519",
+        "sceneRole": "trunk",
+        "variants": {
+          "day": "#4b3529",
+          "dusk": "#3f2c2d",
+          "night": "#1d1519"
+        },
+        "tonalRamp": [
+          "#1d1519",
+          "#3f2c2d",
+          "#4b3529"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "water-day": {
+        "role": "neutral",
+        "displayName": "Pond (day)",
+        "canonical": "#6aa6c9",
+        "sceneRole": "water",
+        "variants": {
+          "day": "#6aa6c9",
+          "dusk": "#9b6f97",
+          "night": "#1c2e56"
+        },
+        "tonalRamp": [
+          "#1c2e56",
+          "#9b6f97",
+          "#6aa6c9"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "water-dusk": {
+        "role": "neutral",
+        "displayName": "Pond (dusk)",
+        "canonical": "#9b6f97",
+        "sceneRole": "water",
+        "variants": {
+          "day": "#6aa6c9",
+          "dusk": "#9b6f97",
+          "night": "#1c2e56"
+        },
+        "tonalRamp": [
+          "#1c2e56",
+          "#9b6f97",
+          "#6aa6c9"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "water-night": {
+        "role": "neutral",
+        "displayName": "Pond (night)",
+        "canonical": "#1c2e56",
+        "sceneRole": "water",
+        "variants": {
+          "day": "#6aa6c9",
+          "dusk": "#9b6f97",
+          "night": "#1c2e56"
+        },
+        "tonalRamp": [
+          "#1c2e56",
+          "#9b6f97",
+          "#6aa6c9"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "waterD-day": {
+        "role": "neutral",
+        "displayName": "Pond Depth (day)",
+        "canonical": "#4c86ad",
+        "sceneRole": "waterD",
+        "variants": {
+          "day": "#4c86ad",
+          "dusk": "#6f5285",
+          "night": "#132143"
+        },
+        "tonalRamp": [
+          "#132143",
+          "#6f5285",
+          "#4c86ad"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "waterD-dusk": {
+        "role": "neutral",
+        "displayName": "Pond Depth (dusk)",
+        "canonical": "#6f5285",
+        "sceneRole": "waterD",
+        "variants": {
+          "day": "#4c86ad",
+          "dusk": "#6f5285",
+          "night": "#132143"
+        },
+        "tonalRamp": [
+          "#132143",
+          "#6f5285",
+          "#4c86ad"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "waterD-night": {
+        "role": "neutral",
+        "displayName": "Pond Depth (night)",
+        "canonical": "#132143",
+        "sceneRole": "waterD",
+        "variants": {
+          "day": "#4c86ad",
+          "dusk": "#6f5285",
+          "night": "#132143"
+        },
+        "tonalRamp": [
+          "#132143",
+          "#6f5285",
+          "#4c86ad"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "waterH-day": {
+        "role": "neutral",
+        "displayName": "Pond Glint (day)",
+        "canonical": "#c3e3ef",
+        "sceneRole": "waterH",
+        "variants": {
+          "day": "#c3e3ef",
+          "dusk": "#f3b98f",
+          "night": "#3e5585"
+        },
+        "tonalRamp": [
+          "#3e5585",
+          "#f3b98f",
+          "#c3e3ef"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "waterH-dusk": {
+        "role": "neutral",
+        "displayName": "Pond Glint (dusk)",
+        "canonical": "#f3b98f",
+        "sceneRole": "waterH",
+        "variants": {
+          "day": "#c3e3ef",
+          "dusk": "#f3b98f",
+          "night": "#3e5585"
+        },
+        "tonalRamp": [
+          "#3e5585",
+          "#f3b98f",
+          "#c3e3ef"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "waterH-night": {
+        "role": "neutral",
+        "displayName": "Pond Glint (night)",
+        "canonical": "#3e5585",
+        "sceneRole": "waterH",
+        "variants": {
+          "day": "#c3e3ef",
+          "dusk": "#f3b98f",
+          "night": "#3e5585"
+        },
+        "tonalRamp": [
+          "#3e5585",
+          "#f3b98f",
+          "#c3e3ef"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "pad-day": {
+        "role": "neutral",
+        "displayName": "Lily Pad (day)",
+        "canonical": "#6f9a4c",
+        "sceneRole": "pad",
+        "variants": {
+          "day": "#6f9a4c",
+          "dusk": "#5f7451",
+          "night": "#264233"
+        },
+        "tonalRamp": [
+          "#264233",
+          "#5f7451",
+          "#6f9a4c"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "pad-dusk": {
+        "role": "neutral",
+        "displayName": "Lily Pad (dusk)",
+        "canonical": "#5f7451",
+        "sceneRole": "pad",
+        "variants": {
+          "day": "#6f9a4c",
+          "dusk": "#5f7451",
+          "night": "#264233"
+        },
+        "tonalRamp": [
+          "#264233",
+          "#5f7451",
+          "#6f9a4c"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "pad-night": {
+        "role": "neutral",
+        "displayName": "Lily Pad (night)",
+        "canonical": "#264233",
+        "sceneRole": "pad",
+        "variants": {
+          "day": "#6f9a4c",
+          "dusk": "#5f7451",
+          "night": "#264233"
+        },
+        "tonalRamp": [
+          "#264233",
+          "#5f7451",
+          "#6f9a4c"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "cloud-day": {
+        "role": "neutral",
+        "displayName": "Cloud (day)",
+        "canonical": "#ffffff",
+        "sceneRole": "cloud",
+        "variants": {
+          "day": "#ffffff",
+          "dusk": "#f7c7ae",
+          "night": "#2c3762"
+        },
+        "tonalRamp": [
+          "#2c3762",
+          "#f7c7ae",
+          "#ffffff"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "cloud-dusk": {
+        "role": "neutral",
+        "displayName": "Cloud (dusk)",
+        "canonical": "#f7c7ae",
+        "sceneRole": "cloud",
+        "variants": {
+          "day": "#ffffff",
+          "dusk": "#f7c7ae",
+          "night": "#2c3762"
+        },
+        "tonalRamp": [
+          "#2c3762",
+          "#f7c7ae",
+          "#ffffff"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "cloud-night": {
+        "role": "neutral",
+        "displayName": "Cloud (night)",
+        "canonical": "#2c3762",
+        "sceneRole": "cloud",
+        "variants": {
+          "day": "#ffffff",
+          "dusk": "#f7c7ae",
+          "night": "#2c3762"
+        },
+        "tonalRamp": [
+          "#2c3762",
+          "#f7c7ae",
+          "#ffffff"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "cloudD-day": {
+        "role": "neutral",
+        "displayName": "Cloud Belly (day)",
+        "canonical": "#dfe9f3",
+        "sceneRole": "cloudD",
+        "variants": {
+          "day": "#dfe9f3",
+          "dusk": "#d99a94",
+          "night": "#222c55"
+        },
+        "tonalRamp": [
+          "#222c55",
+          "#d99a94",
+          "#dfe9f3"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "cloudD-dusk": {
+        "role": "neutral",
+        "displayName": "Cloud Belly (dusk)",
+        "canonical": "#d99a94",
+        "sceneRole": "cloudD",
+        "variants": {
+          "day": "#dfe9f3",
+          "dusk": "#d99a94",
+          "night": "#222c55"
+        },
+        "tonalRamp": [
+          "#222c55",
+          "#d99a94",
+          "#dfe9f3"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "cloudD-night": {
+        "role": "neutral",
+        "displayName": "Cloud Belly (night)",
+        "canonical": "#222c55",
+        "sceneRole": "cloudD",
+        "variants": {
+          "day": "#dfe9f3",
+          "dusk": "#d99a94",
+          "night": "#222c55"
+        },
+        "tonalRamp": [
+          "#222c55",
+          "#d99a94",
+          "#dfe9f3"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "sun-day": {
+        "role": "neutral",
+        "displayName": "Sun / Moon (day)",
+        "canonical": "#fff1b5",
+        "sceneRole": "sun",
+        "variants": {
+          "day": "#fff1b5",
+          "dusk": "#ffd27a",
+          "night": "#f1ecd2"
+        },
+        "tonalRamp": [
+          "#f1ecd2",
+          "#ffd27a",
+          "#fff1b5"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "sun-dusk": {
+        "role": "neutral",
+        "displayName": "Sun / Moon (dusk)",
+        "canonical": "#ffd27a",
+        "sceneRole": "sun",
+        "variants": {
+          "day": "#fff1b5",
+          "dusk": "#ffd27a",
+          "night": "#f1ecd2"
+        },
+        "tonalRamp": [
+          "#f1ecd2",
+          "#ffd27a",
+          "#fff1b5"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "sun-night": {
+        "role": "neutral",
+        "displayName": "Sun / Moon (night)",
+        "canonical": "#f1ecd2",
+        "sceneRole": "sun",
+        "variants": {
+          "day": "#fff1b5",
+          "dusk": "#ffd27a",
+          "night": "#f1ecd2"
+        },
+        "tonalRamp": [
+          "#f1ecd2",
+          "#ffd27a",
+          "#fff1b5"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "bush-day": {
+        "role": "neutral",
+        "displayName": "Bush (day)",
+        "canonical": "#5f8a4f",
+        "sceneRole": "bush",
+        "variants": {
+          "day": "#5f8a4f",
+          "dusk": "#57664f",
+          "night": "#1f3a33"
+        },
+        "tonalRamp": [
+          "#1f3a33",
+          "#57664f",
+          "#5f8a4f"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "bush-dusk": {
+        "role": "neutral",
+        "displayName": "Bush (dusk)",
+        "canonical": "#57664f",
+        "sceneRole": "bush",
+        "variants": {
+          "day": "#5f8a4f",
+          "dusk": "#57664f",
+          "night": "#1f3a33"
+        },
+        "tonalRamp": [
+          "#1f3a33",
+          "#57664f",
+          "#5f8a4f"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "bush-night": {
+        "role": "neutral",
+        "displayName": "Bush (night)",
+        "canonical": "#1f3a33",
+        "sceneRole": "bush",
+        "variants": {
+          "day": "#5f8a4f",
+          "dusk": "#57664f",
+          "night": "#1f3a33"
+        },
+        "tonalRamp": [
+          "#1f3a33",
+          "#57664f",
+          "#5f8a4f"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "bushH-day": {
+        "role": "neutral",
+        "displayName": "Bush Light (day)",
+        "canonical": "#7fa865",
+        "sceneRole": "bushH",
+        "variants": {
+          "day": "#7fa865",
+          "dusk": "#6f7c63",
+          "night": "#2b4a40"
+        },
+        "tonalRamp": [
+          "#2b4a40",
+          "#6f7c63",
+          "#7fa865"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "bushH-dusk": {
+        "role": "neutral",
+        "displayName": "Bush Light (dusk)",
+        "canonical": "#6f7c63",
+        "sceneRole": "bushH",
+        "variants": {
+          "day": "#7fa865",
+          "dusk": "#6f7c63",
+          "night": "#2b4a40"
+        },
+        "tonalRamp": [
+          "#2b4a40",
+          "#6f7c63",
+          "#7fa865"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "bushH-night": {
+        "role": "neutral",
+        "displayName": "Bush Light (night)",
+        "canonical": "#2b4a40",
+        "sceneRole": "bushH",
+        "variants": {
+          "day": "#7fa865",
+          "dusk": "#6f7c63",
+          "night": "#2b4a40"
+        },
+        "tonalRamp": [
+          "#2b4a40",
+          "#6f7c63",
+          "#7fa865"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "bloom-day": {
+        "role": "neutral",
+        "displayName": "Bloom (day)",
+        "canonical": "#f2a5c0",
+        "sceneRole": "bloom",
+        "variants": {
+          "day": "#f2a5c0",
+          "dusk": "#e895a8",
+          "night": "#7a4f6e"
+        },
+        "tonalRamp": [
+          "#7a4f6e",
+          "#e895a8",
+          "#f2a5c0"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "bloom-dusk": {
+        "role": "neutral",
+        "displayName": "Bloom (dusk)",
+        "canonical": "#e895a8",
+        "sceneRole": "bloom",
+        "variants": {
+          "day": "#f2a5c0",
+          "dusk": "#e895a8",
+          "night": "#7a4f6e"
+        },
+        "tonalRamp": [
+          "#7a4f6e",
+          "#e895a8",
+          "#f2a5c0"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "bloom-night": {
+        "role": "neutral",
+        "displayName": "Bloom (night)",
+        "canonical": "#7a4f6e",
+        "sceneRole": "bloom",
+        "variants": {
+          "day": "#f2a5c0",
+          "dusk": "#e895a8",
+          "night": "#7a4f6e"
+        },
+        "tonalRamp": [
+          "#7a4f6e",
+          "#e895a8",
+          "#f2a5c0"
+        ],
+        "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
+      },
+      "mochi-base": {
+        "role": "primary",
+        "displayName": "Sakura Mochi base",
+        "canonical": "#f4a3bc",
+        "tonalRamp": [
+          "#d77898",
+          "#f4a3bc",
+          "#fcd2df"
+        ],
+        "note": "Fixed pet tone; never relit by the clock."
+      },
+      "mochi-hi": {
+        "role": "primary",
+        "displayName": "Sakura Mochi rim light",
+        "canonical": "#fcd2df",
+        "tonalRamp": [
+          "#d77898",
+          "#f4a3bc",
+          "#fcd2df"
+        ]
+      },
+      "mochi-shade": {
+        "role": "primary",
+        "displayName": "Sakura Mochi shade",
+        "canonical": "#d77898",
+        "tonalRamp": [
+          "#d77898",
+          "#f4a3bc",
+          "#fcd2df"
+        ]
+      },
+      "tofu-base": {
+        "role": "primary",
+        "displayName": "Matcha Tofu base",
+        "canonical": "#9fc36a",
+        "tonalRamp": [
+          "#729744",
+          "#9fc36a",
+          "#c8e196"
+        ],
+        "note": "Fixed pet tone; never relit by the clock."
+      },
+      "tofu-hi": {
+        "role": "primary",
+        "displayName": "Matcha Tofu rim light",
+        "canonical": "#c8e196",
+        "tonalRamp": [
+          "#729744",
+          "#9fc36a",
+          "#c8e196"
+        ]
+      },
+      "tofu-shade": {
+        "role": "primary",
+        "displayName": "Matcha Tofu shade",
+        "canonical": "#729744",
+        "tonalRamp": [
+          "#729744",
+          "#9fc36a",
+          "#c8e196"
+        ]
+      },
+      "onigiri-base": {
+        "role": "primary",
+        "displayName": "Rice Onigiri base",
+        "canonical": "#f7f2e6",
+        "tonalRamp": [
+          "#d6cdb9",
+          "#f7f2e6",
+          "#ffffff"
+        ],
+        "note": "Fixed pet tone; never relit by the clock."
+      },
+      "onigiri-hi": {
+        "role": "primary",
+        "displayName": "Rice Onigiri rim light",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "#d6cdb9",
+          "#f7f2e6",
+          "#ffffff"
+        ]
+      },
+      "onigiri-shade": {
+        "role": "primary",
+        "displayName": "Rice Onigiri shade",
+        "canonical": "#d6cdb9",
+        "tonalRamp": [
+          "#d6cdb9",
+          "#f7f2e6",
+          "#ffffff"
+        ]
+      },
+      "pet-ink": {
+        "role": "primary",
+        "displayName": "Dark Plum Ink",
+        "canonical": "#2a2033",
+        "note": "1 px outline around every pet silhouette, eyes, mouths, feet, z outline."
+      },
+      "lantern-light": {
+        "role": "secondary",
+        "displayName": "Lantern Gold",
+        "canonical": "#ffd27a",
+        "note": "Toro window and dithered halo at night."
+      },
+      "crumb-gold": {
+        "role": "secondary",
+        "displayName": "Crumb Gold",
+        "canonical": "#f0c64e",
+        "note": "Eat crumbs; the same gold is the alert ring and alert verb in the chrome."
+      },
+      "chrome-ink": {
+        "role": "neutral",
+        "displayName": "Sumi Ink",
+        "canonical": "#26241f"
+      },
+      "chrome-paper": {
+        "role": "neutral",
+        "displayName": "Washi Paper",
+        "canonical": "#f7f4ec"
+      },
+      "chrome-night-ink": {
+        "role": "neutral",
+        "displayName": "Night Paper",
+        "canonical": "#f1eee6"
+      },
+      "focus-ring": {
+        "role": "neutral",
+        "displayName": "Focus Blue",
+        "canonical": "#4e6ea3"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Wordmark, notice titles, \"get a pet\", privacy headings. Zen Maru Gothic 500/700 only."
+      },
+      "tag": {
+        "displayName": "Tag",
+        "purpose": "Pet name on its name tag; verb follows in tag-verb at 75% opacity."
+      },
+      "tag-verb": {
+        "displayName": "Tag verb",
+        "purpose": "Lowercase state verb inside the tag."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Notice and privacy body copy."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Nav link, status pill, hint."
+      },
+      "command": {
+        "displayName": "Command",
+        "purpose": "Strings the visitor types or pastes; never names or headings."
+      }
+    },
+    "shadows": [
+      {
+        "name": "chip-float",
+        "value": "0 6px 20px rgba(38, 36, 31, 0.12)",
+        "purpose": "Every frosted chip, tag, pill, hint and notice. Paired with backdrop-filter: blur(12px) saturate(1.3)."
+      },
+      {
+        "name": "alert-ring",
+        "value": "0 0 0 3px rgba(240, 198, 78, 0.8), 0 6px 20px rgba(20, 18, 30, 0.25)",
+        "purpose": "Waiting-pet tag only."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out-expo",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Tag lift (0.2s) and hint fade-in (0.5s)."
+      },
+      {
+        "name": "tag-lift",
+        "value": "translate -50% -2px; scale 1.04; 0.2s",
+        "purpose": "Tag hover/focus; uses translate/scale properties, not transform."
+      },
+      {
+        "name": "sprite-rates",
+        "value": "idle 4f@3fps, eat 4f@5, wave 2f@4, work 2f@6, sleep 3f@1.5, cheer 4f@8; per-pet offset 1.7 frames",
+        "purpose": "Pet state loops; reduced motion holds frame 0."
+      },
+      {
+        "name": "boop",
+        "value": "0.45s sine hop up to 5px + 3 pixel hearts",
+        "purpose": "Pet or tag activation."
+      },
+      {
+        "name": "ripple",
+        "value": "1.4s, radius 2 + 16t, y squash 0.32",
+        "purpose": "Task finished, or pond tap (koi x3 speed for 0.9s)."
+      },
+      {
+        "name": "clouds",
+        "value": "1.8 to 3.3 px/s drift, wrap",
+        "purpose": "Day sky; frozen with reduced motion."
+      },
+      {
+        "name": "koi",
+        "value": "0.28 and 0.35 rad/s ellipse, tail flick 200ms",
+        "purpose": "Pond; frozen with reduced motion."
+      },
+      {
+        "name": "leaves",
+        "value": "max 10, spawn ~1 per 2.2s, fall 9px/s, rest 9s",
+        "purpose": "Maple; off with reduced motion."
+      },
+      {
+        "name": "night-life",
+        "value": "stars twinkle, up to 9 fireflies, lantern flicker between two baked densities",
+        "purpose": "Night only; static with reduced motion."
+      },
+      {
+        "name": "clock",
+        "value": "night<05:00, ->dusk 06:12, ->day 07:30, day to 17:00, ->dusk 18:36, ->night 20:00; palette step 0.1h; clock poll 15s; ?h= preview",
+        "purpose": "Relights the scene and switches chrome skin."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px",
+        "purpose": "Header inset 12->24px, burrow name shown, command pill left-aligned with \"get a pet\", hint moves bottom-right."
+      },
+      {
+        "name": "portrait",
+        "value": "height > width",
+        "purpose": "Scale by width/130, higher horizon, 2 clouds, portrait landmark positions, bottomReserve 130 CSS px."
+      }
+    ],
+    "scaleRules": {
+      "pixelScale": "max(2, landscape ? round(vh/190) : round(vw/130)); width = ceil(vw/S), height = floor(vh/S)",
+      "tagGap": "max(26, ceil(150/S)) garden px",
+      "bottomReserve": "ceil((portrait ? 130 : 70)/S) + 12 garden px",
+      "rowPitch": "36 garden px",
+      "edgeMargin": "max(16, tagGap/2) garden px",
+      "horizon": "landscape round(min(92, 0.47H)); portrait round(min(96, 0.27H)); gravelTop = horizon + 17",
+      "pondKeepOut": "ellipse rx+12, ry+8 around the pond",
+      "gravelKeepOut": "pets at least 12 px below gravelTop",
+      "focalSpot": "[0.5W, min(front, pondFront + 22)]; first member always",
+      "maxMembers": 24,
+      "sprite": "32x32 grid, centre x 16, baseline row 28, feet row 29, 1px pet-ink outline (4-connected)",
+      "tagAnchor": "spot y + 6 garden px, centred"
+    }
+  },
+  "components": [
+    {
+      "name": "Chip (day)",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Frosted pill for header, nav, hint; follows the sky, not the OS theme.",
+      "html": "<span class=\"ds-chip\">burrow <span class=\"ds-chip-solid\">live</span></span>",
+      "css": ".ds-chip{display:inline-flex;align-items:center;gap:12px;padding:4px 4px 4px 12px;border-radius:999px;color:#26241f;background:rgba(250,249,245,0.8);border:1px solid rgba(255,255,255,0.9);box-shadow:0 6px 20px rgba(38,36,31,0.12);backdrop-filter:blur(12px) saturate(1.3);-webkit-backdrop-filter:blur(12px) saturate(1.3);font:500 12px/1.33 \"Zen Kaku Gothic New\",system-ui,sans-serif}.ds-chip-solid{background:#26241f;color:#f7f4ec;border-radius:999px;padding:4px 10px}"
+    },
+    {
+      "name": "Chip (night)",
+      "kind": "chip",
+      "refersTo": "chip-night",
+      "description": "Night skin of the same chip; solid pill inverts.",
+      "html": "<span class=\"ds-chip-n\">privacy <span class=\"ds-chip-n-solid\">live</span></span>",
+      "css": ".ds-chip-n{display:inline-flex;align-items:center;gap:12px;padding:4px 4px 4px 12px;border-radius:999px;color:#f1eee6;background:rgba(24,26,32,0.76);border:1px solid rgba(255,255,255,0.16);box-shadow:0 6px 20px rgba(38,36,31,0.12);backdrop-filter:blur(12px) saturate(1.3);-webkit-backdrop-filter:blur(12px) saturate(1.3);font:500 12px/1.33 \"Zen Kaku Gothic New\",system-ui,sans-serif}.ds-chip-n-solid{background:#f1eee6;color:#26241f;border-radius:999px;padding:4px 10px}"
+    },
+    {
+      "name": "Name tag",
+      "kind": "button",
+      "refersTo": "tag",
+      "description": "The glance signal and a control: name, lowercase verb, detail on hover/focus; activating boops the pet.",
+      "html": "<button type=\"button\" class=\"ds-tag\">ada<i>working</i></button>",
+      "css": ".ds-tag{font:700 clamp(12px,1vw,15px)/1 \"Zen Maru Gothic\",ui-rounded,system-ui,sans-serif;padding:0.5em 0.9em;border-radius:999px;white-space:nowrap;cursor:pointer;color:#26241f;background:rgba(250,249,245,0.8);border:1px solid rgba(255,255,255,0.9);box-shadow:0 6px 20px rgba(38,36,31,0.12);backdrop-filter:blur(12px) saturate(1.3);transition:translate .2s cubic-bezier(0.16,1,0.3,1),scale .2s cubic-bezier(0.16,1,0.3,1)}.ds-tag i{font-style:normal;font-weight:500;opacity:.75;margin-left:.45em}.ds-tag:hover,.ds-tag:focus-visible{translate:0 -2px;scale:1.04}.ds-tag:focus-visible{outline:2px solid #4e6ea3;outline-offset:3px}@media (prefers-reduced-motion:reduce){.ds-tag{transition:none}}"
+    },
+    {
+      "name": "Name tag (needs you)",
+      "kind": "button",
+      "refersTo": "tag-alert",
+      "description": "Only the waiting state: ink fill, gold ring, gold verb.",
+      "html": "<button type=\"button\" class=\"ds-tag-alert\">mika<i>needs you</i></button>",
+      "css": ".ds-tag-alert{font:700 clamp(12px,1vw,15px)/1 \"Zen Maru Gothic\",ui-rounded,system-ui,sans-serif;padding:0.5em 0.9em;border-radius:999px;white-space:nowrap;cursor:pointer;color:#f7f4ec;background:rgba(38,36,31,0.92);border:1px solid transparent;box-shadow:0 0 0 3px rgba(240,198,78,0.8),0 6px 20px rgba(20,18,30,0.25);transition:translate .2s cubic-bezier(0.16,1,0.3,1),scale .2s cubic-bezier(0.16,1,0.3,1)}.ds-tag-alert i{font-style:normal;font-weight:500;color:#f0c64e;margin-left:.45em}.ds-tag-alert:hover,.ds-tag-alert:focus-visible{translate:0 -2px;scale:1.04}.ds-tag-alert:focus-visible{outline:2px solid #4e6ea3;outline-offset:3px}"
+    },
+    {
+      "name": "Command pill",
+      "kind": "custom",
+      "refersTo": "command-pill",
+      "description": "The one primary action: get a pet, the command in mono, a solid copy button.",
+      "html": "<div class=\"ds-cmd\"><span class=\"ds-cmd-lead\">get a pet</span><code>npx burrow-pets init</code><button type=\"button\" class=\"ds-cmd-copy\">copy</button></div>",
+      "css": ".ds-cmd{display:inline-flex;align-items:center;gap:12px;white-space:nowrap;padding:6px 6px 6px 16px;border-radius:999px;color:#26241f;background:rgba(250,249,245,0.8);border:1px solid rgba(255,255,255,0.9);box-shadow:0 6px 20px rgba(38,36,31,0.12);backdrop-filter:blur(12px) saturate(1.3);font-size:14px}.ds-cmd-lead{font:700 14px \"Zen Maru Gothic\",ui-rounded,sans-serif}.ds-cmd code{font:400 13px \"Geist Mono\",ui-monospace,monospace}.ds-cmd-copy{border:0;cursor:pointer;background:#26241f;color:#f7f4ec;border-radius:999px;padding:4px 12px;font:700 12px \"Zen Maru Gothic\",ui-rounded,sans-serif;transition:transform .15s}.ds-cmd-copy:active{transform:scale(.97)}.ds-cmd-copy:focus-visible{outline:2px solid #4e6ea3;outline-offset:3px}"
+    },
+    {
+      "name": "Notice",
+      "kind": "card",
+      "refersTo": "notice",
+      "description": "Empty or not-found burrow: replaces the command pill.",
+      "html": "<div class=\"ds-notice\"><p class=\"ds-notice-t\">nobody lives here yet.</p><p class=\"ds-notice-b\">hatch the first pet from your terminal:</p><code>npx burrow-pets init</code></div>",
+      "css": ".ds-notice{max-width:28rem;text-align:center;padding:20px;border-radius:16px;color:#26241f;background:rgba(250,249,245,0.8);border:1px solid rgba(255,255,255,0.9);box-shadow:0 6px 20px rgba(38,36,31,0.12);backdrop-filter:blur(12px) saturate(1.3)}.ds-notice-t{margin:0;font:700 18px/1.5 \"Zen Maru Gothic\",ui-rounded,sans-serif}.ds-notice-b{margin:4px 0 12px;font:400 14px \"Zen Kaku Gothic New\",system-ui,sans-serif;opacity:.8}.ds-notice code{display:inline-block;padding:6px 16px;border-radius:999px;background:rgba(0,0,0,.05);font:400 14px \"Geist Mono\",ui-monospace,monospace}"
+    },
+    {
+      "name": "Pet sprite (mochi, idle)",
+      "kind": "custom",
+      "refersTo": "mochi-base",
+      "description": "Signature: 32px pet, 1px dark-plum outline, top-left light, glinting eyes, blush, feet. Static sketch of the canvas sprite at 4x.",
+      "html": "<div class=\"ds-pet\"><span class=\"ds-pet-body\"></span><span class=\"ds-pet-eye l\"></span><span class=\"ds-pet-eye r\"></span><span class=\"ds-pet-blush l\"></span><span class=\"ds-pet-blush r\"></span></div>",
+      "css": ".ds-pet{position:relative;width:96px;height:64px;image-rendering:pixelated}.ds-pet-body{position:absolute;inset:0;background:linear-gradient(#fcd2df 0 8px,#f4a3bc 8px 52px,#d77898 52px);border:4px solid #2a2033;border-radius:48px 48px 4px 4px}.ds-pet-eye{position:absolute;top:28px;width:8px;height:8px;background:#2a2033;box-shadow:inset 4px 4px 0 -0px transparent}.ds-pet-eye::before{content:\"\";position:absolute;left:0;top:0;width:4px;height:4px;background:#fff}.ds-pet-eye.l{left:32px}.ds-pet-eye.r{left:60px}.ds-pet-blush{position:absolute;top:40px;width:8px;height:4px;background:#ff8fa8}.ds-pet-blush.l{left:20px}.ds-pet-blush.r{left:72px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Lit Garden",
+    "overview": "burrow is a cozy 16-bit zen garden drawn into one low-resolution canvas and scaled up by a whole number: Mt Fuji behind a forest band, a tiled wall with white plaster lines, a momiji maple, raked gravel, a koi pond, a stone lantern, bushes and moss. The sky is the visitor's own clock. Every scene colour has a day, dusk and night variant, and the garden relights itself by interpolating between them, so the same page reads as noon, sunset or a starry night without a second asset.\n\nThe pets are the only things allowed to shout. They are 32 px sprites with a 1 px dark-plum outline, rim light from the upper left, big glinting eyes, blush and tiny feet, and they keep their own fixed tones while the scene darkens around them. Their state is told by pose and props (a laptop, a speech bubble, crumbs, sparkles, a z), never by colour alone, and is restated in a frosted name tag below each stone.\n\nOver the pixels sits a thin layer of modern HTML chrome: frosted pills in Zen Maru Gothic that switch from light to dark with the sky, not with the operating system. Everything is lowercase. The garden is quiet by default and moves in small loops: drifting clouds, koi, falling leaves, fireflies, a flickering lantern, a ripple when a task finishes.",
+    "keyCharacteristics": [
+      "One canvas at about 190 garden pixels tall (landscape) or 130 wide (portrait), integer-scaled with pixelated rendering.",
+      "Palette swap, not filters: 35 scene roles, each with day, dusk and night values, interpolated by the hour.",
+      "Ordered 4x4 Bayer dithering for every soft transition: sky bands, sun halo, pond depth, lantern glow, contact shadows.",
+      "Outlined pets that stay brighter than any scene at any hour.",
+      "Frosted, lowercase, rounded chrome that follows the sky.",
+      "Deterministic layout: one stepping stone per pet, earlier members never move."
+    ],
+    "rules": [
+      {
+        "name": "The Brighter Pet Rule",
+        "body": "Pets keep fixed tones and a 1 px `pet-ink` outline at every hour; the scene darkens around them, they never darken with it. A new species gets a base, highlight and shade that out-value the day gravel's neighbourhood and still read against the night.",
+        "section": "colors"
+      },
+      {
+        "name": "The Palette Swap Rule",
+        "body": "Every scene colour is a role with exactly three values: day, dusk, night. A new scene element adds a role with all three or reuses one; it never darkens with a CSS filter, an overlay or alpha.",
+        "section": "colors"
+      },
+      {
+        "name": "The Ordered Dither Rule",
+        "body": "Soft light in the scene is made of whole pixels on a 4x4 Bayer pattern: sky bands, the sun's halo, pond depth, the lantern glow (full-colour gold pixels, not translucent ones) and the contact shadow under each pet. No smooth gradients, no alpha blending inside the canvas.",
+        "section": "colors"
+      },
+      {
+        "name": "The Lowercase Rule",
+        "body": "Interface copy is lowercase, warm and short: names, verbs (\"hanging out\", \"needs you\", \"asleep\"), status (\"live\", \"reconnecting…\"), titles (\"nobody lives here yet.\"). Proper product nouns in prose (Claude Code) keep their case.",
+        "section": "typography"
+      },
+      {
+        "name": "The Mono Means Type-This Rule",
+        "body": "Geist Mono appears only on strings the visitor would type or paste. It never sets names, labels or headings.",
+        "section": "typography"
+      },
+      {
+        "name": "The Integer Scale Rule",
+        "body": "The scene is drawn at logical resolution and scaled by a whole number S = max(2, round(viewport height / 190)) on landscape, or max(2, round(viewport width / 130)) on portrait. Width rounds up (overflow is clipped), height rounds down so the page never scrolls by a pixel. Never scale by a fraction and never smooth: `image-rendering: pixelated` on every canvas, including the 32 px header mark.",
+        "section": "layout"
+      },
+      {
+        "name": "The Glass Is Chrome Rule",
+        "body": "Blur, translucency and box shadows exist only on HTML chrome over the canvas. The scene itself is opaque pixels. With reduced transparency the chips fall back to solid `#faf9f5` by day and `#181a20` by night.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Sky-Follows-Chrome Rule",
+        "body": "Chips switch to their night skin when the scene is night, regardless of the OS theme.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** draw new scene elements into the baked layers with palette roles that have day, dusk and night values.",
+      "**Do** keep every pet at a whole-pixel position, inside a 32 px grid, outlined 1 px in `pet-ink`, on its own stepping stone with a dithered contact shadow.",
+      "**Do** give each new state a distinct pose and a prop that survives frame 0, plus a lowercase verb for its tag.",
+      "**Do** place new landmarks and props outside pet keep-outs, the way bushes and moss already yield to stones and tags.",
+      "**Do** make soft light with ordered dithering and full-colour pixels.",
+      "**Do** switch chrome with the scene's night flag, and keep chrome as frosted pills with names and titles in Zen Maru Gothic.",
+      "**Do** keep ambient motion as small loops gated by reduced motion and paused when hidden."
+    ],
+    "donts": [
+      "**Don't** scale the scene by a fraction or let the browser smooth it.",
+      "**Don't** darken, tint or blur the canvas with CSS filters, overlays or alpha; swap the palette instead.",
+      "**Don't** relight the pets with the clock or let a scene colour out-shine them.",
+      "**Don't** use `pet-ink` outlines on scenery; scenery edges use their own `D` roles.",
+      "**Don't** put glass, shadows or rounded pills inside the canvas, or pixel art inside the chrome beyond the header mark.",
+      "**Don't** give any state other than \"needs you\" the gold-ringed alert tag.",
+      "**Don't** shrink pets or overlap tags to fit more members; grow the garden downward.",
+      "**Don't** add underground, soil or dirt scenes."
+    ]
+  }
+}
