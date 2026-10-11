@@ -128,16 +128,19 @@ export function PixelBurrow({ members, states, offset, hour }: Props) {
   )
 
   // A one-time cue that the garden answers back; gone after the first boop or pond tap.
-  const [hint, setHint] = useState(false)
+  const [hint, setHint] = useState<string | null>(null)
   useEffect(() => {
     try {
-      setHint(localStorage.getItem(HINT_KEY) !== '1')
+      if (localStorage.getItem(HINT_KEY) === '1') return
     } catch {
-      setHint(true)
+      // private mode: show it
     }
+    // mouse and trackpad users click; phones and tablets tap
+    const verb = matchMedia('(hover: hover) and (pointer: fine)').matches ? 'click' : 'tap'
+    setHint(`${verb} a pet to boop it, or ${verb} the pond`)
   }, [])
   const doneHint = () => {
-    setHint(false)
+    setHint(null)
     try {
       localStorage.setItem(HINT_KEY, '1')
     } catch {
@@ -387,7 +390,7 @@ export function PixelBurrow({ members, states, offset, hour }: Props) {
       })}
       {hint && members.length > 0 && (
         <p className={`hint chip ${phase.night ? 'chip-night' : ''} fixed bottom-[4.5rem] left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-full px-4 py-2 text-xs font-medium sm:bottom-4 sm:left-auto sm:right-6 sm:translate-x-0`}>
-          tap a pet to boop it, or tap the pond
+          {hint}
         </p>
       )}
     </div>
