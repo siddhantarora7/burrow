@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "burrow-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "durable_objects": {
+    "bindings": [
+      { "name": "PET", "class_name": "PetDO" },
+      { "name": "BURROW", "class_name": "BurrowDO" }
+    ]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["PetDO", "BurrowDO"] }],
+  "vars": { "WEB_ORIGIN": "http://localhost:3000" }
+}

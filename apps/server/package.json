@@ -1,0 +1,12 @@
+{
+  "name": "@burrow/server",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --port 8787 --ip 127.0.0.1",
+    "deploy": "wrangler deploy",
+    "types": "wrangler types",
+    "typecheck": "wrangler types && tsc -p tsconfig.json"
+  },
+  "devDependencies": { "@burrow/core": "*", "wrangler": "^4.147.0" }
+}

@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: var(--font-zen-maru), ui-rounded, system-ui, sans-serif;
+  --font-sans: var(--font-zen-kaku), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+:root {
+  --washi: #e9ece4;
+  --sumi: #26241f;
+  --glass: rgba(255, 255, 255, 0.4);
+  --glass-line: rgba(255, 255, 255, 0.6);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --washi: #14161a; --sumi: #edebe4; --glass: rgba(30, 32, 38, 0.45); --glass-line: rgba(255, 255, 255, 0.16); color-scheme: dark; }
+}
+:root[data-theme="dark"] { --washi: #14161a; --sumi: #edebe4; --glass: rgba(30, 32, 38, 0.45); --glass-line: rgba(255, 255, 255, 0.16); color-scheme: dark; }
+
+body { background: var(--washi); color: var(--sumi); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+:focus-visible { outline: 2px solid #4e6ea3; outline-offset: 3px; border-radius: 8px; }
+
+.glass {
+  background: var(--glass);
+  border: 1px solid var(--glass-line);
+  backdrop-filter: blur(14px) saturate(1.4);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 10px 30px rgba(20, 24, 40, 0.12);
+}
+@media (prefers-reduced-transparency: reduce) { .glass { backdrop-filter: none; -webkit-backdrop-filter: none; background: var(--washi); } }
+
+/* Name tags are the glance signal and a control (focus or click to boop). Colours come from .chip. */
+.tag {
+  font: 700 clamp(12px, 1vw, 15px) / 1 var(--font-display);
+  padding: 0.5em 0.9em;
+  border-radius: 999px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: translate 0.2s cubic-bezier(0.16, 1, 0.3, 1), scale 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.tag i { font-style: normal; font-weight: 500; opacity: 0.75; margin-left: 0.45em; }
+.tag-more { display: block; margin-top: 0.4em; font-weight: 500; font-size: 0.85em; opacity: 0.8; }
+/* Tailwind's -translate-x-1/2 uses the `translate` property, so lift with `translate` too (a transform would add a second -50%). */
+.tag-open { translate: -50% -2px; scale: 1.04; z-index: 5; }
+.tag-alert { color: #f7f4ec !important; background: rgba(38, 36, 31, 0.92) !important; border-color: transparent !important; box-shadow: 0 0 0 3px rgba(240, 198, 78, 0.8), 0 6px 20px rgba(20, 18, 30, 0.25) !important; }
+.tag-alert i { color: #f0c64e; opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .tag { transition: none; } }
+
+
+
+::selection { background: #efa9bc; color: #26241f; }
+
+/* Chrome over the garden follows the sky, not the OS theme: light frosted by day, dark at night. */
+.chip { color: #26241f; background: rgba(250, 249, 245, 0.8); border: 1px solid rgba(255, 255, 255, 0.9); box-shadow: 0 6px 20px rgba(38, 36, 31, 0.12); backdrop-filter: blur(12px) saturate(1.3); -webkit-backdrop-filter: blur(12px) saturate(1.3); }
+.chip-solid { background: #26241f; color: #f7f4ec; }
+.chip-night { color: #f1eee6; background: rgba(24, 26, 32, 0.76); border-color: rgba(255, 255, 255, 0.16); }
+.chip-night .chip-solid { background: #f1eee6; color: #26241f; }
+@media (prefers-reduced-transparency: reduce) { .chip { backdrop-filter: none; -webkit-backdrop-filter: none; background: #faf9f5; } .chip-night { background: #181a20; } }
+
+.hint { animation: hint-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+/* opacity only: the hint is centred with `translate`, which an animated translate would override */
+@keyframes hint-in { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .hint { animation: none; } }

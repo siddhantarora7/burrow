@@ -1,0 +1,677 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>burrow pixel spike</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@500&family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --sumi: #26241f; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #10131c; overflow: hidden; font-family: "Zen Maru Gothic", system-ui, sans-serif; }
+  canvas#scene { position: fixed; left: 0; top: 0; image-rendering: pixelated; image-rendering: crisp-edges; cursor: default; }
+  canvas#scene.pointer { cursor: pointer; }
+  .chip { color: #26241f; background: rgba(250, 249, 245, .82); border: 1px solid rgba(255,255,255,.9); box-shadow: 0 6px 20px rgba(20,18,30,.18); backdrop-filter: blur(10px) saturate(1.3); -webkit-backdrop-filter: blur(10px) saturate(1.3); }
+  .night .chip { color: #f1eee6; background: rgba(22, 24, 34, .76); border-color: rgba(255,255,255,.14); }
+  header { position: fixed; top: 14px; left: 16px; right: 16px; display: flex; align-items: center; gap: 10px; z-index: 5; pointer-events: none; }
+  header .brand { pointer-events: auto; font-weight: 700; font-size: 18px; padding: 6px 14px; border-radius: 999px; }
+  header .brand small { font-weight: 500; opacity: .7; margin-left: 6px; font-size: 12px; }
+  .controls { pointer-events: auto; margin-left: auto; display: flex; align-items: center; gap: 10px; padding: 6px 8px 6px 14px; border-radius: 999px; font-size: 12px; font-weight: 500; }
+  .controls input { width: 140px; accent-color: #c6493a; }
+  .controls button { font: 700 12px "Zen Maru Gothic"; border: 0; border-radius: 999px; padding: 5px 11px; background: #26241f; color: #f7f4ec; cursor: pointer; }
+  .night .controls button { background: #f1eee6; color: #26241f; }
+  .controls button[aria-pressed="false"] { opacity: .55; }
+  .tags { position: fixed; inset: 0; pointer-events: none; z-index: 4; }
+  .tag { position: absolute; transform: translate(-50%, 0); white-space: nowrap; font: 700 13px/1 "Zen Maru Gothic"; padding: 6px 10px; border-radius: 999px; transition: transform .18s cubic-bezier(.2,.8,.3,1.4); }
+  .tag i { font-style: normal; font-weight: 500; opacity: .75; margin-left: 6px; }
+  .tag b.more { display: none; font-weight: 500; opacity: .7; margin-left: 6px; }
+  .tag.hover { transform: translate(-50%, -2px) scale(1.06); }
+  .tag.hover b.more { display: inline; }
+  .tag.alert { background: rgba(38,36,31,.92); color: #f7f4ec; border-color: transparent; box-shadow: 0 0 0 3px rgba(240,198,78,.8), 0 6px 20px rgba(20,18,30,.25); }
+  .tag.alert i { color: #f0c64e; opacity: 1; }
+  .hint { position: fixed; left: 16px; bottom: 14px; z-index: 5; font-size: 12px; padding: 7px 12px; border-radius: 999px; }
+  @media (max-width: 560px) { .controls input { width: 80px; } header .brand small { display: none; } .tag { font-size: 11px; } }
+  @media (prefers-reduced-motion: reduce) { .tag { transition: none; } }
+</style>
+</head>
+<body>
+<canvas id="scene" aria-label="A pixel-art zen garden with pets on stepping stones"></canvas>
+<header>
+  <span class="brand chip">burrow <small>pixel spike</small></span>
+  <div class="controls chip">
+    <label for="hour">time</label><input id="hour" type="range" min="0" max="23.9" step="0.1"><span id="clock">12:00</span>
+    <button id="auto" aria-pressed="true" type="button">live demo</button>
+  </div>
+</header>
+<div class="tags" id="tags"></div>
+<div class="hint chip">click a pet to boop it · click the pond · hover for details</div>
+
+<script>
+/* ==========================================================================
+   burrow pixel spike: a throwaway prototype to judge the pixel direction.
+   Everything is drawn into a low-res canvas and scaled by an integer.
+   ========================================================================== */
+
+// ---------- palette: every environment colour has day / dusk / night variants ----------
+const P = {
+  sky0:   ['#5b8fd1', '#45467f', '#0c1230'],
+  sky1:   ['#77a7de', '#6f5596', '#141c42'],
+  sky2:   ['#9cc2e6', '#c06c86', '#1c2752'],
+  sky3:   ['#cfe3ee', '#f0a878', '#273562'],
+  far:    ['#93a9c6', '#7d6d9a', '#1a2550'],
+  snow:   ['#f2f6f9', '#f6d3cb', '#7f8fbb'],
+  forest: ['#5e7d55', '#4c4c62', '#14223a'],
+  forestHi:['#789a63','#64607a', '#1d2d47'],
+  plaster:['#dccaa6', '#c99e88', '#3c394b'],
+  plasterLine:['#f3ecdc','#e2bcaa','#4c4860'],
+  tile:   ['#3f4454', '#372f47', '#1a1c2a'],
+  tileHi: ['#5d6375', '#55496a', '#2a2d40'],
+  gravel: ['#e2ddcd', '#d6b6a3', '#383b51'],
+  rakeD:  ['#cdc6b2', '#c19f8f', '#2d3046'],
+  rakeL:  ['#f2efe5', '#e6cdbd', '#454a63'],
+  stone:  ['#a09b90', '#8f8083', '#4d4c5e'],
+  stoneD: ['#77726a', '#685d65', '#353548'],
+  stoneH: ['#c7c2b6', '#b8a6a4', '#66667c'],
+  moss:   ['#7f9c4f', '#6f7c56', '#2c4639'],
+  mossD:  ['#617c3c', '#58613f', '#213529'],
+  mossH:  ['#a3bd67', '#8e9a6a', '#3a5a45'],
+  maple:  ['#cf4f3c', '#c04a48', '#5a2633'],
+  mapleH: ['#e9744a', '#dd6a55', '#78313c'],
+  mapleD: ['#9b3330', '#8a3039', '#3c1a26'],
+  trunk:  ['#4b3529', '#3f2c2d', '#1d1519'],
+  water:  ['#6aa6c9', '#9b6f97', '#1c2e56'],
+  waterD: ['#4c86ad', '#6f5285', '#132143'],
+  waterH: ['#c3e3ef', '#f3b98f', '#3e5585'],
+  pad:    ['#6f9a4c', '#5f7451', '#264233'],
+  cloud:  ['#ffffff', '#f7c7ae', '#2c3762'],
+  cloudD: ['#dfe9f3', '#d99a94', '#222c55'],
+  sun:    ['#fff1b5', '#ffd27a', '#f1ecd2'],
+  bush:   ['#5f8a4f', '#57664f', '#1f3a33'],
+  bushH:  ['#7fa865', '#6f7c63', '#2b4a40'],
+  bloom:  ['#f2a5c0', '#e895a8', '#7a4f6e'],
+}
+const OUTLINE = '#2a2033'
+const PET = {
+  mochi:   { base: '#f4a3bc', hi: '#fcd2df', shade: '#d77898' },
+  tofu:    { base: '#9fc36a', hi: '#c8e196', shade: '#729744' },
+  onigiri: { base: '#f7f2e6', hi: '#ffffff', shade: '#d6cdb9' },
+}
+
+const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16))
+const toHex = (c) => '#' + c.map((v) => Math.round(v).toString(16).padStart(2, '0')).join('')
+const lerp = (a, b, t) => toHex(hex(a).map((v, i) => v + (hex(b)[i] - v) * t))
+
+// day/dusk/night weights from the hour
+function phase(h) {
+  const k = [[0, 2], [5, 2], [6.2, 1], [7.5, 0], [17, 0], [18.6, 1], [20, 2], [24, 2]]
+  let i = 0
+  while (i < k.length - 2 && h >= k[i + 1][0]) i++
+  const [h0, a] = k[i], [h1, b] = k[i + 1]
+  const t = (h - h0) / (h1 - h0)
+  return { a, b, t, night: (a === 2 && b === 2) || (a === 2 && t < 0.5) || (b === 2 && t > 0.5) }
+}
+function palette(h) {
+  const { a, b, t } = phase(h)
+  const out = {}
+  for (const k in P) out[k] = lerp(P[k][a], P[k][b], t)
+  return out
+}
+
+// ---------- deterministic noise ----------
+const hash = (x, y, s = 0) => {
+  let n = (x * 374761393 + y * 668265263 + s * 2147483647) | 0
+  n = (n ^ (n >>> 13)) * 1274126177
+  return ((n ^ (n >>> 16)) >>> 0) / 4294967296
+}
+const BAYER = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]]
+const dither = (x, y, t) => t * 16 > BAYER[y & 3][x & 3] + 0.5
+
+// ---------- canvas setup ----------
+const cv = document.getElementById('scene')
+const ctx = cv.getContext('2d')
+let W = 320, H = 180, S = 4
+let L = {} // layout
+
+function layout() {
+  const vw = innerWidth, vh = innerHeight
+  S = Math.max(2, vw > vh ? Math.round(vh / 190) : Math.round(vw / 130))
+  W = Math.ceil(vw / S); H = Math.ceil(vh / S)
+  cv.width = W; cv.height = H
+  cv.style.width = W * S + 'px'; cv.style.height = H * S + 'px'
+  const portrait = vh > vw
+  const horizon = portrait ? Math.round(Math.min(96, H * 0.27)) : Math.round(Math.min(92, H * 0.47))
+  const gravelTop = horizon + 17
+  const pond = portrait
+    ? { cx: Math.round(W * 0.5), cy: Math.round(gravelTop + (H - gravelTop) * 0.42), rx: Math.round(Math.min(46, W * 0.3)), ry: 12 }
+    : { cx: Math.round(W * 0.53), cy: Math.round(gravelTop + (H - gravelTop) * 0.4), rx: Math.round(Math.min(48, W * 0.15)), ry: 13 }
+  const spots = portrait
+    ? [[W * 0.5, pond.cy - pond.ry - 16], [W * 0.24, pond.cy + pond.ry + 22], [W * 0.76, pond.cy + pond.ry + 24], [W * 0.5, pond.cy + pond.ry + 50]]
+    : [[W * 0.24, pond.cy - 4], [W * 0.38, pond.cy + pond.ry + 22], [W * 0.7, pond.cy + pond.ry + 18], [W * 0.82, pond.cy - 10]]
+  L = {
+    portrait, horizon, gravelTop, pond,
+    fuji: { x: Math.round(W * (portrait ? 0.32 : 0.3)), peak: Math.round(horizon * 0.38) },
+    maple: { x: Math.round(W * (portrait ? 0.8 : 0.78)), y: horizon + 13 },
+    lantern: { x: Math.round(W * (portrait ? 0.86 : 0.9)), y: gravelTop + (portrait ? 30 : 24) },
+    spots: spots.map(([x, y]) => [Math.round(x), Math.round(Math.min(H - 16, y))]),
+    stones: [],
+  }
+  L.stones = L.spots.map(([x, y]) => ({ x, y: y + 1, rx: 11, ry: 3 }))
+  bake()
+  placeTags()
+}
+
+// ---------- baking the static layers ----------
+let skyLayer, groundLayer, pal, hour = new Date().getHours() + new Date().getMinutes() / 60, ph
+
+function makeLayer() { const c = document.createElement('canvas'); c.width = W; c.height = H; return c }
+function px(img, x, y, color) {
+  if (x < 0 || y < 0 || x >= W || y >= H) return
+  const [r, g, b] = hex(color), i = (y * W + x) * 4
+  img.data[i] = r; img.data[i + 1] = g; img.data[i + 2] = b; img.data[i + 3] = 255
+}
+
+function bake() {
+  pal = palette(hour); ph = phase(hour)
+  document.body.classList.toggle('night', ph.night)
+  // sky: four bands, dithered at each boundary
+  skyLayer = makeLayer()
+  const sc = skyLayer.getContext('2d'), si = sc.createImageData(W, H)
+  const bands = [pal.sky0, pal.sky1, pal.sky2, pal.sky3]
+  for (let y = 0; y < L.horizon + 4; y++) {
+    const f = (y / (L.horizon + 4)) * 3, i = Math.floor(f), t = f - i
+    for (let x = 0; x < W; x++) px(si, x, y, dither(x, y, t) ? bands[Math.min(3, i + 1)] : bands[i])
+  }
+  // sun / moon
+  const sunX = Math.round(W * (L.portrait ? 0.2 : 0.18)), sunY = Math.round(L.horizon * 0.34)
+  for (let y = -12; y <= 12; y++) for (let x = -12; x <= 12; x++) {
+    const d = Math.hypot(x, y)
+    if (ph.night) {
+      if (d <= 5 && Math.hypot(x - 2, y + 1) > 4.2) px(si, sunX + x, sunY + y, pal.sun)
+    } else if (d <= 6) px(si, sunX + x, sunY + y, pal.sun)
+    else if (d <= 10 && dither(x + sunX, y + sunY, (10 - d) / 4 * 0.5)) px(si, sunX + x, sunY + y, lerp(pal.sun, pal.sky1, 0.45))
+  }
+  sc.putImageData(si, 0, 0)
+
+  // ground: mountains, forest, wall, maple, gravel with raked rings, pond, moss, stones, lantern
+  groundLayer = makeLayer()
+  const gc = groundLayer.getContext('2d'), gi = gc.createImageData(W, H)
+  const hz = L.horizon
+  // far mountain (fuji)
+  for (let x = 0; x < W; x++) {
+    const dx = Math.abs(x - L.fuji.x)
+    const top = L.fuji.peak + Math.pow(dx / 78, 0.72) * (hz - L.fuji.peak) + (dx < 6 ? 1 : 0)
+    for (let y = Math.max(0, Math.floor(top)); y < hz + 2; y++) {
+      const snowLine = L.fuji.peak + 9 + Math.round(hash(x, 7) * 3) + (dx % 5 === 0 ? 2 : 0)
+      px(gi, x, y, y < snowLine && dx < 30 ? pal.snow : pal.far)
+    }
+  }
+  // forest band behind the wall
+  for (let x = 0; x < W; x++) {
+    const top = hz - 7 - Math.round(Math.abs(Math.sin(x / 5.3)) * 4 + hash(x, 3) * 2)
+    for (let y = top; y < hz + 2; y++) px(gi, x, y, y <= top + 1 && (x % 7 < 3) ? pal.forestHi : pal.forest)
+  }
+  // wall: tile cap, plaster with white lines, footing
+  for (let x = 0; x < W; x++) {
+    for (let y = hz - 4; y <= hz; y++) px(gi, x, y, y === hz - 4 ? pal.tileHi : (x % 4 === 0 ? pal.tileHi : pal.tile))
+    if (x % 4 === 1 || x % 4 === 2) px(gi, x, hz + 1, pal.tile)
+    for (let y = hz + (x % 4 === 1 || x % 4 === 2 ? 2 : 1); y < hz + 14; y++) px(gi, x, y, pal.plaster)
+    px(gi, x, hz + 6, pal.plasterLine); px(gi, x, hz + 9, pal.plasterLine)
+    for (let y = hz + 14; y < hz + 17; y++) px(gi, x, y, pal.stoneD)
+  }
+  drawMaple(gi)
+  // gravel with rake pattern: rings around the pond, stones, lantern and moss; straight elsewhere
+  const rings = [
+    { cx: L.pond.cx, cy: L.pond.cy, rx: L.pond.rx + 3, ry: L.pond.ry + 2 },
+    ...L.stones.map((s) => ({ cx: s.x, cy: s.y, rx: s.rx + 2, ry: s.ry + 1 })),
+    { cx: L.lantern.x, cy: L.lantern.y, rx: 10, ry: 3 },
+  ]
+  for (let y = L.gravelTop; y < H; y++) for (let x = 0; x < W; x++) {
+    let k = -1
+    for (const r of rings) {
+      for (let j = 0; j < 5; j++) {
+        const nx = (x - r.cx) / (r.rx + j * 3), ny = (y - r.cy) / (r.ry + j * 1.6)
+        if (nx * nx + ny * ny <= 1) { k = j; break }
+      }
+      if (k >= 0) break
+    }
+    let c = pal.gravel
+    if (k >= 0) { const rr = rings.find(() => true); c = k % 2 === 0 ? pal.rakeD : pal.gravel }
+    else if ((y - L.gravelTop) % 3 === 0) c = pal.rakeD
+    else if ((y - L.gravelTop) % 3 === 1) c = pal.rakeL
+    if (hash(x, y, 9) > 0.985) c = pal.stoneH // pebbles
+    px(gi, x, y, c)
+  }
+  // moss islands and flowering bushes along the wall
+  const moss = L.portrait
+    ? [[W * 0.14, L.gravelTop + 6, 16, 4], [W * 0.7, H - 10, 22, 5]]
+    : [[W * 0.07, L.pond.cy + 2, 18, 5], [W * 0.92, H - 12, 22, 5], [W * 0.5, H - 6, 14, 4]]
+  for (const [mx, my, rx, ry] of moss) blob(gi, Math.round(mx), Math.round(my), rx, ry, pal.moss, pal.mossH, pal.mossD, 21)
+  for (let bx = 8 + Math.round(hash(1, 4) * 20); bx < W; bx += 26 + Math.round(hash(bx, 5) * 34)) {
+    if (Math.abs(bx - L.maple.x) < 14 || Math.abs(bx - L.lantern.x) < 12) continue
+    const kind = hash(bx, 6)
+    if (kind < 0.22) { blob(gi, bx, L.gravelTop + 3, 5, 3, pal.stone, pal.stoneH, pal.stoneD, 50 + bx); blob(gi, bx - 2, L.gravelTop + 1, 3, 1, pal.moss, pal.mossH, pal.mossD, 60 + bx) }
+    else blob(gi, bx, L.gravelTop + 1, 6 + Math.round(kind * 6), 4 + Math.round(kind * 2), pal.bush, pal.bushH, pal.mossD, 30 + bx, kind > 0.55)
+  }
+  // pond: rim stones, water with sky reflection, lily pad
+  const { cx, cy, rx, ry } = L.pond
+  for (let y = cy - ry - 3; y <= cy + ry + 3; y++) for (let x = cx - rx - 4; x <= cx + rx + 4; x++) {
+    const e = ((x - cx) / (rx + 2)) ** 2 + ((y - cy) / (ry + 2)) ** 2
+    const w = ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2
+    if (w <= 1) {
+      const t = (y - (cy - ry)) / (2 * ry)
+      let c = dither(x, y, t) ? pal.waterD : pal.water
+      if (y < cy - ry + 2) c = pal.waterD
+      if (Math.abs(x - cx + rx * 0.3) < rx * 0.25 && y === cy - 3) c = pal.waterH
+      px(gi, x, y, c)
+    } else if (e <= 1) px(gi, x, y, y > cy ? pal.stoneD : (hash(x, y, 2) > 0.5 ? pal.stone : pal.stoneH))
+  }
+  blob(gi, cx + Math.round(rx * 0.45), cy + 4, 5, 2, pal.pad, pal.mossH, pal.mossD, 8)
+  px(gi, cx + Math.round(rx * 0.45) + 1, cy + 3, pal.bloom)
+  // stepping stones under the pets
+  for (const s of L.stones) {
+    for (let y = s.y - s.ry - 1; y <= s.y + s.ry + 2; y++) for (let x = s.x - s.rx - 1; x <= s.x + s.rx + 1; x++) {
+      const e = ((x - s.x) / s.rx) ** 2 + ((y - s.y) / s.ry) ** 2
+      const side = ((x - s.x) / s.rx) ** 2 + ((y - s.y - 2) / s.ry) ** 2
+      if (e <= 1) px(gi, x, y, y < s.y - 1 && x < s.x ? pal.stoneH : pal.stone)
+      else if (side <= 1) px(gi, x, y, pal.stoneD)
+    }
+  }
+  drawLantern(gi)
+  gc.putImageData(gi, 0, 0)
+  // ground layer must not paint over the sky: clear everything above the mountains (already transparent)
+}
+
+function blob(img, cx, cy, rx, ry, base, hi, dark, seed, flowers) {
+  for (let y = cy - ry - 2; y <= cy + ry + 2; y++) for (let x = cx - rx - 2; x <= cx + rx + 2; x++) {
+    const n = hash(Math.floor(x / 2), Math.floor(y / 2), seed)
+    const e = ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2
+    if (e > 0.75 + n * 0.5) continue
+    let c = base
+    if (y < cy - ry * 0.3 && x < cx + rx * 0.3) c = hi
+    if (y > cy + ry * 0.4 || e > 0.7 + n * 0.3) c = dark
+    if (c === base && hash(x, y, seed + 3) > 0.82) c = (y + x) % 2 ? hi : dark
+    if (flowers && hash(x, y, seed + 7) > 0.86) c = pal.bloom
+    px(img, x, y, c)
+  }
+}
+
+function drawMaple(img) {
+  const { x: mx, y: my } = L.maple
+  // trunk and a couple of branches
+  for (let y = my - 22; y <= my; y++) for (let dx = -1; dx <= 1; dx++) px(img, mx + dx + Math.round((my - y) * 0.08), y, pal.trunk)
+  for (let i = 0; i < 10; i++) { px(img, mx - 2 - i, my - 18 - Math.round(i * 0.6), pal.trunk); px(img, mx + 3 + i, my - 20 - Math.round(i * 0.5), pal.trunk) }
+  // canopy: layered clumps, lit from the upper left, outlined dark below
+  const clumps = [[-14, -27, 10, 6], [0, -32, 12, 7], [14, -26, 10, 6], [-6, -38, 9, 5], [8, -39, 8, 5], [-22, -22, 6, 4], [22, -21, 6, 4], [1, -44, 6, 4]]
+  const inside = (x, y) => clumps.some(([cx, cy, rx, ry]) => ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 <= 1 + (hash(x, y, 4) - 0.5) * 0.5)
+  for (let y = -52; y <= -14; y++) for (let x = -32; x <= 32; x++) {
+    if (!inside(x, y)) continue
+    const below = !inside(x, y + 1), above = !inside(x, y - 1)
+    let c = pal.maple
+    if (below) c = pal.mapleD
+    else if (above || (hash(x, y, 6) > 0.8 && x < 6)) c = pal.mapleH
+    else if (y > -22 && hash(x, y, 5) > 0.5) c = pal.mapleD
+    px(img, mx + x, my + y, c)
+  }
+}
+
+const LANTERN = [
+  '.......K.......',
+  '......KSK......',
+  '.......K.......',
+  '....KKKKKKK....',
+  '..KKSSSSSSSKK..',
+  'KKSSSSHHHSSSSKK',
+  'K.KDDDDDDDDDK.K',
+  '....KSSSSSK....',
+  '....KSLLLSK....',
+  '....KSLLLSK....',
+  '....KSLLLSK....',
+  '....KSSSSSK....',
+  '...KDDDDDDDK...',
+  '.....KSSSK.....',
+  '.....KSHSK.....',
+  '.....KSHSK.....',
+  '.....KSHSK.....',
+  '.....KSHSK.....',
+  '.....KSSSK.....',
+  '....KDDDDDK....',
+  '...KSSSSSSSK...',
+  '..KSSSHHSSSSK..',
+  '..KDDDDDDDDDK..',
+]
+function drawLantern(img) {
+  const ox = L.lantern.x - 7, oy = L.lantern.y - LANTERN.length + 1
+  const map = { K: pal.stoneD, S: pal.stone, H: pal.stoneH, D: pal.stoneD, L: ph.night ? '#ffd27a' : pal.stoneD }
+  LANTERN.forEach((row, y) => [...row].forEach((ch, x) => { if (ch !== '.') px(img, ox + x, oy + y, map[ch]) }))
+}
+
+/* ==========================================================================
+   Pets: rasterised from simple shapes into a 32x32 grid, then shaded,
+   outlined, given a face and props. Cached per species/state/frame.
+   ========================================================================== */
+const G = 32, CX = 16, BOT = 28
+const SHAPES = {
+  mochi: (x, y) => y <= BOT && y >= 14 && ((x - CX) / 10.5) ** 2 + ((y - BOT) / 14) ** 2 <= 1,
+  tofu: (x, y) => {
+    if (x < 6 || x > 26 || y < 14 || y > BOT) return false
+    const r = 3, cx = Math.max(6 + r, Math.min(26 - r, x)), cy = Math.max(14 + r, Math.min(BOT - r, y))
+    return (x - cx) ** 2 + (y - cy) ** 2 <= r * r + 0.5
+  },
+  onigiri: (x, y) => {
+    if (y > BOT || y < 11) return false
+    const half = (y - 11) * 0.72 + 1.2
+    if (Math.abs(x - CX) > half) return false
+    if (y >= BOT - 1 && Math.abs(x - CX) > half - 2) return false
+    return !(y < 13 && Math.abs(x - CX) > 1)
+  },
+}
+const FACE_Y = { mochi: 21, tofu: 20, onigiri: 21 }
+const C = { E: 0, O: 1, B: 2, H: 3, S: 4, F: 5, W: 6, P: 7, N: 8, L1: 9, L2: 10, A: 11, K1: 12, K2: 13, Y: 14, Z: 15, R: 16 }
+
+function petGrid(species, state, frame) {
+  let sx = 1, sy = 1, dy = 0, arm = null, armL = null
+  if (state === 'idle' && frame % 4 === 1) { sx = 1.06; sy = 0.92 }
+  if (state === 'sleep' && frame % 3 === 1) { sx = 1.06; sy = 0.92 }
+  if (state === 'eat' && frame === 2) { sx = 1.12; sy = 0.86 }
+  if (state === 'cheer') { if (frame === 0) { sx = 1.12; sy = 0.86 } if (frame === 1) dy = -3; if (frame === 2) dy = -5; if (frame === 3) dy = -2 }
+  if (state === 'wave') { arm = frame % 2 ? 'up' : 'out' }
+  if (state === 'cheer' && frame > 0) { arm = 'up'; armL = 'up' }
+  const shape = SHAPES[species]
+  const g = Array.from({ length: G }, () => new Array(G).fill(C.E))
+  const inBody = (x, y) => shape(CX + (x - CX) / sx, BOT - (BOT - (y - dy)) / sy)
+  for (let y = 0; y < G; y++) for (let x = 0; x < G; x++) if (inBody(x, y)) g[y][x] = C.B
+  // arms: small nubs, part of the silhouette so they get outlined too
+  const nub = (pts) => pts.forEach(([x, y]) => { if (g[y + dy] && x >= 0 && x < G) g[y + dy][x] = C.B })
+  const ay = FACE_Y[species] + 3
+  if (arm === 'out') nub([[27, ay - 1], [28, ay - 2], [27, ay - 2], [28, ay - 3]])
+  if (arm === 'up') nub([[26, ay - 4], [27, ay - 5], [27, ay - 6], [28, ay - 7], [27, ay - 4]])
+  if (armL === 'up') nub([[6, ay - 4], [5, ay - 5], [5, ay - 6], [4, ay - 7], [5, ay - 4]])
+  // nori band
+  if (species === 'onigiri') for (let y = 23; y <= BOT; y++) for (let x = 12; x <= 20; x++) if (g[y + dy]?.[x] === C.B) g[y + dy][x] = C.N
+  // shading: lit top-left edge, shaded bottom and right edge
+  // Shading reads a snapshot of the silhouette, so a changed pixel never cascades to its neighbours.
+  const mask = g.map((r) => r.map((v) => v === C.B || v === C.N))
+  const body = (x, y) => !!mask[y]?.[x]
+  for (let y = 0; y < G; y++) for (let x = 0; x < G; x++) {
+    if (g[y][x] !== C.B) continue
+    if (!body(x, y + 1) || !body(x, y + 2) || (!body(x + 1, y) && x > CX)) g[y][x] = C.S
+    else if ((!body(x, y - 1) && x <= CX + 1) || (!body(x - 1, y) && y < BOT - 4)) g[y][x] = C.H
+  }
+  // a soft highlight spot
+  const fy = FACE_Y[species] + dy
+  if (g[fy - 5]?.[CX - 4] === C.B) g[fy - 5][CX - 4] = C.H
+  if (g[fy - 5]?.[CX - 3] === C.B) g[fy - 5][CX - 3] = C.H
+  // feet
+  for (const fx of [CX - 5, CX - 4, CX + 3, CX + 4]) if (dy === 0 && g[BOT + 1]) g[BOT + 1][fx] = C.O
+  // face
+  const set = (x, y, v) => { if (g[y] && x >= 0 && x < G) g[y][x] = v }
+  const eye = (x, closed, happy) => {
+    if (closed) { set(x, fy + 1, C.F); set(x + 1, fy + 1, C.F) }
+    else if (happy) { set(x, fy + 1, C.F); set(x + 1, fy, C.F); set(x + 2, fy + 1, C.F) }
+    else { set(x, fy, C.W); set(x + 1, fy, C.F); set(x, fy + 1, C.F); set(x + 1, fy + 1, C.F) }
+  }
+  const happy = state === 'eat' && frame !== 1 || state === 'cheer'
+  const closed = state === 'sleep' || (state === 'idle' && frame === 3)
+  const lx = species === 'tofu' ? CX - 5 : CX - 5, rx = species === 'tofu' ? CX + 3 : CX + 3
+  eye(happy ? lx - 1 : lx, closed, happy); eye(happy ? rx : rx, closed, happy)
+  set(lx - 2, fy + 3, C.P); set(lx - 1, fy + 3, C.P); set(rx + 2, fy + 3, C.P); set(rx + 3, fy + 3, C.P)
+  const my = fy + 3
+  if (state === 'idle' || state === 'work') { set(CX - 1, my, C.F); set(CX, my + 1, C.F); set(CX + 1, my, C.F) }
+  if (state === 'wave') { set(CX - 1, my, C.F); set(CX, my, C.F); set(CX - 1, my + 1, C.F); set(CX, my + 1, C.F) }
+  if (state === 'eat') { if (frame === 1) { set(CX - 1, my, C.F); set(CX, my, C.F); set(CX - 1, my + 1, C.F); set(CX, my + 1, C.F) } else { set(CX - 1, my, C.F); set(CX, my, C.F) } }
+  if (state === 'sleep') { set(CX, my, C.F) }
+  if (state === 'cheer') { for (let x = CX - 2; x <= CX + 1; x++) set(x, my, C.F); set(CX - 1, my + 1, C.R); set(CX, my + 1, C.R) }
+  // outline: every empty pixel touching the silhouette
+  const out = g.map((r) => r.slice())
+  for (let y = 0; y < G; y++) for (let x = 0; x < G; x++) {
+    if (g[y][x] !== C.E) continue
+    const n = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([a, b]) => { const v = g[y + b]?.[x + a]; return v !== undefined && v !== C.E && v !== C.O })
+    if (n) out[y][x] = C.O
+  }
+  // props drawn over the outline
+  const put = (sprite, ox, oy, map) => sprite.forEach((row, y) => [...row].forEach((ch, x) => { if (ch !== '.' && out[oy + y] && ox + x >= 0 && ox + x < G) out[oy + y][ox + x] = map[ch] }))
+  if (state === 'work') {
+    put(['OOOOOOOOOOOO', 'O1111111111O', 'O1111221111O', 'O1111111111O', 'OOOOOOOOOOOO', '.O22222222O.'], CX - 6, BOT - 5, { O: C.O, 1: C.L1, 2: C.L2 })
+    const paw = frame % 2
+    put(['SS'], CX - 5, BOT - 6 - paw, { S: C.S }); put(['SS'], CX + 3, BOT - 6 - (1 - paw), { S: C.S })
+  }
+  if (state === 'wave') put(['.OOOO.', 'OWWAWO', 'OWWAWO', 'OWWWWO', 'OWWAWO', '.OOOO.', '.O....'], 23, 3 + (frame % 2), { O: C.O, W: C.W, A: C.A })
+  if (state === 'eat' && frame === 0) put(['.K.', 'KYK', '.K.'], CX - 1, fy - 1, { K: C.K1, Y: C.K2 })
+  if (state === 'eat' && frame === 2) { set(CX - 4, my + 2, C.K1); set(CX + 4, my + 1, C.K2) }
+  if (state === 'sleep') { const o = frame % 3; put(['ZZZ', '..Z', '.Z.', 'Z..', 'ZZZ'], 23 + o, 6 - o * 2, { Z: C.Z }) }
+  if (state === 'cheer') { const sp = ['..Y..', '..Y..', 'YY.YY', '..Y..', '..Y..']; put(sp, frame % 2 ? 2 : 4, frame % 2 ? 6 : 3, { Y: C.Y }); put(sp, 25, frame % 2 ? 3 : 8, { Y: C.Y }) }
+  return out
+}
+
+const spriteCache = new Map()
+function petSprite(species, state, frame) {
+  const key = species + state + frame
+  if (spriteCache.has(key)) return spriteCache.get(key)
+  const g = petGrid(species, state, frame)
+  const col = PET[species]
+  const map = {
+    [C.O]: OUTLINE, [C.B]: col.base, [C.H]: col.hi, [C.S]: col.shade, [C.F]: OUTLINE, [C.W]: '#ffffff', [C.P]: '#ff8fa8',
+    [C.N]: '#2f3b30', [C.L1]: '#dfe4ec', [C.L2]: '#9aa3b2', [C.A]: '#e2383f', [C.K1]: '#f0c64e', [C.K2]: '#7fc4e8', [C.Y]: '#ffd34f', [C.Z]: '#ffffff', [C.R]: '#ff8fa3',
+  }
+  const c = document.createElement('canvas'); c.width = G; c.height = G
+  const x2 = c.getContext('2d')
+  g.forEach((row, y) => row.forEach((v, x) => { if (v !== C.E) { x2.fillStyle = map[v]; x2.fillRect(x, y, 1, 1) } }))
+  spriteCache.set(key, c)
+  return c
+}
+
+/* ==========================================================================
+   World state: pets, demo events, particles, interaction
+   ========================================================================== */
+const STATES = {
+  idle: { frames: 4, fps: 3, verb: 'hanging out', more: 'agent is quiet' },
+  eat: { frames: 4, fps: 5, verb: 'eating', more: 'just finished a task' },
+  wave: { frames: 2, fps: 4, verb: 'needs you', more: 'waiting for permission' },
+  work: { frames: 2, fps: 6, verb: 'working', more: 'on a long run · 14m' },
+  sleep: { frames: 3, fps: 1.5, verb: 'asleep', more: 'away for 32m' },
+  cheer: { frames: 4, fps: 8, verb: 'cheering', more: 'a friend shipped' },
+}
+const pets = [
+  { name: 'kiwi', species: 'mochi', state: 'work' },
+  { name: 'mika', species: 'tofu', state: 'idle' },
+  { name: 'jun', species: 'onigiri', state: 'wave' },
+  { name: 'ada', species: 'mochi', state: 'sleep' },
+].map((p) => ({ ...p, boop: 0, hover: false, until: 0 }))
+
+let particles = [] // { kind, x, y, vx, vy, life, max, color }
+let ripples = []   // { x, y, t }
+const koi = [{ t: 0, speed: 0.35, color: '#f0823c', spot: '#ffffff' }, { t: Math.PI, speed: 0.28, color: '#f4efe6', spot: '#e2483f' }]
+let clouds = []
+function resetClouds() {
+  clouds = Array.from({ length: L.portrait ? 2 : 3 }, (_, i) => ({ x: (i + 0.3) * W / 3, y: 10 + i * 9, w: 18 + i * 6, speed: 0.6 + i * 0.25 }))
+}
+
+function setState(p, s, holdMs = 0) {
+  p.state = s
+  p.until = holdMs ? performance.now() + holdMs : 0
+  const i = pets.indexOf(p), [x, y] = L.spots[i]
+  if (s === 'eat') { ripple(L.pond.cx + Math.sign(x - L.pond.cx) * Math.min(L.pond.rx - 8, Math.abs(x - L.pond.cx)), L.pond.cy); for (const o of pets) if (o !== p && (o.state === 'idle' || o.state === 'work')) setState(o, 'cheer', 2400) }
+  placeTags()
+}
+function ripple(x, y) { ripples.push({ x, y, t: 0 }) }
+
+// demo: a loose script of agent events across the four pets
+let auto = true
+const script = [
+  [2500, 'mika', 'work'], [6000, 'kiwi', 'eat', 6000], [12000, 'kiwi', 'work'], [9000, 'jun', 'work'],
+  [15000, 'mika', 'eat', 6000], [21000, 'mika', 'idle'], [18000, 'jun', 'wave'], [26000, 'ada', 'idle'],
+  [30000, 'jun', 'eat', 6000], [36000, 'jun', 'idle'], [33000, 'ada', 'sleep'],
+]
+let demoStart = performance.now()
+function runDemo(now) {
+  if (!auto) return
+  const t = (now - demoStart) % 40000
+  for (const [at, name, s, hold] of script) {
+    const key = name + at
+    if (t >= at && !runDemo.done.has(key)) { runDemo.done.add(key); const p = pets.find((q) => q.name === name); setState(p, s, hold || 0) }
+  }
+  if (t < 1000 && runDemo.done.size) runDemo.done.clear()
+}
+runDemo.done = new Set()
+
+// ---------- tags (crisp HTML over the pixels) ----------
+const tagsEl = document.getElementById('tags')
+function placeTags() {
+  tagsEl.innerHTML = pets.map((p, i) => {
+    const [x, y] = L.spots[i] || [0, 0]
+    const st = STATES[p.state]
+    return `<span class="tag chip${p.state === 'wave' ? ' alert' : ''}${p.hover ? ' hover' : ''}" style="left:${x * S}px;top:${(y + 6) * S}px">${p.name}<i>${st.verb}</i><b class="more">· ${st.more}</b></span>`
+  }).join('')
+  const any = pets.find((p) => p.state === 'wave')
+  document.title = any ? `${any.name} needs you · burrow` : 'burrow'
+}
+
+// ---------- interaction ----------
+function petAt(mx, my) {
+  return pets.findIndex((p, i) => { const [x, y] = L.spots[i]; return mx > x - 12 && mx < x + 12 && my > y - 22 && my < y + 3 })
+}
+cv.addEventListener('mousemove', (e) => {
+  const i = petAt(e.clientX / S, e.clientY / S)
+  const inPond = ((e.clientX / S - L.pond.cx) / L.pond.rx) ** 2 + ((e.clientY / S - L.pond.cy) / L.pond.ry) ** 2 <= 1
+  cv.classList.toggle('pointer', i >= 0 || inPond)
+  let changed = false
+  pets.forEach((p, j) => { if (p.hover !== (j === i)) { p.hover = j === i; changed = true } })
+  if (changed) placeTags()
+})
+cv.addEventListener('click', (e) => {
+  const mx = e.clientX / S, my = e.clientY / S
+  const i = petAt(mx, my)
+  if (i >= 0) {
+    const p = pets[i], [x, y] = L.spots[i]
+    p.boop = performance.now()
+    for (let k = 0; k < 3; k++) particles.push({ kind: 'heart', x: x + (k - 1) * 5, y: y - 24, vx: (k - 1) * 0.15, vy: -0.35 - k * 0.05, life: 0, max: 70 })
+    return
+  }
+  if (((mx - L.pond.cx) / L.pond.rx) ** 2 + ((my - L.pond.cy) / L.pond.ry) ** 2 <= 1) { ripple(Math.round(mx), Math.round(my)); koi.forEach((k) => (k.speed *= 3)); setTimeout(() => koi.forEach((k) => (k.speed /= 3)), 900) }
+})
+
+// ---------- per-frame drawing ----------
+// Pixel-true soft light or shadow: an ordered-dither falloff instead of a blurred ellipse.
+function ditherGlow(cx, cy, rx, ry, color, strength) {
+  ctx.fillStyle = color
+  for (let y = Math.floor(cy - ry); y <= cy + ry; y++) for (let x = Math.floor(cx - rx); x <= cx + rx; x++) {
+    const e = ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2
+    if (e <= 1 && dither(x, y, (1 - e) * strength)) ctx.fillRect(x, y, 1, 1)
+  }
+}
+const HEART = ['.R.R.', 'RRRRR', 'RRRRR', '.RRR.', '..R..']
+function sprite(rows, x, y, color) { ctx.fillStyle = color; rows.forEach((r, j) => [...r].forEach((c, i) => { if (c !== '.') ctx.fillRect(x + i, y + j, 1, 1) })) }
+
+function drawCloud(c) {
+  const x = Math.round(c.x), y = Math.round(c.y)
+  ctx.fillStyle = pal.cloudD; ctx.fillRect(x - c.w / 2, y + 1, c.w, 3)
+  ctx.fillStyle = pal.cloud
+  ctx.fillRect(x - c.w / 2 + 1, y, c.w - 2, 3)
+  for (const [dx, r] of [[-c.w / 5, 3], [0, 5], [c.w / 5, 4]]) for (let yy = -r; yy <= 0; yy++) { const half = Math.round(Math.sqrt(r * r - yy * yy)); ctx.fillRect(Math.round(x + dx - half), y + yy, half * 2, 1) }
+}
+
+let last = performance.now(), leaves = [], flies = []
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
+function frame(now) {
+  const dt = Math.min(50, now - last); last = now
+  runDemo(now)
+  for (const p of pets) if (p.until && now > p.until) { p.until = 0; setState(p, p.state === 'cheer' ? 'idle' : p.state === 'eat' ? 'idle' : p.state) }
+
+  ctx.clearRect(0, 0, W, H)
+  ctx.drawImage(skyLayer, 0, 0)
+  // stars twinkle at night
+  if (ph.night) for (let i = 0; i < W * 0.35; i++) {
+    const sx = Math.floor(hash(i, 1) * W), sy = Math.floor(hash(i, 2) * L.horizon * 0.8)
+    if (Math.abs(sx - W * 0.18) < 10 && Math.abs(sy - L.horizon * 0.34) < 10) continue
+    const tw = Math.sin(now / 600 + i) > 0.3
+    ctx.fillStyle = tw ? '#ffffff' : '#9fb0d8'; ctx.fillRect(sx, sy, 1, 1)
+  }
+  if (!ph.night) for (const c of clouds) { if (!reduce) c.x += c.speed * dt / 1000 * 3; if (c.x - c.w > W) c.x = -c.w; drawCloud(c) }
+  ctx.drawImage(groundLayer, 0, 0)
+
+  // water: shimmer, koi, ripples (kept inside the pond)
+  const { cx, cy, rx, ry } = L.pond
+  const inPond = (x, y) => ((x - cx) / (rx - 1)) ** 2 + ((y - cy) / (ry - 1)) ** 2 <= 1
+  for (let i = 0; i < 14; i++) {
+    const x = Math.round(cx - rx + hash(i, Math.floor(now / 700)) * rx * 2), y = Math.round(cy - ry + hash(i, Math.floor(now / 700) + 1) * ry * 2)
+    if (inPond(x, y) && inPond(x + 2, y)) { ctx.fillStyle = pal.waterH; ctx.fillRect(x, y, 2, 1) }
+  }
+  for (const k of koi) {
+    if (!reduce) k.t += k.speed * dt / 1000
+    const x = Math.round(cx + Math.cos(k.t) * (rx - 10)), y = Math.round(cy + Math.sin(k.t) * (ry - 5))
+    const dir = -Math.sin(k.t) >= 0 ? 1 : -1
+    const wig = Math.floor(now / 200) % 2
+    ctx.fillStyle = k.color; ctx.fillRect(x - 2, y, 5, 2)
+    ctx.fillStyle = k.spot; ctx.fillRect(x + (dir > 0 ? 1 : -1), y, 1, 1)
+    ctx.fillStyle = k.color; ctx.fillRect(x - 3 * dir - (dir < 0 ? 1 : 0), y + wig, 1, 1)
+  }
+  ripples = ripples.filter((r) => (r.t += dt / 1000) < 1.4)
+  for (const r of ripples) {
+    const R = 2 + r.t * 16, Ry = R * 0.32
+    ctx.fillStyle = pal.waterH
+    for (let a = 0; a < Math.PI * 2; a += 0.08) { const x = Math.round(r.x + Math.cos(a) * R), y = Math.round(r.y + Math.sin(a) * Ry); if (inPond(x, y) && (r.t < 1 || hash(x, y) > 0.5)) ctx.fillRect(x, y, 1, 1) }
+  }
+
+  // lantern flicker + glow at night
+  if (ph.night) {
+    const fl = 0.85 + Math.sin(now / 90) * 0.1 + Math.sin(now / 37) * 0.05
+    ditherGlow(L.lantern.x, L.lantern.y - 13, 24, 18, '#ffd27a', 0.55 * fl)
+    ditherGlow(L.lantern.x, L.lantern.y + 1, 18, 4, '#ffd27a', 0.5 * fl)
+  }
+
+  // pets: shadow, sprite, boop hop
+  const order = pets.map((p, i) => [p, i]).sort((a, b) => L.spots[a[1]][1] - L.spots[b[1]][1])
+  for (const [p, i] of order) {
+    const [x, y] = L.spots[i]
+    const st = STATES[p.state]
+    const f = reduce ? 0 : Math.floor(now / 1000 * st.fps + i * 1.7) % st.frames
+    const boopT = (now - p.boop) / 1000
+    const hop = boopT < 0.45 ? Math.round(Math.sin(boopT / 0.45 * Math.PI) * 5) : 0
+    ditherGlow(x, y, hop ? 6 : 9, 2, pal.stoneD, 0.5)
+    ctx.drawImage(petSprite(p.species, p.state, f), x - CX, y - BOT - 1 - hop)
+  }
+
+  // falling maple leaves, resting on the gravel a while
+  if (!reduce && Math.random() < dt / 2200 && leaves.length < 10) leaves.push({ x: L.maple.x + (Math.random() - 0.5) * 50, y: L.maple.y - 30, rest: 0, ground: L.gravelTop + 4 + Math.random() * (H - L.gravelTop - 10), seed: Math.random() * 10 })
+  leaves = leaves.filter((l) => {
+    if (l.y < l.ground) { l.y += dt / 1000 * 9; l.x += Math.sin(now / 500 + l.seed) * 0.15 } else l.rest += dt
+    ctx.fillStyle = l.y < l.ground && Math.floor(now / 250 + l.seed) % 2 ? pal.mapleH : pal.maple
+    ctx.fillRect(Math.round(l.x), Math.round(l.y), 2, 1)
+    return l.rest < 9000
+  })
+  // fireflies at night
+  if (ph.night) {
+    if (flies.length < 9) flies.push({ x: Math.random() * W, y: L.gravelTop - 4 + Math.random() * 30, s: Math.random() * 10 })
+    for (const fl of flies) { fl.x += Math.sin(now / 900 + fl.s) * 0.08; fl.y += Math.cos(now / 1100 + fl.s) * 0.05; if (Math.sin(now / 300 + fl.s * 3) > 0.2) { ctx.fillStyle = '#f7e78a'; ctx.fillRect(Math.round(fl.x), Math.round(fl.y), 1, 1) } }
+  } else flies = []
+
+  // particles: hearts from boops
+  particles = particles.filter((q) => (q.life += dt / 16) < q.max)
+  for (const q of particles) { q.x += q.vx; q.y += q.vy; if (Math.floor(q.life / 6) % 2 || q.life < q.max - 20) sprite(HEART, Math.round(q.x) - 2, Math.round(q.y), '#ff6f91') }
+
+  requestAnimationFrame(frame)
+}
+
+// ---------- controls ----------
+const hourIn = document.getElementById('hour'), clockEl = document.getElementById('clock')
+function setHour(h) {
+  hour = h; hourIn.value = h
+  const hh = Math.floor(h), mm = Math.round((h - hh) * 60)
+  clockEl.textContent = `${String(hh).padStart(2, '0')}:${String(mm % 60).padStart(2, '0')}`
+  bake()
+}
+hourIn.addEventListener('input', () => setHour(+hourIn.value))
+document.getElementById('auto').addEventListener('click', (e) => {
+  auto = !auto; e.currentTarget.setAttribute('aria-pressed', auto); demoStart = performance.now(); runDemo.done.clear()
+})
+addEventListener('resize', () => { layout(); resetClouds() })
+
+const qh = new URLSearchParams(location.search).get('h')
+if (qh !== null) hour = +qh
+layout(); resetClouds(); setHour(hour); placeTags()
+requestAnimationFrame(frame)
+</script>
+</body>
+</html>
