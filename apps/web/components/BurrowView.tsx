@@ -59,7 +59,7 @@ export function BurrowScreen({ status, burrow, members, offset, label, statusLab
   const statusText = statusLabel ?? (status === 'live' ? 'live' : status === 'not_found' ? 'not found' : status === 'reconnecting' ? 'reconnecting…' : 'connecting…')
 
   return (
-    <main className="relative min-h-[100dvh] w-full overflow-x-hidden" style={{ background: hour === null ? 'var(--paper)' : paletteAt(hour).gravel }}>
+    <main className="garden relative min-h-[100dvh] w-full overflow-x-hidden" style={{ background: hour === null ? 'var(--paper)' : paletteAt(hour).gravel }}>
       <header className="fixed inset-x-0 top-0 z-20 flex items-center gap-2 px-3 py-3 sm:px-6">
         <span className={`chip ${night ? 'chip-night' : ''} flex items-center gap-1.5 rounded-full py-0.5 pl-1.5 pr-4 font-display text-lg font-bold`}>
           <Mark />

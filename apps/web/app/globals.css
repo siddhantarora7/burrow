@@ -9,16 +9,18 @@
 :root {
   --paper: #f7f4ec;
   --ink: #26241f;
+  --focus: #2e4a7d;
   color-scheme: light;
 }
 /* Plain pages (privacy, landing) follow the OS theme; the garden's chrome follows its sky instead. */
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) { --paper: #181a20; --ink: #f1eee6; color-scheme: dark; }
+  :root:not([data-theme="light"]) { --paper: #181a20; --ink: #f1eee6; --focus: #f1eee6; color-scheme: dark; }
 }
-:root[data-theme="dark"] { --paper: #181a20; --ink: #f1eee6; color-scheme: dark; }
+:root[data-theme="dark"] { --paper: #181a20; --ink: #f1eee6; --focus: #f1eee6; color-scheme: dark; }
 
 body { background: var(--paper); color: var(--ink); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
-:focus-visible { outline: 2px solid #4e6ea3; outline-offset: 3px; border-radius: 8px; }
+/* deep blue clears 4.6:1 on day and dusk gravel; .chip-night swaps in paper for the night garden */
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: 8px; }
 
 /* Name tags are the glance signal and a control (focus or click to boop). Colours come from .chip. */
 .tag {
@@ -41,10 +43,13 @@ body { background: var(--paper); color: var(--ink); font-family: var(--font-sans
 
 ::selection { background: #efa9bc; color: #26241f; }
 
+/* The garden follows its sky, not the OS: its day ring stays blue even in OS dark mode. */
+.garden { --focus: #2e4a7d; }
+
 /* Chrome over the garden follows the sky, not the OS theme: light frosted by day, dark at night. */
 .chip { color: #26241f; background: rgba(250, 249, 245, 0.8); border: 1px solid rgba(255, 255, 255, 0.9); box-shadow: 0 6px 20px rgba(38, 36, 31, 0.12); backdrop-filter: blur(12px) saturate(1.3); -webkit-backdrop-filter: blur(12px) saturate(1.3); }
 .chip-solid { background: #26241f; color: #f7f4ec; }
-.chip-night { color: #f1eee6; background: rgba(24, 26, 32, 0.76); border-color: rgba(255, 255, 255, 0.16); }
+.chip-night { --focus: #f1eee6; color: #f1eee6; background: rgba(24, 26, 32, 0.76); border-color: rgba(255, 255, 255, 0.16); }
 .chip-night .chip-solid { background: #f1eee6; color: #26241f; }
 /* Chips on plain pages take the night skin when the OS is dark. */
 @media (prefers-color-scheme: dark) {
