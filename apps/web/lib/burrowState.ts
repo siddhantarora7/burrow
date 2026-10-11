@@ -34,5 +34,8 @@ export function reduce(state: BurrowState, action: Action): BurrowState {
     }
     case 'error':
       return { ...initialState, status: 'not_found' }
+    case 'welcome':
+    case 'poke':
+      return state
   }
 }
