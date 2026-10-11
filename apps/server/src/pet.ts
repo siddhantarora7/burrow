@@ -1,5 +1,5 @@
 import { DurableObject } from 'cloudflare:workers'
-import { parseWireEvent, type Ev, type MemberProfile } from '@burrow/core'
+import { emptyLedger, foldWait, parseWireEvent, type Ev, type MemberProfile, type Today, type WaitLedger } from '@burrow/core'
 import { allowRate, localDate, sha256Hex, type Hatch } from './logic'
 
 interface Profile extends MemberProfile {
@@ -29,6 +29,14 @@ export class PetDO extends DurableObject<Env> {
     return { petId, name: profile.name, species: profile.species, color: profile.color }
   }
 
+  /** The pet's public profile if `secret` is its CLI token, else null. */
+  async auth(secret: string): Promise<MemberProfile | null> {
+    const tokens = (await this.ctx.storage.get<string[]>('tokens')) ?? []
+    if (!tokens.includes(await sha256Hex(secret))) return null
+    const p = (await this.ctx.storage.get<Profile>('profile'))!
+    return { petId: p.petId, name: p.name, species: p.species, color: p.color }
+  }
+
   async addBurrow(burrowId: string): Promise<void> {
     const burrows = (await this.ctx.storage.get<string[]>('burrows')) ?? []
     if (!burrows.includes(burrowId)) await this.ctx.storage.put('burrows', [...burrows, burrowId])
@@ -53,12 +61,14 @@ export class PetDO extends DurableObject<Env> {
       stats.mealsToday++
     }
     stats.lastEventAt = now
+    const ledger = foldWait((await this.ctx.storage.get<WaitLedger>('ledger')) ?? emptyLedger(day), ev, day)
     const events = (await this.ctx.storage.get<Ev[]>('events')) ?? []
     events.push(ev)
-    await this.ctx.storage.put({ stats, events: events.filter((e) => e.t > now - 86_400_000).slice(-200) })
+    await this.ctx.storage.put({ stats, ledger, events: events.filter((e) => e.t > now - 86_400_000).slice(-200) })
 
+    const today: Today = { day, waitedMs: ledger.waitedMs, meals: stats.mealsToday }
     const burrows = (await this.ctx.storage.get<string[]>('burrows')) ?? []
-    await Promise.all(burrows.map((id) => this.env.BURROW.get(this.env.BURROW.idFromName(id)).ingest(profile.petId, ev)))
+    await Promise.all(burrows.map((id) => this.env.BURROW.get(this.env.BURROW.idFromName(id)).ingest(profile.petId, ev, today)))
     return { status: 204 }
   }
 }

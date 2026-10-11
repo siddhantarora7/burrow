@@ -24,7 +24,12 @@ describe('validateHatch', () => {
     [{ name: 'k', species: 'mochi', color: 'neon' }, 'unknown color'],
     [{ name: 'k', species: 'mochi', tz: 'Mars/Olympus' }, 'unknown time zone'],
     ['nope', 'body must be a JSON object'],
+    [{ name: 'k', species: 'mochi', burrowId: 'nope' }, 'burrowId must be a burrow id'],
   ])('rejects %j', (body, error) => expect(validateHatch(body)).toEqual({ ok: false, error }))
+  it('hatches into a friend\'s burrow when given its id', () => {
+    const r = validateHatch({ name: 'k', species: 'tofu', burrowId: 'abcdefgh12' })
+    expect(r).toEqual({ ok: true, value: { name: 'k', species: 'tofu', color: 'matcha', tz: 'UTC', burrowId: 'abcdefgh12' } })
+  })
 })
 
 describe('pruneEvents', () => {

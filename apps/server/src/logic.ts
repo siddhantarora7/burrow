@@ -1,5 +1,5 @@
 import {
-  cleanName, DEFAULT_COLOR, EVENT_RETENTION_MS, isPetColor, isSpecies, MAX_MEMBER_EVENTS,
+  cleanName, DEFAULT_COLOR, EVENT_RETENTION_MS, isId, isPetColor, isSpecies, MAX_MEMBER_EVENTS,
   type Ev, type PetColor, type Species,
 } from '@burrow/core'
 
@@ -8,7 +8,8 @@ export async function sha256Hex(s: string): Promise<string> {
   return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('')
 }
 
-export type Hatch = { name: string; species: Species; color: PetColor; tz: string }
+/** `burrowId`: hatch straight into a friend's burrow instead of creating one. */
+export type Hatch = { name: string; species: Species; color: PetColor; tz: string; burrowId?: string }
 
 function validTz(tz: string): boolean {
   try {
@@ -29,7 +30,8 @@ export function validateHatch(body: unknown): { ok: true; value: Hatch } | { ok:
   if (!isPetColor(color)) return { ok: false, error: 'unknown color' }
   const tz = b.tz === undefined ? 'UTC' : b.tz
   if (typeof tz !== 'string' || !validTz(tz)) return { ok: false, error: 'unknown time zone' }
-  return { ok: true, value: { name, species: b.species, color, tz } }
+  if (b.burrowId !== undefined && !isId(b.burrowId)) return { ok: false, error: 'burrowId must be a burrow id' }
+  return { ok: true, value: { name, species: b.species, color, tz, ...(b.burrowId ? { burrowId: b.burrowId } : {}) } }
 }
 
 export function pruneEvents(events: Ev[], now: number): Ev[] {

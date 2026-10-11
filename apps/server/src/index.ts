@@ -7,6 +7,8 @@ export { BurrowDO } from './burrow'
 const pet = (env: Env, id: string) => env.PET.get(env.PET.idFromName(id))
 const burrow = (env: Env, id: string) => env.BURROW.get(env.BURROW.idFromName(id))
 
+const bearer = (req: Request) => parseToken(req.headers.get('authorization')?.replace(/^Bearer\s+/i, ''))
+
 async function readJson(req: Request): Promise<unknown> {
   if (Number(req.headers.get('content-length') ?? 0) > 4096) return undefined
   try {
@@ -30,24 +32,44 @@ export default {
     if (req.method === 'POST' && url.pathname === '/v1/pets') {
       const hatch = validateHatch(await readJson(req))
       if (!hatch.ok) return json({ error: hatch.error }, 400, cors)
+      const invited = hatch.value.burrowId
+      // Check the friend's burrow before hatching, so a bad link never orphans a pet.
+      if (invited) {
+        if (!(await burrow(env, invited).exists())) return json({ error: 'burrow not found' }, 404, cors)
+        if (await burrow(env, invited).isFull()) return json({ error: 'burrow is full' }, 409, cors)
+      }
       const petId = newId()
       const secret = newId(SECRET_LEN)
-      const burrowId = newId()
+      const burrowId = invited ?? newId()
       const profile = await pet(env, petId).hatch(petId, hatch.value, await sha256Hex(secret), now)
       const b = burrow(env, burrowId)
-      await b.create({ id: burrowId, name: burrowName(profile.name), env: 'garden', createdAt: now, createdBy: petId })
+      if (!invited) await b.create({ id: burrowId, name: burrowName(profile.name), env: 'garden', createdAt: now, createdBy: petId })
       await b.join(profile, now)
       await pet(env, petId).addBurrow(burrowId)
       return json({ petId, token: `${petId}.${secret}`, burrowId }, 201, cors)
     }
 
     if (req.method === 'POST' && url.pathname === '/v1/events') {
-      const tok = parseToken(req.headers.get('authorization')?.replace(/^Bearer\s+/i, ''))
+      const tok = bearer(req)
       if (!tok) return json({ error: 'bad token' }, 401)
       const r = await pet(env, tok.petId).event(tok.secret, await readJson(req), now)
       if (r.status === 204) return new Response(null, { status: 204 })
       if (r.status === 400) return json({ error: r.error }, 400)
       return json({ error: r.status === 401 ? 'bad token' : 'slow down' }, r.status)
+    }
+
+    const join = url.pathname.match(/^\/v1\/burrows\/([^/]+)\/join$/)
+    if (req.method === 'POST' && join) {
+      const tok = bearer(req)
+      const profile = tok && (await pet(env, tok.petId).auth(tok.secret))
+      if (!profile) return json({ error: 'bad token' }, 401)
+      if (!isId(join[1])) return json({ error: 'burrow not found' }, 404)
+      const b = burrow(env, join[1])
+      const r = await b.join(profile, now)
+      if (r === 'not_found') return json({ error: 'burrow not found' }, 404)
+      if (r === 'full') return json({ error: 'burrow is full' }, 409)
+      await pet(env, profile.petId).addBurrow(join[1])
+      return json({ burrowId: join[1], name: (await b.info())!.name }, 200)
     }
 
     const ws = url.pathname.match(/^\/v1\/burrows\/([^/]+)\/ws$/)
