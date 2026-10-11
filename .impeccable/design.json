@@ -1789,20 +1789,26 @@
         ],
         "note": "Scene role; the clock interpolates day, dusk and night in RGB (apps/web/lib/pixel/palette.ts). Ramp is the real night-dusk-day swap, not synthesized."
       },
-      "mochi-base": {
+      "pet-ink": {
         "role": "primary",
-        "displayName": "Sakura Mochi base",
+        "displayName": "Dark Plum Ink",
+        "canonical": "#2a2033",
+        "note": "1 px outline around every pet silhouette, eyes, mouths, feet, z outline."
+      },
+      "sakura-base": {
+        "role": "primary",
+        "displayName": "Sakura base",
         "canonical": "#f4a3bc",
         "tonalRamp": [
           "#d77898",
           "#f4a3bc",
           "#fcd2df"
         ],
-        "note": "Fixed pet tone; never relit by the clock."
+        "note": "Fixed pet tone for this member colour; never relit by the clock."
       },
-      "mochi-hi": {
+      "sakura-hi": {
         "role": "primary",
-        "displayName": "Sakura Mochi rim light",
+        "displayName": "Sakura rim light",
         "canonical": "#fcd2df",
         "tonalRamp": [
           "#d77898",
@@ -1810,9 +1816,9 @@
           "#fcd2df"
         ]
       },
-      "mochi-shade": {
+      "sakura-shade": {
         "role": "primary",
-        "displayName": "Sakura Mochi shade",
+        "displayName": "Sakura shade",
         "canonical": "#d77898",
         "tonalRamp": [
           "#d77898",
@@ -1820,20 +1826,20 @@
           "#fcd2df"
         ]
       },
-      "tofu-base": {
+      "matcha-base": {
         "role": "primary",
-        "displayName": "Matcha Tofu base",
+        "displayName": "Matcha base",
         "canonical": "#9fc36a",
         "tonalRamp": [
           "#729744",
           "#9fc36a",
           "#c8e196"
         ],
-        "note": "Fixed pet tone; never relit by the clock."
+        "note": "Fixed pet tone for this member colour; never relit by the clock."
       },
-      "tofu-hi": {
+      "matcha-hi": {
         "role": "primary",
-        "displayName": "Matcha Tofu rim light",
+        "displayName": "Matcha rim light",
         "canonical": "#c8e196",
         "tonalRamp": [
           "#729744",
@@ -1841,9 +1847,9 @@
           "#c8e196"
         ]
       },
-      "tofu-shade": {
+      "matcha-shade": {
         "role": "primary",
-        "displayName": "Matcha Tofu shade",
+        "displayName": "Matcha shade",
         "canonical": "#729744",
         "tonalRamp": [
           "#729744",
@@ -1851,20 +1857,20 @@
           "#c8e196"
         ]
       },
-      "onigiri-base": {
+      "rice-base": {
         "role": "primary",
-        "displayName": "Rice Onigiri base",
+        "displayName": "Rice base",
         "canonical": "#f7f2e6",
         "tonalRamp": [
           "#d6cdb9",
           "#f7f2e6",
           "#ffffff"
         ],
-        "note": "Fixed pet tone; never relit by the clock."
+        "note": "Fixed pet tone for this member colour; never relit by the clock."
       },
-      "onigiri-hi": {
+      "rice-hi": {
         "role": "primary",
-        "displayName": "Rice Onigiri rim light",
+        "displayName": "Rice rim light",
         "canonical": "#ffffff",
         "tonalRamp": [
           "#d6cdb9",
@@ -1872,9 +1878,9 @@
           "#ffffff"
         ]
       },
-      "onigiri-shade": {
+      "rice-shade": {
         "role": "primary",
-        "displayName": "Rice Onigiri shade",
+        "displayName": "Rice shade",
         "canonical": "#d6cdb9",
         "tonalRamp": [
           "#d6cdb9",
@@ -1882,11 +1888,98 @@
           "#ffffff"
         ]
       },
-      "pet-ink": {
+      "yuzu-base": {
         "role": "primary",
-        "displayName": "Dark Plum Ink",
-        "canonical": "#2a2033",
-        "note": "1 px outline around every pet silhouette, eyes, mouths, feet, z outline."
+        "displayName": "Yuzu base",
+        "canonical": "#f5c94f",
+        "tonalRamp": [
+          "#d49a2e",
+          "#f5c94f",
+          "#fbe59a"
+        ],
+        "note": "Fixed pet tone for this member colour; never relit by the clock."
+      },
+      "yuzu-hi": {
+        "role": "primary",
+        "displayName": "Yuzu rim light",
+        "canonical": "#fbe59a",
+        "tonalRamp": [
+          "#d49a2e",
+          "#f5c94f",
+          "#fbe59a"
+        ]
+      },
+      "yuzu-shade": {
+        "role": "primary",
+        "displayName": "Yuzu shade",
+        "canonical": "#d49a2e",
+        "tonalRamp": [
+          "#d49a2e",
+          "#f5c94f",
+          "#fbe59a"
+        ]
+      },
+      "sora-base": {
+        "role": "primary",
+        "displayName": "Sora base",
+        "canonical": "#a6cbef",
+        "tonalRamp": [
+          "#7099d1",
+          "#a6cbef",
+          "#d3e7fb"
+        ],
+        "note": "Fixed pet tone for this member colour; never relit by the clock."
+      },
+      "sora-hi": {
+        "role": "primary",
+        "displayName": "Sora rim light",
+        "canonical": "#d3e7fb",
+        "tonalRamp": [
+          "#7099d1",
+          "#a6cbef",
+          "#d3e7fb"
+        ]
+      },
+      "sora-shade": {
+        "role": "primary",
+        "displayName": "Sora shade",
+        "canonical": "#7099d1",
+        "tonalRamp": [
+          "#7099d1",
+          "#a6cbef",
+          "#d3e7fb"
+        ]
+      },
+      "fuji-base": {
+        "role": "primary",
+        "displayName": "Fuji base",
+        "canonical": "#c3aee6",
+        "tonalRamp": [
+          "#9a80ca",
+          "#c3aee6",
+          "#e3d7f7"
+        ],
+        "note": "Fixed pet tone for this member colour; never relit by the clock."
+      },
+      "fuji-hi": {
+        "role": "primary",
+        "displayName": "Fuji rim light",
+        "canonical": "#e3d7f7",
+        "tonalRamp": [
+          "#9a80ca",
+          "#c3aee6",
+          "#e3d7f7"
+        ]
+      },
+      "fuji-shade": {
+        "role": "primary",
+        "displayName": "Fuji shade",
+        "canonical": "#9a80ca",
+        "tonalRamp": [
+          "#9a80ca",
+          "#c3aee6",
+          "#e3d7f7"
+        ]
       },
       "lantern-light": {
         "role": "secondary",
@@ -1918,7 +2011,20 @@
       "focus-ring": {
         "role": "neutral",
         "displayName": "Focus Blue",
-        "canonical": "#4e6ea3"
+        "canonical": "#2e4a7d",
+        "note": "Day and dusk; 4.6:1 or better on gravel."
+      },
+      "focus-ring-night": {
+        "role": "neutral",
+        "displayName": "Focus Paper",
+        "canonical": "#f1eee6",
+        "note": "Night chips and dark plain pages."
+      },
+      "selection": {
+        "role": "neutral",
+        "displayName": "Selection",
+        "canonical": "#fcd2df",
+        "note": "The sakura pet's rim light, under chrome ink."
       }
     },
     "typographyMeta": {
@@ -2061,7 +2167,7 @@
       "refersTo": "tag",
       "description": "The glance signal and a control: name, lowercase verb, detail on hover/focus; activating boops the pet.",
       "html": "<button type=\"button\" class=\"ds-tag\">ada<i>working</i></button>",
-      "css": ".ds-tag{font:700 clamp(12px,1vw,15px)/1 \"Zen Maru Gothic\",ui-rounded,system-ui,sans-serif;padding:0.5em 0.9em;border-radius:999px;white-space:nowrap;cursor:pointer;color:#26241f;background:rgba(250,249,245,0.8);border:1px solid rgba(255,255,255,0.9);box-shadow:0 6px 20px rgba(38,36,31,0.12);backdrop-filter:blur(12px) saturate(1.3);transition:translate .2s cubic-bezier(0.16,1,0.3,1),scale .2s cubic-bezier(0.16,1,0.3,1)}.ds-tag i{font-style:normal;font-weight:500;opacity:.75;margin-left:.45em}.ds-tag:hover,.ds-tag:focus-visible{translate:0 -2px;scale:1.04}.ds-tag:focus-visible{outline:2px solid #4e6ea3;outline-offset:3px}@media (prefers-reduced-motion:reduce){.ds-tag{transition:none}}"
+      "css": ".ds-tag{font:700 clamp(12px,1vw,15px)/1 \"Zen Maru Gothic\",ui-rounded,system-ui,sans-serif;padding:0.5em 0.9em;border-radius:999px;white-space:nowrap;cursor:pointer;color:#26241f;background:rgba(250,249,245,0.8);border:1px solid rgba(255,255,255,0.9);box-shadow:0 6px 20px rgba(38,36,31,0.12);backdrop-filter:blur(12px) saturate(1.3);transition:translate .2s cubic-bezier(0.16,1,0.3,1),scale .2s cubic-bezier(0.16,1,0.3,1)}.ds-tag i{font-style:normal;font-weight:500;opacity:.75;margin-left:.45em}.ds-tag:hover,.ds-tag:focus-visible{translate:0 -2px;scale:1.04}.ds-tag:focus-visible{outline:2px solid #2e4a7d;outline-offset:3px}@media (prefers-reduced-motion:reduce){.ds-tag{transition:none}}"
     },
     {
       "name": "Name tag (needs you)",
@@ -2069,7 +2175,7 @@
       "refersTo": "tag-alert",
       "description": "Only the waiting state: ink fill, gold ring, gold verb.",
       "html": "<button type=\"button\" class=\"ds-tag-alert\">mika<i>needs you</i></button>",
-      "css": ".ds-tag-alert{font:700 clamp(12px,1vw,15px)/1 \"Zen Maru Gothic\",ui-rounded,system-ui,sans-serif;padding:0.5em 0.9em;border-radius:999px;white-space:nowrap;cursor:pointer;color:#f7f4ec;background:rgba(38,36,31,0.92);border:1px solid transparent;box-shadow:0 0 0 3px rgba(240,198,78,0.8),0 6px 20px rgba(20,18,30,0.25);transition:translate .2s cubic-bezier(0.16,1,0.3,1),scale .2s cubic-bezier(0.16,1,0.3,1)}.ds-tag-alert i{font-style:normal;font-weight:500;color:#f0c64e;margin-left:.45em}.ds-tag-alert:hover,.ds-tag-alert:focus-visible{translate:0 -2px;scale:1.04}.ds-tag-alert:focus-visible{outline:2px solid #4e6ea3;outline-offset:3px}"
+      "css": ".ds-tag-alert{font:700 clamp(12px,1vw,15px)/1 \"Zen Maru Gothic\",ui-rounded,system-ui,sans-serif;padding:0.5em 0.9em;border-radius:999px;white-space:nowrap;cursor:pointer;color:#f7f4ec;background:rgba(38,36,31,0.92);border:1px solid transparent;box-shadow:0 0 0 3px rgba(240,198,78,0.8),0 6px 20px rgba(20,18,30,0.25);transition:translate .2s cubic-bezier(0.16,1,0.3,1),scale .2s cubic-bezier(0.16,1,0.3,1)}.ds-tag-alert i{font-style:normal;font-weight:500;color:#f0c64e;margin-left:.45em}.ds-tag-alert:hover,.ds-tag-alert:focus-visible{translate:0 -2px;scale:1.04}.ds-tag-alert:focus-visible{outline:2px solid #2e4a7d;outline-offset:3px}"
     },
     {
       "name": "Command pill",
@@ -2077,7 +2183,7 @@
       "refersTo": "command-pill",
       "description": "The one primary action: get a pet, the command in mono, a solid copy button.",
       "html": "<div class=\"ds-cmd\"><span class=\"ds-cmd-lead\">get a pet</span><code>npx burrow-pets init</code><button type=\"button\" class=\"ds-cmd-copy\">copy</button></div>",
-      "css": ".ds-cmd{display:inline-flex;align-items:center;gap:12px;white-space:nowrap;padding:6px 6px 6px 16px;border-radius:999px;color:#26241f;background:rgba(250,249,245,0.8);border:1px solid rgba(255,255,255,0.9);box-shadow:0 6px 20px rgba(38,36,31,0.12);backdrop-filter:blur(12px) saturate(1.3);font-size:14px}.ds-cmd-lead{font:700 14px \"Zen Maru Gothic\",ui-rounded,sans-serif}.ds-cmd code{font:400 13px \"Geist Mono\",ui-monospace,monospace}.ds-cmd-copy{border:0;cursor:pointer;background:#26241f;color:#f7f4ec;border-radius:999px;padding:4px 12px;font:700 12px \"Zen Maru Gothic\",ui-rounded,sans-serif;transition:transform .15s}.ds-cmd-copy:active{transform:scale(.97)}.ds-cmd-copy:focus-visible{outline:2px solid #4e6ea3;outline-offset:3px}"
+      "css": ".ds-cmd{display:inline-flex;align-items:center;gap:12px;white-space:nowrap;padding:6px 6px 6px 16px;border-radius:999px;color:#26241f;background:rgba(250,249,245,0.8);border:1px solid rgba(255,255,255,0.9);box-shadow:0 6px 20px rgba(38,36,31,0.12);backdrop-filter:blur(12px) saturate(1.3);font-size:14px}.ds-cmd-lead{font:700 14px \"Zen Maru Gothic\",ui-rounded,sans-serif}.ds-cmd code{font:400 13px \"Geist Mono\",ui-monospace,monospace}.ds-cmd-copy{border:0;cursor:pointer;background:#26241f;color:#f7f4ec;border-radius:999px;padding:4px 12px;font:700 12px \"Zen Maru Gothic\",ui-rounded,sans-serif;transition:transform .15s}.ds-cmd-copy:active{transform:scale(.97)}.ds-cmd-copy:focus-visible{outline:2px solid #2e4a7d;outline-offset:3px}"
     },
     {
       "name": "Notice",
@@ -2090,7 +2196,7 @@
     {
       "name": "Pet sprite (mochi, idle)",
       "kind": "custom",
-      "refersTo": "mochi-base",
+      "refersTo": "sakura-base",
       "description": "Signature: 32px pet, 1px dark-plum outline, top-left light, glinting eyes, blush, feet. Static sketch of the canvas sprite at 4x.",
       "html": "<div class=\"ds-pet\"><span class=\"ds-pet-body\"></span><span class=\"ds-pet-eye l\"></span><span class=\"ds-pet-eye r\"></span><span class=\"ds-pet-blush l\"></span><span class=\"ds-pet-blush r\"></span></div>",
       "css": ".ds-pet{position:relative;width:96px;height:64px;image-rendering:pixelated}.ds-pet-body{position:absolute;inset:0;background:linear-gradient(#fcd2df 0 8px,#f4a3bc 8px 52px,#d77898 52px);border:4px solid #2a2033;border-radius:48px 48px 4px 4px}.ds-pet-eye{position:absolute;top:28px;width:8px;height:8px;background:#2a2033;box-shadow:inset 4px 4px 0 -0px transparent}.ds-pet-eye::before{content:\"\";position:absolute;left:0;top:0;width:4px;height:4px;background:#fff}.ds-pet-eye.l{left:32px}.ds-pet-eye.r{left:60px}.ds-pet-blush{position:absolute;top:40px;width:8px;height:4px;background:#ff8fa8}.ds-pet-blush.l{left:20px}.ds-pet-blush.r{left:72px}"
@@ -2110,7 +2216,7 @@
     "rules": [
       {
         "name": "The Brighter Pet Rule",
-        "body": "Pets keep fixed tones and a 1 px `pet-ink` outline at every hour; the scene darkens around them, they never darken with it. A new species gets a base, highlight and shade that out-value the day gravel's neighbourhood and still read against the night.",
+        "body": "Pets keep fixed tones and a 1 px `pet-ink` outline at every hour; the scene darkens around them, they never darken with it. A new pet colour gets a base, highlight and shade that out-value the day gravel's neighbourhood and still read against the night: base at 4.5:1 or better against night gravel, shade at 4.5:1 or better against `pet-ink` (enforced in `apps/web/test/pixel.test.ts`).",
         "section": "colors"
       },
       {

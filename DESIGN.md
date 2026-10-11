@@ -2,17 +2,26 @@
 name: burrow
 description: a calm, living pixel-art zen garden where friends' coding-agent pets sit on stepping stones under the visitor's real sky.
 colors:
-  # pets: fixed tones, never relit by the clock
+  # pets: fixed tones per member colour (default sakura mochi, matcha tofu, rice onigiri), never relit by the clock
   pet-ink: "#2a2033"
-  mochi-base: "#f4a3bc"
-  mochi-hi: "#fcd2df"
-  mochi-shade: "#d77898"
-  tofu-base: "#9fc36a"
-  tofu-hi: "#c8e196"
-  tofu-shade: "#729744"
-  onigiri-base: "#f7f2e6"
-  onigiri-hi: "#ffffff"
-  onigiri-shade: "#d6cdb9"
+  sakura-base: "#f4a3bc"
+  sakura-hi: "#fcd2df"
+  sakura-shade: "#d77898"
+  matcha-base: "#9fc36a"
+  matcha-hi: "#c8e196"
+  matcha-shade: "#729744"
+  rice-base: "#f7f2e6"
+  rice-hi: "#ffffff"
+  rice-shade: "#d6cdb9"
+  yuzu-base: "#f5c94f"
+  yuzu-hi: "#fbe59a"
+  yuzu-shade: "#d49a2e"
+  sora-base: "#a6cbef"
+  sora-hi: "#d3e7fb"
+  sora-shade: "#7099d1"
+  fuji-base: "#c3aee6"
+  fuji-hi: "#e3d7f7"
+  fuji-shade: "#9a80ca"
   nori: "#2f3b30"
   pet-glint: "#ffffff"
   pet-blush: "#ff8fa8"
@@ -43,7 +52,9 @@ colors:
   chip-night-line: "rgba(255, 255, 255, 0.16)"
   alert-bg: "rgba(38, 36, 31, 0.92)"
   alert-ring: "rgba(240, 198, 78, 0.8)"
-  focus-ring: "#4e6ea3"
+  focus-ring: "#2e4a7d"
+  focus-ring-night: "#f1eee6"
+  selection: "#fcd2df"
   # scene: every role has day / dusk / night variants (apps/web/lib/pixel/palette.ts)
   sky0-day: "#5b8fd1"
   sky0-dusk: "#45467f"
@@ -274,7 +285,7 @@ Over the pixels sits a thin layer of modern HTML chrome: frosted pills in Zen Ma
 A cozy 16-bit palette: muted, warm scenery that relights by the clock, with saturated pets that never relight.
 
 ### Primary
-- **Pet tones** (`mochi-*`, `tofu-*`, `onigiri-*`): sakura pink, matcha green and rice white, each as base, highlight and shade. These are the colour of the product; they are the only saturated, high-value masses on screen and they ignore the clock.
+- **Pet tones** (`sakura-*`, `matcha-*`, `rice-*`, `yuzu-*`, `sora-*`, `fuji-*`): one ramp per member colour, each as base, highlight and shade. A pet wears its member's colour; each species defaults to its own (sakura mochi, matcha tofu, rice onigiri), and an unknown colour falls back to that default. These are the colour of the product; they are the only saturated, high-value masses on screen and they ignore the clock.
 - **Pet Ink** (`pet-ink`, dark plum): the 1 px outline around every pet silhouette, arms included, and the feet, eyes and mouths. Also outlines the sleeping z so it reads over water, gravel or sky.
 
 ### Secondary
@@ -287,10 +298,11 @@ A cozy 16-bit palette: muted, warm scenery that relights by the clock, with satu
 ### Neutral
 - **Scene roles** (`<role>-day`, `<role>-dusk`, `<role>-night`): sky bands `sky0` to `sky3` (top to horizon), `far` and `snow` (the mountain), `forest`/`forestHi`, wall `tile`/`tileHi`/`plaster`/`plasterLine`, ground `gravel`/`rakeD`/`rakeL`, rock `stone`/`stoneD`/`stoneH`, `moss`/`mossD`/`mossH`, `bush`/`bushH`/`bloom`, maple `maple`/`mapleH`/`mapleD`/`trunk`, pond `water`/`waterD`/`waterH`/`pad`, `cloud`/`cloudD`, and `sun` (which is the moon at night). Most roles come as a base, a highlight (`H`/`Hi`) and a dark (`D`).
 - **Day/dusk/night keyframes**: night until 05:00, night to dusk by 06:12, dusk to day by 07:30, day until 17:00, day to dusk by 18:36, dusk to night by 20:00. The scene counts as night when the night weight passes one half; that flag also switches stars, lantern light, fireflies and the chrome.
-- **Chrome Ink and Paper** (`chrome-ink`, `chrome-paper`, `chrome-night-ink`): warm sumi black and washi white for all HTML text and solid pills. The page background behind the canvas is the current `gravel` colour, so overscroll and loading never flash a foreign colour.
+- **Chrome Ink and Paper** (`chrome-ink`, `chrome-paper`, `chrome-night-ink`): warm sumi black and washi white for all HTML text and solid pills, exposed to CSS as `--ink` and `--paper`. Plain pages (privacy, the placeholder landing) follow the OS theme: paper on ink-dark `#181a20` in dark mode, with `.chip-os` chips taking the night skin. The page background behind the canvas is the current `gravel` colour, so overscroll and loading never flash a foreign colour.
+- **Focus and selection**: the focus ring is `focus-ring` deep blue (4.6:1 or better on day and dusk gravel) and switches to `focus-ring-night` paper on night chips and dark plain pages; the garden pins its own ring so an OS dark theme never leaks into a daytime garden. Selected text sits on `selection`, the sakura pet's rim light, in chrome ink.
 
 ### Named Rules
-**The Brighter Pet Rule.** Pets keep fixed tones and a 1 px `pet-ink` outline at every hour; the scene darkens around them, they never darken with it. A new species gets a base, highlight and shade that out-value the day gravel's neighbourhood and still read against the night.
+**The Brighter Pet Rule.** Pets keep fixed tones and a 1 px `pet-ink` outline at every hour; the scene darkens around them, they never darken with it. A new pet colour gets a base, highlight and shade that out-value the day gravel's neighbourhood and still read against the night: base at 4.5:1 or better against night gravel, shade at 4.5:1 or better against `pet-ink` (enforced in `apps/web/test/pixel.test.ts`).
 
 **The Palette Swap Rule.** Every scene colour is a role with exactly three values: day, dusk, night. A new scene element adds a role with all three or reuses one; it never darkens with a CSS filter, an overlay or alpha.
 
@@ -372,12 +384,12 @@ The glance signal and a control.
 - **Content:** name in 700, verb in 500 at 75% opacity; on hover or focus it grows a second line of detail ("waiting on you for 3m", "quiet for 4m, maybe interrupted").
 - **Skins:** day chip, night chip, and the alert skin for the waiting state: dark ink fill, paper text, gold verb and a 3 px gold ring. Only one state ever gets the alert skin.
 - **Hover / Focus:** lifts 2 px and scales to 1.04 over 0.2s on `cubic-bezier(0.16, 1, 0.3, 1)`, using the `translate`/`scale` properties so it composes with the centring translate; a dotted white ring appears on the pet's stone. No transition with reduced motion.
-- **Behaviour:** a real `<button>`; activating it boops the pet. Its accessible name states name, verb and detail ("ada is needs you: waiting on you for 3m. Press to boop.").
+- **Behaviour:** a real `<button>`; activating it boops the pet. Its accessible name starts with exactly the visible text, then adds the detail ("ada needs you: waiting on you for 3m. press to boop."), so speech users can say what they see (WCAG 2.5.3).
 
 ### Chips (header, nav, status, hint)
 - **Style:** frosted pill (chip float). Header pairs the 32 px mochi mark with the wordmark and, from `sm`, the burrow name at 70%. Nav carries a `privacy` link (underline on hover) and a solid status pill (`live`, `connecting…`, `reconnecting…`, `demo`) with `role="status"`.
 - **Night:** dark frosted fill, solid pill inverts to paper with ink text.
-- **Hint:** one time only ("tap a pet to boop it, or tap the pond"), fades in over 0.5s with opacity alone, gone after the first boop or pond tap.
+- **Hint:** one time only ("click a pet to boop it, or click the pond" with a mouse or trackpad, "tap" on touch screens), fades in over 0.5s with opacity alone, gone after the first boop or pond tap.
 
 ### Command pill
 - **Style:** frosted pill, "get a pet" in display bold (from `sm`), the command in Geist Mono, then a solid copy button in display bold 0.75rem that reads `copied` once used and presses to 0.97.
@@ -389,7 +401,7 @@ The glance signal and a control.
 - **Task finished:** a ripple crosses the pond on the pet's side when a stop event lands.
 
 ### Ambient motion
-All loops run in one `requestAnimationFrame`, pause when the tab is hidden, and clamp each step at 50 ms.
+All loops run in one `requestAnimationFrame`, pause when the tab is hidden, and clamp each step at 50 ms. Every motion is in garden pixels per second, stepped by the real frame time (`apps/web/lib/pixel/ambient.ts`), so 120 Hz screens move at the same speed as 60 Hz ones. Ripples age by the clock, so one queued while the tab was hidden is dropped, not played minutes later.
 - **Day:** 3 clouds (2 on portrait) drift right at 1.8 to 3.3 px/s and wrap.
 - **Night:** about one star per three columns of width, twinkling white to `star-dim`, skipping the moon; up to 9 fireflies blinking on slow sine paths; the lantern halo flickers between two baked densities.
 - **Always:** 2 koi circle the pond with a flicking tail; 14 two-pixel glints re-scatter on the water every 0.7s; up to 10 maple leaves fall at 9 px/s with a sway, rest on the gravel for 9s, then vanish.
@@ -397,7 +409,7 @@ All loops run in one `requestAnimationFrame`, pause when the tab is hidden, and 
 
 ### Performance (60 fps with 24 pets)
 - Sky, ground (mountain, wall, maple, gravel, bushes, pond, stones, contact shadows, lantern), the lantern alone and the two glow densities are baked into offscreen canvases once per layout and palette step (the hour rounded to 0.1). Each frame is a few `drawImage` calls plus the small ambient marks.
-- Sprites are cached as one 32 px canvas per species, state, frame and quiet flag.
+- Sprites are cached as one 32 px canvas per species, colour, state, frame and quiet flag.
 - The garden canvas carries `will-change: transform` so the frosted chrome above it does not re-blur it every frame.
 - Resizes settle for 120 ms, unchanged sizes are ignored, and on touch screens a height-only change under 15% (the URL bar) never re-lays out the garden.
 
