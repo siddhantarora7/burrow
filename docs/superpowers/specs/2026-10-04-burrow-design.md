@@ -188,6 +188,8 @@ Accessibility: each pet has a text label ("mika is eating. Agent finished a task
 
 ## 8. Milestones (each demoed before the next)
 
+> Milestones 2–5 below are superseded by `2026-10-11-burrow-launch-design.md` (2026-10-11): the launch centres on "your agent is waiting on you" and cuts the tatami room, treats, growth stages and the share card.
+
 1. **Core loop**: `core` derive + tests; CLI `init` + hook script; Worker + PetDO + one BurrowDO; `/b/[id]` showing one pet reacting live.
 2. **Shared burrow**: invite links, `join`, multiple members, presence, garden spots for up to 24, mobile layout, second environment (tatami room) and env picker.
 3. **Social**: treats and cheers, growth stages, `/p/[id]` share card.
