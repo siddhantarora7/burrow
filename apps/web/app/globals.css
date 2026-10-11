@@ -7,28 +7,18 @@
 }
 
 :root {
-  --washi: #e9ece4;
-  --sumi: #26241f;
-  --glass: rgba(255, 255, 255, 0.4);
-  --glass-line: rgba(255, 255, 255, 0.6);
+  --paper: #f7f4ec;
+  --ink: #26241f;
   color-scheme: light;
 }
+/* Plain pages (privacy, landing) follow the OS theme; the garden's chrome follows its sky instead. */
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) { --washi: #14161a; --sumi: #edebe4; --glass: rgba(30, 32, 38, 0.45); --glass-line: rgba(255, 255, 255, 0.16); color-scheme: dark; }
+  :root:not([data-theme="light"]) { --paper: #181a20; --ink: #f1eee6; color-scheme: dark; }
 }
-:root[data-theme="dark"] { --washi: #14161a; --sumi: #edebe4; --glass: rgba(30, 32, 38, 0.45); --glass-line: rgba(255, 255, 255, 0.16); color-scheme: dark; }
+:root[data-theme="dark"] { --paper: #181a20; --ink: #f1eee6; color-scheme: dark; }
 
-body { background: var(--washi); color: var(--sumi); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+body { background: var(--paper); color: var(--ink); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
 :focus-visible { outline: 2px solid #4e6ea3; outline-offset: 3px; border-radius: 8px; }
-
-.glass {
-  background: var(--glass);
-  border: 1px solid var(--glass-line);
-  backdrop-filter: blur(14px) saturate(1.4);
-  -webkit-backdrop-filter: blur(14px) saturate(1.4);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 10px 30px rgba(20, 24, 40, 0.12);
-}
-@media (prefers-reduced-transparency: reduce) { .glass { backdrop-filter: none; -webkit-backdrop-filter: none; background: var(--washi); } }
 
 /* Name tags are the glance signal and a control (focus or click to boop). Colours come from .chip. */
 .tag {
@@ -56,7 +46,13 @@ body { background: var(--washi); color: var(--sumi); font-family: var(--font-san
 .chip-solid { background: #26241f; color: #f7f4ec; }
 .chip-night { color: #f1eee6; background: rgba(24, 26, 32, 0.76); border-color: rgba(255, 255, 255, 0.16); }
 .chip-night .chip-solid { background: #f1eee6; color: #26241f; }
+/* Chips on plain pages take the night skin when the OS is dark. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .chip-os { color: #f1eee6; background: rgba(24, 26, 32, 0.76); border-color: rgba(255, 255, 255, 0.16); }
+}
+:root[data-theme="dark"] .chip-os { color: #f1eee6; background: rgba(24, 26, 32, 0.76); border-color: rgba(255, 255, 255, 0.16); }
 @media (prefers-reduced-transparency: reduce) { .chip { backdrop-filter: none; -webkit-backdrop-filter: none; background: #faf9f5; } .chip-night { background: #181a20; } }
+@media (prefers-reduced-transparency: reduce) and (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .chip-os { background: #181a20; } }
 
 .hint { animation: hint-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
 /* opacity only: the hint is centred with `translate`, which an animated translate would override */
