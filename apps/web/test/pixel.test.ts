@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_COLOR, PET_COLORS, PET_STATES, SPECIES, type PetColor } from '@burrow/core'
+import { DEFAULT_COLOR, PET_COLORS, PET_STATES, SPECIES, STAGES, type PetColor } from '@burrow/core'
 import { paletteAt, phaseAt } from '../lib/pixel/palette'
-import { C, colorsFor, FRAMES, GRID, PET_INK, PET_TONES, petGrid, toneOf } from '../lib/pixel/sprites'
+import { C, colorsFor, FRAMES, GRID, PET_INK, PET_TONES, petGrid, silhouette, toneOf } from '../lib/pixel/sprites'
 
 describe('phaseAt', () => {
   it('is day at noon, night at 22:00, dusk around 18:40', () => {
@@ -19,11 +19,11 @@ describe('paletteAt', () => {
 
 describe('petGrid', () => {
   const body = new Set<number>([C.B, C.H, C.S, C.N])
-  it.each(SPECIES)('%s: every state and frame is outlined, so pets never blend into the garden', (species) => {
+  it.each(SPECIES.flatMap((sp) => STAGES.map((st) => [sp, st] as const)))('%s %s: every state and frame is outlined, so pets never blend into the garden', (species, stage) => {
     for (const state of PET_STATES) {
       for (let f = 0; f < FRAMES[state]; f++) {
         for (const quiet of state === 'work' ? [false, true] : [false]) {
-          const g = petGrid(species, state, f, quiet)
+          const g = petGrid(species, state, f, quiet, stage)
           expect(g).toHaveLength(GRID)
           let bodyPx = 0
           for (let y = 0; y < GRID; y++)
@@ -33,7 +33,7 @@ describe('petGrid', () => {
               // a body pixel never touches empty space: there is always outline (or face/props) between
               for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) expect(g[y + dy]?.[x + dx], `${species} ${state} ${f} at ${x},${y}`).not.toBe(C.E)
             }
-          expect(bodyPx).toBeGreaterThan(120)
+          expect(bodyPx).toBeGreaterThan(stage === 'baby' ? 60 : 120)
         }
       }
     }
@@ -78,13 +78,13 @@ describe('scene baking', () => {
 })
 
 describe('the working pose (the state people see most)', () => {
-  it.each(SPECIES)('%s: the face stays readable above the laptop', (species) => {
+  it.each(SPECIES.flatMap((sp) => STAGES.map((st) => [sp, st] as const)))('%s %s: the face stays readable above the laptop', (species, stage) => {
     for (const f of [0, 1]) {
-      const g = petGrid(species, 'work', f, false)
+      const g = petGrid(species, 'work', f, false, stage)
       const rows = (v: number) => g.map((r, y) => (r.includes(v as never) ? y : -1)).filter((y) => y >= 0)
       const lidTop = Math.min(...rows(C.L1)) - 1 // the lid outline sits just above its first light row
       const eyeBottom = Math.max(...g.map((r, y) => (r.some((v, x) => v === C.F && x < 15) ? y : -1)).filter((y) => y < lidTop))
-      expect(rows(C.W).length, `${species} f${f} glints`).toBeGreaterThanOrEqual(1)
+      expect(rows(C.W).length, `${species} ${stage} f${f} glints`).toBeGreaterThanOrEqual(1)
       expect(g.flat().filter((v) => v === C.W)).toHaveLength(2)
       expect(lidTop - eyeBottom, `${species} f${f}: body between eyes and lid`).toBeGreaterThanOrEqual(2)
       expect(g.flat().some((v) => v === C.P), `${species} f${f}: blush`).toBe(true)
@@ -178,5 +178,46 @@ describe('lantern glow', () => {
     expect(GLOW.rx).toBeLessThanOrEqual(18)
     const lit = [...colours(bakeGlow(GLOW.rx, GLOW.ry, GLOW.strength[1])).values()].flat().length
     expect(lit / ((2 * GLOW.rx + 1) * (2 * GLOW.ry + 1))).toBeLessThan(0.3)
+  })
+})
+
+describe('growth forms', () => {
+  const filled = (g: number[][]) => g.flat().filter((v) => v !== C.E).length
+  const body = (g: number[][]) => g.flat().filter((v) => v === C.B || v === C.H || v === C.S || v === C.N || v === C.D).length
+
+  it.each(SPECIES)('%s: a baby is smaller than its grown form', (species) => {
+    expect(body(petGrid(species, 'idle', 0, false, 'baby'))).toBeLessThan(body(petGrid(species, 'idle', 0, false, 'grown')) * 0.8)
+  })
+
+  it.each(SPECIES)('%s: the evolved form is the grown one plus a detail that sticks out', (species) => {
+    for (const state of PET_STATES) {
+      const grown = petGrid(species, state, 0, false, 'grown')
+      const evolved = petGrid(species, state, 0, false, 'evolved')
+      let extra = 0
+      grown.forEach((row, y) => row.forEach((v, x) => {
+        if (v !== C.E) expect(evolved[y]![x], `${species} ${state} lost ${x},${y}`).not.toBe(C.E)
+        else if (evolved[y]![x] !== C.E) extra++
+      }))
+      expect(extra, `${species} ${state}`).toBeGreaterThanOrEqual(6)
+    }
+  })
+
+  it('new species keep their own silhouettes', () => {
+    const shape = (species: (typeof SPECIES)[number]) => petGrid(species, 'idle', 0).map((r) => r.map((v) => (v === C.E ? 0 : 1)).join('')).join('')
+    expect(new Set(SPECIES.map(shape)).size).toBe(SPECIES.length)
+    expect(filled(petGrid('dorayaki', 'idle', 0))).toBeGreaterThan(filled(petGrid('dango', 'idle', 0)) * 0.9)
+  })
+
+  it('dorayaki: the anko band sits below the face', () => {
+    const g = petGrid('dorayaki', 'idle', 0)
+    const anko = g.findIndex((r) => r.includes(C.D as never))
+    const lastFace = Math.max(...g.map((r, y) => (r.includes(C.F as never) ? y : -1)))
+    expect(anko).toBeGreaterThan(0)
+    expect(anko).toBeGreaterThan(lastFace)
+  })
+
+  it('a silhouette is all ink, for the catalog\'s undiscovered forms', () => {
+    const g = silhouette(petGrid('taiyaki', 'idle', 0, false, 'evolved'))
+    expect(new Set(g.flat())).toEqual(new Set([C.E, C.O]))
   })
 })

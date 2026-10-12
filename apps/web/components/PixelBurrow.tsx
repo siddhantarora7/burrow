@@ -1,10 +1,10 @@
 'use client'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { bottomReserve, layoutGarden, pixelScale, POKE_GAP_MS, tagGap, TIMING, type DeriveResult, type GardenLayout, type Member, type PetColor, type PetState, type Species } from '@burrow/core'
+import { bottomReserve, layoutGarden, pixelScale, POKE_GAP_MS, tagGap, TIMING, type DeriveResult, type GardenLayout, type Member, type PetColor, type PetState, type Species, growthOf, stageOf, type Stage } from '@burrow/core'
 import { heartsAt, heartVisible, liveRipples, stepFly, stepHeart, stepLeaf, type Fly, type Heart, type Leaf, type Ripple } from '@/lib/pixel/ambient'
 import { hash, paletteAt, phaseAt, type Palette } from '@/lib/pixel/palette'
 import { bakeGlow, bakeGround, bakeLantern, bakeSky, GLOW, sunPosition, type Buffer } from '@/lib/pixel/scene'
-import { colorsFor, FPS, FRAMES, GRID, petGrid, toneOf } from '@/lib/pixel/sprites'
+import { colorsFor, FPS, FRAMES, GRID, petGrid, silhouette, toneOf } from '@/lib/pixel/sprites'
 import { tagLabel, VERB, waitedLine } from '@/lib/status'
 import { Pointer } from './icons'
 
@@ -34,15 +34,16 @@ function detail(r: DeriveResult | undefined, now: number): string {
 
 // ---------- sprite cache: one tiny canvas per species/colour/state/frame ----------
 const cache = new Map<string, HTMLCanvasElement>()
-export function spriteCanvas(species: Species, color: PetColor, state: PetState, frame: number, quiet: boolean): HTMLCanvasElement {
-  const key = `${species}:${color}:${state}:${frame}:${quiet}`
+export function spriteCanvas(species: Species, color: PetColor, state: PetState, frame: number, quiet: boolean, stage: Stage = 'grown', known = true): HTMLCanvasElement {
+  const key = `${species}:${color}:${state}:${frame}:${quiet}:${stage}:${known}`
   let c = cache.get(key)
   if (c) return c
   c = document.createElement('canvas')
   c.width = c.height = GRID
   const ctx = c.getContext('2d')!
   const colors = colorsFor(color)
-  petGrid(species, state, frame, quiet).forEach((row, y) =>
+  const grid = petGrid(species, state, frame, quiet, stage)
+  ;(known ? grid : silhouette(grid)).forEach((row, y) =>
     row.forEach((v, x) => {
       if (!v) return
       ctx.fillStyle = colors[v]!
@@ -288,7 +289,7 @@ export function PixelBurrow({ members, states, offset, hour, me = null, pokes = 
         const f = reduce ? 0 : Math.floor((now / 1000) * FPS[state] + i * 1.7) % FRAMES[state]
         const boopT = (now - (st.boops.get(m.petId) ?? -1e9)) / 1000
         const hop = boopT < 0.45 ? Math.round(Math.sin((boopT / 0.45) * Math.PI) * 5) : 0
-        ctx.drawImage(spriteCanvas(m.species, toneOf(m.species, m.color), state, f, !!r?.quiet), x - CX, y - BOT - 1 - hop)
+        ctx.drawImage(spriteCanvas(m.species, toneOf(m.species, m.color), state, f, !!r?.quiet, stageOf(growthOf(m).xp)), x - CX, y - BOT - 1 - hop)
         if (st.hover === m.petId) {
           // a soft selection ring on the stone
           ctx.fillStyle = '#ffffff'
