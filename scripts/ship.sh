@@ -13,8 +13,10 @@ set -euo pipefail
 # ──────────────────────────────────────────────────────────────────────────
 
 if [[ -t 1 ]] && command -v tput >/dev/null 2>&1 && [[ "$(tput colors 2>/dev/null || echo 0)" -ge 8 ]]; then
-  BOLD=$(tput bold); DIM=$(tput dim); RESET=$(tput sgr0)
-  BLUE=$(tput setaf 4); GREEN=$(tput setaf 2); YELLOW=$(tput setaf 3); RED=$(tput setaf 1)
+  # a style the terminal lacks (macOS has no "dim") becomes "" instead of tripping set -e
+  _cap() { tput "$@" 2>/dev/null || true; }
+  BOLD=$(_cap bold); DIM=$(_cap dim); RESET=$(_cap sgr0)
+  BLUE=$(_cap setaf 4); GREEN=$(_cap setaf 2); YELLOW=$(_cap setaf 3); RED=$(_cap setaf 1)
 else
   BOLD=""; DIM=""; RESET=""; BLUE=""; GREEN=""; YELLOW=""; RED=""
 fi
