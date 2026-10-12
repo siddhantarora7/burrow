@@ -185,6 +185,9 @@ export function PixelBurrow({ members, states, offset, hour, me = null, pokes = 
   // A pet that reaches a new stage bursts into sparkles and the garden says so, once, on every screen.
   const stagesSeen = useRef<Map<string, Stage> | null>(null)
   const [toast, setToast] = useState<string | null>(null)
+  // the timer lives outside the effect: every event re-runs it, and that must not cancel a showing toast
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  useEffect(() => () => clearTimeout(toastTimer.current), [])
   useEffect(() => {
     const { rises, stages } = stageRises(stagesSeen.current, members)
     stagesSeen.current = stages
@@ -192,8 +195,8 @@ export function PixelBurrow({ members, states, offset, hour, me = null, pokes = 
     for (const r of rises) live.current.bursts.set(r.petId, performance.now())
     const r = rises.at(-1)!
     setToast(r.stage === 'evolved' ? `${r.name} evolved!` : `${r.name} grew up!`)
-    const t = setTimeout(() => setToast(null), 4000)
-    return () => clearTimeout(t)
+    clearTimeout(toastTimer.current)
+    toastTimer.current = setTimeout(() => setToast(null), 4000)
   }, [members])
 
   // A ripple crosses the pond each time a pet finishes a task.

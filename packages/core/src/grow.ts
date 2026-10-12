@@ -81,7 +81,8 @@ export function earn(g: Growth, prev: WaitLedger, ev: Ev, day: string): Growth {
     next = { ...next, koban: next.koban + koban, weekKoban: next.weekKoban + koban, [counter]: next[counter] + 1 }
   }
   const opened = prev.open[ev.session]
-  if (!OPENS.has(ev.type) && opened !== undefined && next.replies < GROW.replyCap) {
+  // closing the session is walking away, not answering
+  if (!OPENS.has(ev.type) && ev.type !== 'session_end' && opened !== undefined && next.replies < GROW.replyCap) {
     const waited = ev.t - opened
     if (waited <= GROW.quickMs) pay(GROW.quickPay, 'replies')
     else if (waited <= GROW.okMs) pay(GROW.okPay, 'replies')

@@ -48,6 +48,10 @@ describe('earn', () => {
     expect(run([ev('needs_input', T0), ev('prompt', T0 + 300_000)]).koban).toBe(0)
   })
 
+  it('ending the session is not an answer', () => {
+    expect(run([ev('needs_input', T0), ev('session_end', T0 + 5_000)]).koban).toBe(0)
+  })
+
   it('pays a reply only in the session that was waiting', () => {
     expect(run([ev('needs_input', T0, 'aaaaaaaaaaaa'), ev('prompt', T0 + 10_000, 'bbbbbbbbbbbb')]).koban).toBe(0)
   })
