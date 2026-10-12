@@ -98,3 +98,28 @@ body { background: var(--paper); color: var(--ink); font-family: var(--font-sans
 .panel::backdrop { background: rgba(20, 18, 30, 0.4); backdrop-filter: blur(2px); }
 .pill-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .pill-btn:disabled:hover { background: transparent; }
+
+/* Landing hero: the garden's night sky (sky0 → sky2), fading into the page below. Always night, whatever the OS. */
+.night canvas.twinkle, .night > canvas { mask-image: linear-gradient(#000 55%, transparent); }
+.night { color: #f1eee6; background: linear-gradient(180deg, #0c1230 0%, #141c42 45%, #1c2752 72%, var(--paper) 100%); --focus: #f1eee6; }
+@media (prefers-reduced-motion: no-preference) {
+  .twinkle { animation: twinkle 3.2s ease-in-out infinite; }
+  .floater { animation: bob 5s ease-in-out infinite; }
+}
+@keyframes twinkle { 50% { opacity: 0.15; } }
+@keyframes bob { 50% { translate: 0 -10px; } }
+.floater canvas { filter: drop-shadow(0 18px 24px rgba(0, 0, 0, 0.35)); }
+/* a grouped nav on the night sky */
+.navgroup { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.14); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+
+/* The command, raised like a key: a soft lower edge that presses down on hover. */
+.raised { background: var(--raised); color: var(--ink); border: 1px solid var(--line); box-shadow: 0 4px 0 rgba(38, 36, 31, 0.1), 0 14px 30px -12px rgba(38, 36, 31, 0.3); transition: translate 0.15s, box-shadow 0.15s; }
+.raised:hover { translate: 0 1px; box-shadow: 0 3px 0 rgba(38, 36, 31, 0.1), 0 10px 24px -12px rgba(38, 36, 31, 0.3); }
+.raised-dark { background: #f7f4ec; color: #26241f; border-color: transparent; box-shadow: 0 4px 0 #b9b3a3, 0 18px 40px -12px rgba(0, 0, 0, 0.6); }
+.raised-dark:hover { box-shadow: 0 3px 0 #b9b3a3, 0 14px 32px -12px rgba(0, 0, 0, 0.6); }
+.raised-dark .chip-solid, .raised-dark .pill-btn.chip-solid:hover { background: #26241f; color: #f7f4ec; }
+@media (prefers-reduced-motion: reduce) { .raised, .raised:hover { transition: none; translate: none; } }
+
+/* Moments beside the demo: small cards in the chip's light skin; the alert one wears the waiting tag's gold ring. */
+.moment { color: #26241f; background: rgba(252, 251, 248, 0.96); border: 1px solid rgba(38, 36, 31, 0.08); box-shadow: 0 1px 2px rgba(38, 36, 31, 0.06), 0 18px 40px -14px rgba(12, 18, 48, 0.35); }
+.moment-alert { color: #f7f4ec; background: #26241f; border-color: transparent; box-shadow: 0 0 0 3px rgba(240, 198, 78, 0.8), 0 18px 40px -14px rgba(12, 18, 48, 0.45); }
