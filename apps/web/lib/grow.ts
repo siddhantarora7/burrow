@@ -47,3 +47,15 @@ export function stageRises(prev: ReadonlyMap<string, Stage> | null, members: rea
     : []
   return { rises, stages }
 }
+
+/** Pets whose koban went up since `prev`, for the little "+3" over their heads. Spending and first sight are silent. */
+export function kobanGains(prev: ReadonlyMap<string, number> | null, members: readonly Member[]) {
+  const balances = new Map(members.map((m) => [m.petId, growthOf(m).koban] as const))
+  const gains = prev
+    ? members.flatMap((m) => {
+        const before = prev.get(m.petId), now = balances.get(m.petId)!
+        return before !== undefined && now > before ? [{ petId: m.petId, amount: now - before }] : []
+      })
+    : []
+  return { gains, balances }
+}

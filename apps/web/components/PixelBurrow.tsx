@@ -7,7 +7,7 @@ import { bakeGlow, bakeGround, bakeLantern, bakeSky, GLOW, sunPosition, type Buf
 import { colorsFor, FPS, FRAMES, GRID, petGrid, silhouette, toneOf } from '@/lib/pixel/sprites'
 import { tagLabel, VERB, waitedLine } from '@/lib/status'
 import { Pointer, Sparkles } from './icons'
-import { careState, stageRises } from '@/lib/grow'
+import { careState, kobanGains, stageRises } from '@/lib/grow'
 
 const BOT = 28
 const CX = 16
@@ -181,6 +181,20 @@ export function PixelBurrow({ members, states, offset, hour, me = null, pokes = 
   live.current.hover = hover
   live.current.cares = cares
   live.current.offset = offset
+
+  // Koban earned float up from the pet as a small "+3", on every screen.
+  const balancesSeen = useRef<Map<string, number> | null>(null)
+  const [pops, setPops] = useState<Array<{ id: number; petId: string; amount: number }>>([])
+  const popId = useRef(0)
+  useEffect(() => {
+    const { gains, balances } = kobanGains(balancesSeen.current, members)
+    balancesSeen.current = balances
+    for (const g of gains) {
+      const id = ++popId.current
+      setPops((p) => [...p, { id, ...g }])
+      setTimeout(() => setPops((p) => p.filter((x) => x.id !== id)), 1600)
+    }
+  }, [members])
 
   // A pet that reaches a new stage bursts into sparkles and the garden says so, once, on every screen.
   const stagesSeen = useRef<Map<string, Stage> | null>(null)
@@ -453,6 +467,14 @@ export function PixelBurrow({ members, states, offset, hour, me = null, pokes = 
             {open && <b className="tag-more">{more}</b>}
           </button>
         )
+      })}
+      {pops.map((p) => {
+        const spot = L.spots[members.findIndex((m) => m.petId === p.petId)]
+        return spot ? (
+          <span key={p.id} className="koban-pop absolute -translate-x-1/2" style={{ left: spot[0] * S, top: (spot[1] - 34) * S }} aria-hidden="true">
+            +{p.amount}
+          </span>
+        ) : null
       })}
       {showHint && hint && members.length > 0 && (
         <p className={`hint chip ${phase.night ? 'chip-night' : ''} pill fixed left-1/2 z-20 -translate-x-1/2 sm:left-auto sm:right-6 sm:translate-x-0 ${careShown ? 'bottom-[7.5rem] sm:bottom-[4.5rem]' : 'bottom-[4.5rem] sm:bottom-6'}`}>

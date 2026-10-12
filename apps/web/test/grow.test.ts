@@ -56,3 +56,18 @@ describe('stageRises', () => {
     expect(stageRises(null, [m('a', 'mochi', g(500, 0))]).rises).toEqual([])
   })
 })
+
+import { kobanGains } from '../lib/grow'
+
+describe('kobanGains', () => {
+  it('reports pets whose koban went up, by how much, and remembers the new balances', () => {
+    const prev = new Map([['a', 4], ['b', 10]])
+    const { gains, balances } = kobanGains(prev, [m('a', 'mochi', { xp: 0, koban: 7, week: 'w', weekKoban: 7 }), m('b', 'tofu', { xp: 10, koban: 5, week: 'w', weekKoban: 10 })])
+    expect(gains).toEqual([{ petId: 'a', amount: 3 }])
+    expect(balances.get('b')).toBe(5)
+  })
+  it('spending is not a gain, and the first look celebrates nothing', () => {
+    expect(kobanGains(null, [m('a', 'mochi', g(0, 9))]).gains).toEqual([])
+    expect(kobanGains(new Map(), [m('a', 'mochi', g(0, 9))]).gains).toEqual([])
+  })
+})
