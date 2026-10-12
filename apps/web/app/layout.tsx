@@ -6,9 +6,15 @@ const display = Zen_Maru_Gothic({ weight: ['500', '700'], subsets: ['latin'], va
 const body = Zen_Kaku_Gothic_New({ weight: ['400', '500', '700'], subsets: ['latin'], variable: '--font-zen-kaku' })
 const mono = Geist_Mono({ subsets: ['latin'], variable: '--font-geist-mono' })
 
+const description = 'a pixel pet for Claude Code that waves when your agent is waiting on you, in a garden shared with your friends.'
+
 export const metadata: Metadata = {
+  // share cards need absolute image URLs: Vercel provides the production host at build time
+  metadataBase: new URL(process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : 'http://localhost:3000'),
   title: 'burrow',
-  description: 'a tiny pet that reacts live to your coding agent, in a garden shared with your friends.',
+  description,
+  openGraph: { title: 'burrow', description, siteName: 'burrow', type: 'website' },
+  twitter: { card: 'summary_large_image', title: 'burrow', description },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
