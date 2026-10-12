@@ -221,3 +221,27 @@ describe('growth forms', () => {
     expect(new Set(g.flat())).toEqual(new Set([C.E, C.O]))
   })
 })
+
+describe('faces survive every frame', () => {
+  it.each(SPECIES.flatMap((sp) => STAGES.map((st) => [sp, st] as const)))('%s %s: eyes stay on the body in every state and frame', (species, stage) => {
+    for (const state of PET_STATES) {
+      if (state === 'sleep') continue // closed eyes are a line; checked by count below
+      for (let f = 0; f < FRAMES[state]; f++) {
+        const g = petGrid(species, state, f, false, stage)
+        // every face pixel (eyes, mouth) has body directly beside it, so it is drawn on the pet, not above it
+        const face = g.flatMap((r, y) => r.map((v, x) => [v, x, y] as const)).filter(([v]) => v === C.F)
+        expect(face.length, `${species} ${stage} ${state} ${f}`).toBeGreaterThanOrEqual(4)
+        for (const [, x, y] of face) {
+          const around = [g[y]?.[x - 1], g[y]?.[x + 1], g[y + 1]?.[x], g[y - 1]?.[x]]
+          expect(around.some((v) => v === C.B || v === C.H || v === C.S || v === C.D || v === C.N), `${species} ${stage} ${state} f${f} face at ${x},${y}`).toBe(true)
+        }
+      }
+    }
+  })
+  it('dorayaki: the anko band is solid, not striped', () => {
+    const g = petGrid('dorayaki', 'idle', 0)
+    const row = g.find((r) => r.includes(C.D as never))!
+    const xs = row.map((v, x) => (v === C.D ? x : -1)).filter((x) => x >= 0)
+    expect(xs.at(-1)! - xs[0]! + 1).toBe(xs.length)
+  })
+})

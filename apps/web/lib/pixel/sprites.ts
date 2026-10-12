@@ -71,6 +71,8 @@ const FACE_Y: Record<Species, number> = { mochi: 21, tofu: 20, onigiri: 20, dang
 
 /** A baby is the grown silhouette at this scale about the feet. */
 const BABY = 0.78
+/** Where a baby's face sits (it rides a row lower when the body squashes); dango's small middle ball needs closer eyes. */
+const BABY_FACE: Record<Species, { y: number; narrow?: boolean }> = { mochi: { y: 21 }, tofu: { y: 20 }, onigiri: { y: 20 }, dango: { y: 21, narrow: true }, taiyaki: { y: 20 }, dorayaki: { y: 20 } }
 
 /**
  * Each evolved form's signature detail, drawn over the outline at the top of the head (`dx` from centre,
@@ -109,13 +111,13 @@ export function petGrid(species: Species, state: PetState, frame: number, quiet 
   if (state === 'wave') arm = frame % 2 ? 'up' : 'out'
 
   const shape = SHAPES[species]
+  const squash = sy
   sx *= k
   sy *= k
   const g: Code[][] = Array.from({ length: GRID }, () => new Array<Code>(GRID).fill(C.E))
   for (let y = 0; y < GRID; y++)
     for (let x = 0; x < GRID; x++) if (shape(CX + (x - CX) / sx, BOT - (BOT - (y - dy)) / sy)) g[y]![x] = C.B
-  // a baby's face sits a row higher than its scaled spot: a big-forehead, big-eyed look
-  const faceY = k === 1 ? FACE_Y[species] : Math.floor(BOT - (BOT - FACE_Y[species]) * k) - 1
+  const faceY = k === 1 ? FACE_Y[species] : BABY_FACE[species].y + Math.round((1 - squash) * (BOT - BABY_FACE[species].y))
 
   // Arms are part of the silhouette, so they get outlined too.
   const nub = (pts: Array<[number, number]>) => pts.forEach(([x, y]) => { if (g[y + dy] && x >= 0 && x < GRID) g[y + dy]![x] = C.B })
@@ -127,7 +129,12 @@ export function petGrid(species: Species, state: PetState, frame: number, quiet 
   // the nori band sits low, leaving rice between it and the face
   if (species === 'onigiri') for (let y = BOT - 2; y <= BOT; y++) for (let x = kx(12); x <= kx(20); x++) if (g[y + dy]?.[x] === C.B) g[y + dy]![x] = C.N
   // dorayaki: the anko shows as a dark band between the pancakes, inside the outline
-  if (species === 'dorayaki') for (const y of [BOT - 3, BOT - 2]) for (let x = 0; x < GRID; x++) if (g[y + dy]?.[x] === C.B && g[y + dy]?.[x - 1] === C.B && g[y + dy]?.[x + 1] === C.B) g[y + dy]![x] = C.D
+  if (species === 'dorayaki') {
+    for (const y of k === 1 ? [BOT - 3, BOT - 2] : [BOT - 2]) {
+      const row = g[y + dy]?.slice()
+      if (row) for (let x = 1; x < GRID - 1; x++) if (row[x] === C.B && row[x - 1] === C.B && row[x + 1] === C.B) g[y + dy]![x] = C.D
+    }
+  }
 
   // Shading reads a snapshot of the silhouette, so a changed pixel never cascades.
   const mask = g.map((r) => r.map((v) => v === C.B || v === C.N || v === C.D))
@@ -155,7 +162,7 @@ export function petGrid(species: Species, state: PetState, frame: number, quiet 
     else if (happy) { set(x, fy + 1, C.F); set(x + 1, fy, C.F); set(x + 2, fy + 1, C.F) }
     else { set(x, fy, C.W); set(x + 1, fy, C.F); set(x, fy + 1, C.F); set(x + 1, fy + 1, C.F) }
   }
-  const lx = k === 1 ? CX - 5 : CX - 4, rx = k === 1 ? CX + 3 : CX + 2
+  const lx = k === 1 ? CX - 5 : BABY_FACE[species].narrow ? CX - 3 : CX - 4, rx = k === 1 ? CX + 3 : BABY_FACE[species].narrow ? CX + 1 : CX + 2
   eye(happy ? lx - 1 : lx)
   eye(rx)
   for (const [bx, by] of [[lx - 2, fy + 3], [lx - 1, fy + 3], [rx + 2, fy + 3], [rx + 3, fy + 3]] as const) if (g[by]?.[bx] !== C.E) set(bx, by, C.P)
