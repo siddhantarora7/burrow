@@ -234,7 +234,12 @@ export function petGrid(species: Species, state: PetState, frame: number, quiet 
   // dango: the skewer shows between the dumplings and pokes out at both ends
   if (species === 'dango') {
     const sy = Math.round(BOT - (BOT - 24) * k) + dy
-    for (let x = 0; x < GRID; x++) if (out[sy]?.[x] === C.E || out[sy]?.[x] === C.O) out[sy]![x] = C.L2
+    const row = out[sy]
+    if (row) {
+      const xs = row.map((v, x) => (v !== C.E ? x : -1)).filter((x) => x >= 0)
+      // the outline is already one pixel out; one more pixel of stick past it on each side
+      for (let x = Math.max(0, xs[0]! - 1); x <= Math.min(GRID - 1, xs.at(-1)! + 1); x++) if (row[x] === C.E || row[x] === C.O) row[x] = C.L2
+    }
   }
   return out
 }

@@ -245,3 +245,14 @@ describe('faces survive every frame', () => {
     expect(xs.at(-1)! - xs[0]! + 1).toBe(xs.length)
   })
 })
+
+describe('dango skewer', () => {
+  it.each(STAGES)('%s: pokes out two pixels past the dumplings, not across the whole sprite', (stage) => {
+    const g = petGrid('dango', 'idle', 0, false, stage)
+    const row = g.find((r) => r.includes(C.L2 as never) && r.some((v) => v === C.B || v === C.S || v === C.H))!
+    const stick = row.map((v, x) => (v === C.L2 ? x : -1)).filter((x) => x >= 0)
+    const body = row.map((v, x) => (v !== C.E && v !== C.L2 ? x : -1)).filter((x) => x >= 0)
+    expect(Math.min(...stick)).toBe(Math.max(0, Math.min(...body) - 2))
+    expect(Math.max(...stick)).toBe(Math.min(GRID - 1, Math.max(...body) + 2))
+  })
+})
