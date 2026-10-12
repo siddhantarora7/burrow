@@ -9,7 +9,10 @@ import { usePetStates } from '@/lib/usePetStates'
 import { useAlerts } from '@/lib/useAlerts'
 import { burrowTitle, VERB } from '@/lib/status'
 import { INIT, inviteCommand } from '@/lib/commands'
-import { Bell, BellOff, Check, Copy, ShieldCheck, Terminal, UserPlus, VolumeOff } from './icons'
+import { Bell, BellOff, BookOpen, Check, Copy, ShieldCheck, Terminal, Trophy, UserPlus, VolumeOff } from './icons'
+import { CarePill } from './CarePill'
+import { CatalogPanel, RanksPanel, type PanelName } from './Panels'
+import type { CareAction } from '@burrow/core'
 
 // The visitor's own clock drives the light. The server cannot know it, so it renders the
 // chrome only (null) instead of guessing a time of day.
@@ -48,6 +51,7 @@ export function BurrowView({ id }: { id: string }) {
 
 type ScreenProps = BurrowState & {
   poke?: (to: string) => void
+  care?: (action: CareAction) => void
   /** Header text beside the wordmark; defaults to the burrow's name. */
   label?: string
   /** Replaces the connection status, e.g. "demo". */
@@ -61,8 +65,11 @@ type ScreenProps = BurrowState & {
 const ALERT_ICON = { 'alerts on': Bell, 'allow notifications': Bell, 'chime only': Bell, 'alerts off': BellOff, 'click for sound': VolumeOff } as const
 
 /** The garden page for any source of members: the live WebSocket, or the synthetic demo. */
-export function BurrowScreen({ status, burrow, members, offset, me, pokes, poke, label, statusLabel, invite, embed = false }: ScreenProps) {
+export function BurrowScreen({ status, burrow, members, offset, me, pokes, poke, care, catalog, cares, label, statusLabel, invite, embed = false }: ScreenProps) {
   const states = usePetStates(members, offset)
+  const [panel, setPanel] = useState<PanelName | null>(null)
+  const mine = me ? members.find((m) => m.petId === me) : undefined
+  const showCare = !embed && !!mine && !!care
   const alerts = useAlerts({ me, members, states, pokes })
   const hour = useHour()
 
@@ -81,16 +88,24 @@ export function BurrowScreen({ status, burrow, members, offset, me, pokes, poke,
     <main className="garden relative min-h-[100dvh] w-full overflow-x-hidden" style={{ background: hour === null ? 'var(--paper)' : paletteAt(hour).gravel }}>
       {!embed && (
         <header className="fixed inset-x-0 top-0 z-20 flex items-center gap-2 px-3 py-3 sm:px-6 sm:py-5">
-          <Link href="/" className={`${skin} pill gap-2 pl-2 pr-4`}>
+          <Link href="/" aria-label="burrow home" className={`${skin} pill gap-2 px-1.5 min-[420px]:pl-2 min-[420px]:pr-4`}>
             <Mark />
-            <span className="lbl text-base font-bold">burrow</span>
+            <span className="lbl hidden text-base font-bold min-[420px]:block">burrow</span>
             {(label ?? burrow?.name) && <span className="lbl hidden border-l border-current/20 pl-2.5 opacity-70 sm:block">{label ?? burrow?.name}</span>}
           </Link>
           <nav className={`${skin} pill ml-auto gap-0.5 px-1`}>
+            <button type="button" className="pill-btn" onClick={() => setPanel('catalog')} aria-label="catalog">
+              <BookOpen />
+              <span className="lbl hidden md:block">catalog</span>
+            </button>
+            <button type="button" className="pill-btn" onClick={() => setPanel('ranks')} aria-label="ranks">
+              <Trophy />
+              <span className="lbl hidden md:block">ranks</span>
+            </button>
             {me && (
-              <button type="button" onClick={alerts.press} className="pill-btn" title="alerts when your agent waits on you, or a friend pokes you">
+              <button type="button" onClick={alerts.press} className="pill-btn" title="alerts when your agent waits on you, or a friend pokes you" aria-label={alerts.label}>
                 <AlertIcon />
-                <span className="lbl">{alerts.label}</span>
+                <span className="lbl hidden sm:block">{alerts.label}</span>
               </button>
             )}
             <Link href="/privacy" className="pill-btn" aria-label="privacy">
@@ -105,7 +120,11 @@ export function BurrowScreen({ status, burrow, members, offset, me, pokes, poke,
         </header>
       )}
 
-      {hour !== null && <PixelBurrow members={members} states={states} offset={offset} hour={hour} me={me} pokes={pokes} onPoke={poke} showHint={!embed} />}
+      {hour !== null && <PixelBurrow members={members} states={states} offset={offset} hour={hour} me={me} pokes={pokes} onPoke={poke} showHint={!embed} cares={cares} careShown={showCare} />}
+
+      {showCare && <CarePill member={mine!} night={night} onCare={care!} />}
+      {panel === 'catalog' && <CatalogPanel catalog={catalog} members={members} night={night} onClose={() => setPanel(null)} />}
+      {panel === 'ranks' && <RanksPanel members={members} me={me} night={night} onClose={() => setPanel(null)} />}
 
       {embed ? null : status === 'not_found' ? (
         <Notice night={night} title="this burrow doesn't exist." body="check the link for typos, or start your own garden:" command={INIT} />

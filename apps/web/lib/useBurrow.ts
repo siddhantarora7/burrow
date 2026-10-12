@@ -1,6 +1,6 @@
 'use client'
 import { useCallback, useEffect, useReducer, useRef } from 'react'
-import type { ClientMsg, ServerMsg } from '@burrow/core'
+import type { CareAction, ClientMsg, ServerMsg } from '@burrow/core'
 import { initialState, reduce } from './burrowState'
 import { clearMe, readMe, redeemClaimInUrl } from './me'
 
@@ -71,5 +71,10 @@ export function useBurrow(id: string) {
     if (ws?.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ t: 'poke', to } satisfies ClientMsg))
   }, [])
 
-  return { ...state, poke }
+  const care = useCallback((action: CareAction) => {
+    const ws = socket.current
+    if (ws?.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ t: 'care', action } satisfies ClientMsg))
+  }, [])
+
+  return { ...state, poke, care }
 }

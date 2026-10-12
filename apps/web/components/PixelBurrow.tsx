@@ -1,12 +1,13 @@
 'use client'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { bottomReserve, layoutGarden, pixelScale, POKE_GAP_MS, tagGap, TIMING, type DeriveResult, type GardenLayout, type Member, type PetColor, type PetState, type Species, growthOf, stageOf, type Stage } from '@burrow/core'
+import { bottomReserve, layoutGarden, pixelScale, POKE_GAP_MS, tagGap, TIMING, type DeriveResult, type GardenLayout, type Member, type PetColor, type PetState, type Species, growthOf, stageOf, type Stage, type CareAction } from '@burrow/core'
 import { heartsAt, heartVisible, liveRipples, stepFly, stepHeart, stepLeaf, type Fly, type Heart, type Leaf, type Ripple } from '@/lib/pixel/ambient'
 import { hash, paletteAt, phaseAt, type Palette } from '@/lib/pixel/palette'
 import { bakeGlow, bakeGround, bakeLantern, bakeSky, GLOW, sunPosition, type Buffer } from '@/lib/pixel/scene'
 import { colorsFor, FPS, FRAMES, GRID, petGrid, silhouette, toneOf } from '@/lib/pixel/sprites'
 import { tagLabel, VERB, waitedLine } from '@/lib/status'
-import { Pointer } from './icons'
+import { Pointer, Sparkles } from './icons'
+import { careState, stageRises } from '@/lib/grow'
 
 const BOT = 28
 const CX = 16
@@ -109,15 +110,19 @@ interface Props {
   onPoke?: (petId: string) => void
   /** The one-time boop hint and room for the bottom pills; both off inside the landing page's frame. */
   showHint?: boolean
+  /** Recent feeds and plays (server time), so the pet eats or cheers on every screen. */
+  cares?: ReadonlyArray<{ petId: string; effect: CareAction; t: number }>
+  /** The care pill is showing: on phones it stacks above the invite pill, so the garden keeps more room. */
+  careShown?: boolean
 }
 
-export function PixelBurrow({ members, states, offset, hour, me = null, pokes = [], onPoke, showHint = true }: Props) {
+export function PixelBurrow({ members, states, offset, hour, me = null, pokes = [], onPoke, showHint = true, cares = [], careShown = false }: Props) {
   const screen = useScreen()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [hover, setHover] = useState<string | null>(null)
   const [, tick] = useState(0)
 
-  const L: GardenLayout | null = useMemo(() => (screen ? layoutGarden(screen.W, screen.H, members.length, tagGap(screen.S), showHint ? bottomReserve(screen.S, screen.H > screen.W) : undefined) : null), [screen, members.length, showHint])
+  const L: GardenLayout | null = useMemo(() => (screen ? layoutGarden(screen.W, screen.H, members.length, tagGap(screen.S), showHint ? bottomReserve(screen.S, screen.H > screen.W) + (careShown && screen.H > screen.W ? Math.ceil(56 / screen.S) : 0) : undefined) : null), [screen, members.length, showHint, careShown])
   const hourKey = Math.round(hour * 10) / 10
   const pal: Palette = useMemo(() => paletteAt(hourKey), [hourKey])
   const phase = useMemo(() => phaseAt(hourKey), [hourKey])
@@ -163,6 +168,9 @@ export function PixelBurrow({ members, states, offset, hour, me = null, pokes = 
     seenStops: new Map<string, number>(),
     ripples: [] as Ripple[],
     hearts: [] as Heart[],
+    cares, offset,
+    /** sparkle bursts when a pet reaches a new stage (performance.now()) */
+    bursts: new Map<string, number>(),
     leaves: [] as Leaf[],
     flies: [] as Fly[],
     koi: [{ t: 0, speed: 0.35, color: '#f0823c', spot: '#ffffff' }, { t: Math.PI, speed: 0.28, color: '#f4efe6', spot: '#e2483f' }],
@@ -171,6 +179,22 @@ export function PixelBurrow({ members, states, offset, hour, me = null, pokes = 
   live.current.members = members
   live.current.states = states
   live.current.hover = hover
+  live.current.cares = cares
+  live.current.offset = offset
+
+  // A pet that reaches a new stage bursts into sparkles and the garden says so, once, on every screen.
+  const stagesSeen = useRef<Map<string, Stage> | null>(null)
+  const [toast, setToast] = useState<string | null>(null)
+  useEffect(() => {
+    const { rises, stages } = stageRises(stagesSeen.current, members)
+    stagesSeen.current = stages
+    if (!rises.length) return
+    for (const r of rises) live.current.bursts.set(r.petId, performance.now())
+    const r = rises.at(-1)!
+    setToast(r.stage === 'evolved' ? `${r.name} evolved!` : `${r.name} grew up!`)
+    const t = setTimeout(() => setToast(null), 4000)
+    return () => clearTimeout(t)
+  }, [members])
 
   // A ripple crosses the pond each time a pet finishes a task.
   useEffect(() => {
@@ -285,7 +309,8 @@ export function PixelBurrow({ members, states, offset, hour, me = null, pokes = 
       for (const { m, i } of order) {
         const [x, y] = L.spots[i]!
         const r = st.states.get(m.petId)
-        const state = r?.state ?? 'sleep'
+        // a feed or play shows for a moment, over whatever the agent is doing
+        const state = careState(st.cares, m.petId, Date.now() + st.offset) ?? r?.state ?? 'sleep'
         const f = reduce ? 0 : Math.floor((now / 1000) * FPS[state] + i * 1.7) % FRAMES[state]
         const boopT = (now - (st.boops.get(m.petId) ?? -1e9)) / 1000
         const hop = boopT < 0.45 ? Math.round(Math.sin((boopT / 0.45) * Math.PI) * 5) : 0
@@ -314,6 +339,18 @@ export function PixelBurrow({ members, states, offset, hour, me = null, pokes = 
           if (Math.sin(now / 300 + fl.s * 3) > 0.2) ctx.fillRect(Math.round(fl.x), Math.round(fl.y), 1, 1)
         }
       } else st.flies = []
+      // stage-up sparkles: eight gold rays that spread from the pet and blink out over 1.2 s
+      ctx.fillStyle = '#ffd34f'
+      for (const [petId, born] of st.bursts) {
+        const age = (now - born) / 1200
+        const i = st.members.findIndex((m) => m.petId === petId)
+        if (age > 1 || i < 0 || !L.spots[i]) { st.bursts.delete(petId); continue }
+        const [bx, by] = L.spots[i]!
+        for (let k = 0; k < 8; k++) {
+          const a = (k / 8) * Math.PI * 2, rr = 6 + age * 14
+          if (reduce || Math.floor(now / 90 + k) % 3) ctx.fillRect(Math.round(bx + Math.cos(a) * rr), Math.round(by - 14 + Math.sin(a) * rr * 0.8), 1, 1)
+        }
+      }
       st.hearts = st.hearts.filter((h) => stepHeart(h, dt))
       ctx.fillStyle = '#ff6f91'
       for (const h of st.hearts) {
@@ -415,11 +452,15 @@ export function PixelBurrow({ members, states, offset, hour, me = null, pokes = 
         )
       })}
       {showHint && hint && members.length > 0 && (
-        <p className={`hint chip ${phase.night ? 'chip-night' : ''} pill fixed bottom-[4.5rem] left-1/2 z-20 -translate-x-1/2 sm:bottom-6 sm:left-auto sm:right-6 sm:translate-x-0`}>
+        <p className={`hint chip ${phase.night ? 'chip-night' : ''} pill fixed left-1/2 z-20 -translate-x-1/2 sm:left-auto sm:right-6 sm:translate-x-0 ${careShown ? 'bottom-[7.5rem] sm:bottom-[4.5rem]' : 'bottom-[4.5rem] sm:bottom-6'}`}>
           <Pointer className="opacity-60" />
           <span className="lbl">{hint}</span>
         </p>
       )}
+      <p aria-live="polite" className={`fixed left-1/2 top-[4.25rem] z-30 -translate-x-1/2 sm:top-20 ${toast ? `hint chip ${phase.night ? 'chip-night' : ''} pill font-bold` : 'sr-only'}`}>
+        {toast && <Sparkles className="text-[#d49a2e]" />}
+        <span className="lbl">{toast}</span>
+      </p>
     </div>
   )
 }

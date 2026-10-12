@@ -29,3 +29,30 @@ describe('ranks', () => {
     expect(ranks([m('a', 'mochi')])[0]).toMatchObject({ weekKoban: 0, stage: 'grown' })
   })
 })
+
+import { careState, stageRises } from '../lib/grow'
+
+describe('careState', () => {
+  const cares = [{ petId: 'a', effect: 'feed' as const, t: 1000 }, { petId: 'b', effect: 'play' as const, t: 5000 }]
+  it('eats for 2.4 s after a feed and cheers for 2 s after a play', () => {
+    expect(careState(cares, 'a', 3000)).toBe('eat')
+    expect(careState(cares, 'a', 3401)).toBeNull()
+    expect(careState(cares, 'b', 6999)).toBe('cheer')
+    expect(careState(cares, 'b', 7001)).toBeNull()
+  })
+  it('only the newest care for that pet counts', () => {
+    expect(careState([...cares, { petId: 'a', effect: 'play', t: 2000 }], 'a', 2500)).toBe('cheer')
+  })
+})
+
+describe('stageRises', () => {
+  it('names pets whose stage went up since last time, and remembers the new stages', () => {
+    const prev = new Map([['a', 'baby'], ['b', 'grown']] as const)
+    const { rises, stages } = stageRises(prev, [m('a', 'mochi', g(100, 0)), m('b', 'tofu', g(120, 0)), m('c', 'dango', g(500, 0))])
+    expect(rises).toEqual([{ petId: 'a', name: 'a', stage: 'grown' }])
+    expect(stages.get('c')).toBe('evolved')
+  })
+  it('stays quiet on first sight, so loading a garden never celebrates', () => {
+    expect(stageRises(null, [m('a', 'mochi', g(500, 0))]).rises).toEqual([])
+  })
+})

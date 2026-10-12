@@ -91,3 +91,10 @@ body { background: var(--paper); color: var(--ink); font-family: var(--font-sans
 /* Plain pages draw the solid button in their own ink, so it inverts with the OS theme. */
 .on-page .chip-solid, .on-page .pill-btn.chip-solid:hover { background: var(--ink); color: var(--paper); }
 .on-page .pill-btn.chip-solid:hover { opacity: 0.86; }
+
+/* Panels (catalog, ranks): a modal in the chip skin over a soft dim of the garden. */
+.panel { background: rgba(252, 251, 248, 0.96); }
+.panel.chip-night { background: rgba(24, 26, 32, 0.95); }
+.panel::backdrop { background: rgba(20, 18, 30, 0.4); backdrop-filter: blur(2px); }
+.pill-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.pill-btn:disabled:hover { background: transparent; }
