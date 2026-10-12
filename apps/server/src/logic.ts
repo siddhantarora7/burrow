@@ -1,7 +1,4 @@
-import {
-  cleanName, DEFAULT_COLOR, EVENT_RETENTION_MS, isId, isPetColor, isSpecies, MAX_MEMBER_EVENTS,
-  type Ev, type PetColor, type Species,
-} from '@burrow/core'
+import { cleanName, DEFAULT_COLOR, EVENT_RETENTION_MS, isId, isPetColor, isSpecies, MAX_MEMBER_EVENTS, type Ev, type PetColor, type Species, formKey, growthOf, stageOf, type PetGrowth } from '@burrow/core'
 
 export async function sha256Hex(s: string): Promise<string> {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s))
@@ -67,4 +64,14 @@ export const capList = <T>(xs: T[], n: number): T[] => xs.slice(Math.max(0, xs.l
 
 export function json(body: unknown, status = 200, headers: HeadersInit = {}): Response {
   return new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json', ...headers } })
+}
+
+/** The garden catalog plus every member's current form, in first-found order. */
+export function withForms(catalog: readonly string[], members: ReadonlyArray<{ species: Species; growth?: PetGrowth }>): string[] {
+  const out = [...catalog]
+  for (const m of members) {
+    const k = formKey(m.species, stageOf(growthOf(m).xp))
+    if (!out.includes(k)) out.push(k)
+  }
+  return out
 }

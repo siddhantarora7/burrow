@@ -88,3 +88,15 @@ describe('capList', () => {
     expect(capList([1], 2)).toEqual([1])
   })
 })
+
+import { withForms } from '../src/logic'
+
+describe('withForms', () => {
+  const m = (species: 'mochi' | 'tofu', xp?: number) => ({ species, ...(xp === undefined ? {} : { growth: { xp, koban: 0, week: '', weekKoban: 0 } }) })
+  it("adds each member's current form, keeps what was already found, never repeats", () => {
+    expect(withForms(['tofu:evolved'], [m('mochi', 0), m('tofu', 120), m('mochi', 10)])).toEqual(['tofu:evolved', 'mochi:baby', 'tofu:grown'])
+  })
+  it('counts a pet from before growth existed as grown', () => {
+    expect(withForms([], [m('mochi')])).toEqual(['mochi:grown'])
+  })
+})

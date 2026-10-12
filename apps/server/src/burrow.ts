@@ -1,6 +1,6 @@
 import { DurableObject } from 'cloudflare:workers'
-import { canPoke, MAX_MEMBERS, parseToken, type BurrowInfo, type ClientMsg, type Ev, type Member, type MemberProfile, type ServerMsg, type Today } from '@burrow/core'
-import { pruneEvents } from './logic'
+import { canPoke, isCareAction, MAX_MEMBERS, parseToken, type BurrowInfo, type CareAction, type ClientMsg, type Ev, type Member, type MemberProfile, type PetGrowth, type ServerMsg, type Today } from '@burrow/core'
+import { pruneEvents, withForms } from './logic'
 
 export class BurrowDO extends DurableObject<Env> {
   constructor(ctx: DurableObjectState, env: Env) {
@@ -24,7 +24,7 @@ export class BurrowDO extends DurableObject<Env> {
     if (members.some((m) => m.petId === profile.petId)) return 'ok'
     if (members.length >= MAX_MEMBERS) return 'full'
     const member: Member = { ...profile, joinedAt: now, mealsTotal: 0, events: [] }
-    await this.ctx.storage.put('members', [...members, member])
+    await this.ctx.storage.put({ members: [...members, member], catalog: await this.catalogWith([member]) })
     this.broadcast({ t: 'member', member, serverNow: now })
     return 'ok'
   }
@@ -37,16 +37,32 @@ export class BurrowDO extends DurableObject<Env> {
     return ((await this.ctx.storage.get<Member[]>('members')) ?? []).length >= MAX_MEMBERS
   }
 
-  async ingest(petId: string, ev: Ev, today?: Today): Promise<void> {
+  async ingest(petId: string, ev: Ev, today?: Today, growth?: PetGrowth): Promise<void> {
     const members = (await this.ctx.storage.get<Member[]>('members')) ?? []
     const m = members.find((x) => x.petId === petId)
     if (!m) return
     m.events = pruneEvents([...m.events, ev], ev.t)
     if (ev.type === 'stop') m.mealsTotal++
     if (today) m.today = today
-    await this.ctx.storage.put('members', members)
+    if (growth) m.growth = growth
+    await this.ctx.storage.put({ members, catalog: await this.catalogWith([m]) })
     // The Worker that stamped ev.t may run on a machine whose clock is slightly ahead of this one.
-    this.broadcast({ t: 'event', petId, ev, today, serverNow: Math.max(Date.now(), ev.t) })
+    this.broadcast({ t: 'event', petId, ev, today, growth, serverNow: Math.max(Date.now(), ev.t) })
+  }
+
+  /** A member's owner fed or played with it (PetDO already charged the koban). */
+  async grow(petId: string, growth: PetGrowth, effect: CareAction, now: number): Promise<void> {
+    const members = (await this.ctx.storage.get<Member[]>('members')) ?? []
+    const m = members.find((x) => x.petId === petId)
+    if (!m) return
+    m.growth = growth
+    await this.ctx.storage.put({ members, catalog: await this.catalogWith([m]) })
+    this.broadcast({ t: 'grow', petId, growth, effect, serverNow: now })
+  }
+
+  /** The stored catalog plus these members' current forms. It only ever grows. */
+  private async catalogWith(members: Member[]): Promise<string[]> {
+    return withForms((await this.ctx.storage.get<string[]>('catalog')) ?? [], members)
   }
 
   override async fetch(req: Request): Promise<Response> {
@@ -61,7 +77,8 @@ export class BurrowDO extends DurableObject<Env> {
     } else {
       const now = Date.now()
       const members = ((await this.ctx.storage.get<Member[]>('members')) ?? []).map((m) => ({ ...m, events: pruneEvents(m.events, now) }))
-      server.send(JSON.stringify({ t: 'snapshot', burrow: info, members, serverNow: now } satisfies ServerMsg))
+      // gardens from before the catalog existed start with their members' forms
+      server.send(JSON.stringify({ t: 'snapshot', burrow: info, members, catalog: await this.catalogWith(members), serverNow: now } satisfies ServerMsg))
     }
     return new Response(null, { status: 101, webSocket: client })
   }
@@ -92,6 +109,14 @@ export class BurrowDO extends DurableObject<Env> {
       const fresh = Object.fromEntries(Object.entries(pokes).filter(([, t]) => now - t < 60_000))
       await this.ctx.storage.put('pokes', { ...fresh, [key]: now })
       this.broadcast({ t: 'poke', from: from!, to: msg.to, serverNow: now })
+      return
+    }
+    if (msg.t === 'care' && isCareAction(msg.action)) {
+      // only a browser signed in as a member, and only for its own pet; PetDO charges and tells every garden
+      const me = (ws.deserializeAttachment() as { me?: string | null } | null)?.me ?? null
+      const members = (await this.ctx.storage.get<Member[]>('members')) ?? []
+      if (!me || !members.some((m) => m.petId === me)) return
+      await this.env.PET.get(this.env.PET.idFromName(me)).care(msg.action, Date.now())
     }
   }
 
