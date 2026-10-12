@@ -1,4 +1,4 @@
-export const SPECIES = ['mochi', 'tofu', 'onigiri'] as const
+export const SPECIES = ['mochi', 'tofu', 'onigiri', 'dango', 'taiyaki', 'dorayaki'] as const
 export type Species = (typeof SPECIES)[number]
 
 export const PET_COLORS = {
@@ -8,10 +8,11 @@ export const PET_COLORS = {
   yuzu: '#F0C64E',
   sora: '#A9C8E8',
   fuji: '#BFAEDB',
+  kinako: '#D9A66B',
 } as const
 export type PetColor = keyof typeof PET_COLORS
 
-export const DEFAULT_COLOR: Record<Species, PetColor> = { mochi: 'sakura', tofu: 'matcha', onigiri: 'rice' }
+export const DEFAULT_COLOR: Record<Species, PetColor> = { mochi: 'sakura', tofu: 'matcha', onigiri: 'rice', dango: 'sora', taiyaki: 'yuzu', dorayaki: 'kinako' }
 
 export const isSpecies = (x: unknown): x is Species => typeof x === 'string' && (SPECIES as readonly string[]).includes(x)
 export const isPetColor = (x: unknown): x is PetColor => typeof x === 'string' && Object.hasOwn(PET_COLORS, x)
