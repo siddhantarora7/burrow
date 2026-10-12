@@ -10,5 +10,5 @@
     ]
   },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["PetDO", "BurrowDO"] }],
-  "vars": { "WEB_ORIGIN": "http://localhost:3000" }
+  "vars": { "WEB_ORIGIN": "https://burrow-taupe.vercel.app" }
 }

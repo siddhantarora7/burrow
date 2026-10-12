@@ -256,7 +256,7 @@ if at 4; then
 stage "Cloudflare: let the web app talk to the API"
 say "The API only accepts browser calls (sign-in links) from the web app's own origin."
 (cd apps/server && npx wrangler deploy --var "WEB_ORIGIN:$WEB_URL") || or_resume 4 "the API redeploy failed"
-note "Redeploying later? Pass the same --var, or move it into wrangler.jsonc's vars."
+note "Redeploying later? Put $WEB_URL in apps/server/wrangler.jsonc vars, or resume here: scripts/ship.sh 4"
 pause
 fi
 
