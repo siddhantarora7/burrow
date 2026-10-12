@@ -10,11 +10,11 @@ Every number in brackets comes from the dogfooding week with real friends. Do no
 
 I run Claude Code for long stretches and kept losing time to one thing: the agent stopped to ask for permission while I was in another window, and sat there. Burrow is a small fix for that, plus some company.
 
-`npx burrow-pets init` installs Claude Code hooks and hatches a pixel-art pet. Keep its garden open on a second screen: the pet works on a tiny laptop while your agent runs, eats when it finishes, and waves when it needs you. The tab chimes and can notify you. Friends' pets live in the same garden (`init <their link>`), so you see who's shipping, and a friend can poke you when your agent has been waiting. Finished tasks and quick replies earn koban that feed your pet, and it grows from baby to evolved; each garden fills a shared catalog of 18 forms.
+`npx burrow-pets init` installs Claude Code hooks and hatches a pixel-art pet. Keep its garden open on a second screen: the pet works on a tiny laptop while your agent runs, eats when it finishes, and waves when it needs you. The tab chimes and can notify you. Friends' pets can live in the same garden (`init <their link>`), and a friend can poke you when your agent has been waiting. There's a small game on top: runs that finish and quick answers to a waiting agent earn coins, coins feed the pet, and fed pets grow up. A garden shares one catalog of 18 forms.
 
 Over a week with [N] friends, our agents waited on us for [X] minutes a day on average; [one honest observation about whether alerts and pokes changed it].
 
-Privacy was the design constraint. Each hook sends exactly `{"v":1,"type":"stop","at":…,"session":"<salted hash>"}`, and the server rejects any other key. No prompts, code, paths or tool names ever leave your machine. Claude Code fires no hook when you press Esc, so a run that goes silent dozes after 2 minutes instead of pretending to work.
+On privacy: each hook sends exactly `{"v":1,"type":"stop","at":…,"session":"<salted hash>"}`, and the server rejects any other key. No prompts, code, paths or tool names leave your machine. One quirk: Claude Code fires no hook when you press Esc, so a run that goes silent shows the pet dozing after 2 minutes.
 
 Stack: Cloudflare Workers + Durable Objects (one per pet and per garden, hibernating WebSockets), Next.js, a canvas renderer at ~190 px tall scaled by whole numbers with day/dusk/night palette swaps. The state machine is a pure function shared by server and browser.
 

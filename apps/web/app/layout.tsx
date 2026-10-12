@@ -6,7 +6,7 @@ const display = Zen_Maru_Gothic({ weight: ['500', '700'], subsets: ['latin'], va
 const body = Zen_Kaku_Gothic_New({ weight: ['400', '500', '700'], subsets: ['latin'], variable: '--font-zen-kaku' })
 const mono = Geist_Mono({ subsets: ['latin'], variable: '--font-geist-mono' })
 
-const description = 'a pixel pet for Claude Code that waves when your agent is waiting on you, in a garden shared with your friends.'
+const description = 'a pixel pet for Claude Code that waves when your agent is waiting on you. friends can share the garden.'
 
 export const metadata: Metadata = {
   // share cards need absolute image URLs: Vercel provides the production host at build time

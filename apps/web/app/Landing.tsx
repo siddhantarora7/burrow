@@ -106,7 +106,7 @@ export function Landing() {
             <Sprite species="mochi" color="sakura" state="wave" size={60} animate className="-my-4 ml-1 inline-block align-middle sm:-my-8 sm:ml-3 sm:!size-[96px]" />
           </h1>
           <p className="mx-auto mt-6 max-w-xl text-pretty font-sans text-lg leading-relaxed text-[#c9cbe0] sm:text-xl">
-            burrow is a tiny pixel pet for Claude Code. it works while your agent runs, waves the moment it needs you, and grows as you ship, in a garden shared with your friends.
+            burrow is a tiny pixel pet for Claude Code. it waves the moment your agent stops to ask you something, so you stop coming back to an agent that sat waiting for twenty minutes.
           </p>
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Command dark />
@@ -179,8 +179,7 @@ export function Landing() {
         </section>
 
         <section className="mx-auto max-w-5xl px-5 pt-28 sm:px-8 sm:pt-36">
-          <p className="text-center text-sm font-medium text-[var(--muted)]">what it does</p>
-          <h2 className="mt-3 text-balance text-center text-3xl font-bold tracking-[-0.02em] sm:text-5xl">it watches your agent, so you don&apos;t have to.</h2>
+          <h2 className="text-balance text-center text-3xl font-bold tracking-[-0.02em] sm:text-5xl">what it does</h2>
           <div className="mx-auto mt-14 grid max-w-4xl gap-10 sm:grid-cols-2 sm:gap-x-14 sm:gap-y-12">
             {POINTS.map(({ Icon, title, body }) => (
               <div key={title}>

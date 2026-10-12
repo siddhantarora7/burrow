@@ -1,6 +1,6 @@
 # burrow
 
-A tiny pet that reacts live to your coding agent, tells you when the agent is waiting on you, and lives in a garden shared with your friends.
+A pixel pet for Claude Code that waves when your agent is waiting on you. Friends' pets can share the garden.
 
     npx burrow-pets init                 # hatch a pet, install the hooks, get your garden link
     npx burrow-pets init <friend's link> # or move straight into a friend's garden
@@ -13,7 +13,7 @@ The garden is pixel art: a raked zen garden under Mt Fuji whose light follows yo
 
 **Waiting on you.** Open your garden from the link `init` or `open` prints and the tab knows which pet is yours: when your agent starts waiting on you, it chimes (after your first click on the page, since browsers keep sound locked until then) and, if you allow it, shows a notification while the tab is in the background. A friend who is signed in can poke your waiting pet, which pings you too. Each tag shows how long that agent waited on its human today ("waited on you 41m today"). The sign-in link works once, for 10 minutes, and carries its code in the URL fragment, which never reaches a server; the browser keeps a token that can only say hello and poke.
 
-**Raise it.** Finished tasks (a run of a minute or more, not every chat reply) and quick replies to a waiting agent earn koban, capped per day. Spend them to feed your pet or play with it, and it grows from baby to grown to evolved. Six species (mochi, tofu, onigiri, dango, taiyaki, dorayaki) in three forms make 18 to find, and each garden fills one catalog together; the ranks panel shows who earned the most this week. Koban are worked out on the server from the same four-field events, so growth costs no privacy.
+**Raise it.** Finished tasks (a run of a minute or more, not every chat reply) and quick replies to a waiting agent earn koban, capped per day. Spend them to feed your pet or play with it, and it grows from baby to grown to evolved. Six species (mochi, tofu, onigiri, dango, taiyaki, dorayaki) in three forms make 18 to find, and each garden fills one catalog together; the ranks panel shows who earned the most this week. The server works koban out from the same four-field events; nothing extra is sent.
 
 Claude Code sends no hook when you press Esc, so a run that goes silent shows your pet dozing ("quiet") after 2 minutes and idle after 4.
 

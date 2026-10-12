@@ -22,6 +22,10 @@ export default function Privacy() {
       </dl>
       <h2 className="mt-12 font-display text-2xl font-bold">never sent</h2>
       <p className="mt-3 opacity-80">your prompts, Claude&apos;s replies, code, file paths, folder or repo names, tool names, or anything Claude reads or writes.</p>
+      <h2 className="mt-12 font-display text-2xl font-bold">what the server works out</h2>
+      <p className="mt-3 opacity-80">
+        everything in the garden comes from those fields: your pet&apos;s state, how long your agent waited on you today, and the koban it earns (finished runs and quick answers). nothing else is collected to make that work.
+      </p>
       <h2 className="mt-12 font-display text-2xl font-bold">see it yourself</h2>
       <p className="mt-3 opacity-80">
         run <code className="font-mono text-sm">npx burrow-pets privacy</code> to print the same list, or{' '}
