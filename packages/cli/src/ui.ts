@@ -1,3 +1,4 @@
+import type { Species } from '@burrow/core'
 import { HOOKS } from './settings'
 
 const tty = process.stdout.isTTY && !process.env.NO_COLOR
@@ -6,7 +7,7 @@ export const dim = wrap('2')
 export const bold = wrap('1')
 export const green = wrap('32')
 
-export const FACE = { mochi: '(•ᴗ•)', tofu: '[•ᴗ•]', onigiri: '/•ᴗ•\\' } as const
+export const FACE: Record<Species, string> = { mochi: '(•ᴗ•)', tofu: '[•ᴗ•]', onigiri: '/•ᴗ•\\', dango: 'o(•ᴗ•)o', taiyaki: '<•ᴗ•><', dorayaki: '(=•ᴗ•=)' }
 
 export const SAMPLE_PAYLOAD = '{ "v": 1, "type": "stop", "at": 1791234567890, "session": "3f9a1c0e7b2d" }'
 
