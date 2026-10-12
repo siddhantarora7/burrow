@@ -194,69 +194,96 @@ cd "$(dirname "$0")/.."
 ENV_FILE=".superpowers/ship.env"
 mkdir -p .superpowers
 
+# scripts/ship.sh 3 resumes at stage 3, reusing the addresses saved by earlier runs.
+FROM="${1:-1}"
+API_URL="$(_existing API_URL || true)"
+WEB_URL="$(_existing WEB_URL || true)"
+# at N: true when stage N should run; a skipped stage still counts toward the progress shown.
+at() { if (( $1 < FROM )); then _STAGE_INDEX=$((_STAGE_INDEX + 1)); return 1; fi; }
+# or_resume N "what failed": stop with the command that picks up again at stage N.
+or_resume() { warn "$2"; note "Fix it, then resume with: scripts/ship.sh $1"; exit 1; }
+
 banner "Ship burrow: Worker, web, npm"
 
+if at 1; then
 stage "Cloudflare: log in and deploy the API"
 say "The API is a Cloudflare Worker with two Durable Objects. The free plan covers it."
 step "A browser opens to approve wrangler; approve it, then come back here."
-(cd apps/server && npx wrangler login)
+(cd apps/server && npx wrangler login) || or_resume 1 "wrangler login failed"
 say "Deploying. The first deploy may ask you to pick a workers.dev subdomain."
 note "WEB_ORIGIN is a placeholder for now; stage 4 sets the real web address."
-(cd apps/server && npx wrangler deploy --var WEB_ORIGIN:https://placeholder.invalid)
+(cd apps/server && npx wrangler deploy --var WEB_ORIGIN:https://placeholder.invalid) || or_resume 1 "the API deploy failed"
 step "Copy the https://burrow-api.<your-subdomain>.workers.dev address printed above."
 ask API_URL "Paste the API address:"
 API_URL="${API_URL%/}"
 write_env API_URL "$API_URL"
 curl -fsS "$API_URL/" >/dev/null && say "✓ the API answers" || warn "the API did not answer yet; give it a minute and check $API_URL/"
 pause
+fi
 
+[[ -n "$API_URL" ]] || or_resume 1 "no API address saved yet"
+
+if at 2; then
 stage "Vercel: log in and link the web app"
 say "The web app is Next.js in apps/web, inside an npm-workspaces monorepo."
-(npx vercel login)
-step "Link from the repo root: create a new project, e.g. named 'burrow'."
-(npx vercel link)
+npx vercel login || or_resume 2 "vercel login failed"
+step "Link from the repo root: create a new project, e.g. named 'burrow'. Code directory: apps/web"
+npx vercel link || or_resume 2 "vercel link failed"
 open_url "https://vercel.com/dashboard"
-step "Open the project → Settings → Build and Deployment → Root Directory: set it to apps/web and save."
+step "Open the project → Settings → Build and Deployment → Root Directory: check it says apps/web."
 step "Keep 'Include files outside the root directory' on (it needs packages/core)."
 step "Settings → Environment Variables: add ENABLE_EXPERIMENTAL_COREPACK = 1 (Production), so Vercel uses npm 12 from package.json."
 note "If those settings live under different names today, the goal is: root apps/web, monorepo files included, npm 12."
 pause "Done with the settings?"
+fi
 
+if at 3; then
 stage "Vercel: point the web app at the API and deploy"
 printf '%s' "$API_URL" | npx vercel env add NEXT_PUBLIC_API_URL production || warn "NEXT_PUBLIC_API_URL may already exist; check it equals $API_URL in the dashboard"
-npx vercel deploy --prod
-step "Copy the production address (https://<project>.vercel.app) printed above, not a preview URL."
+npx vercel deploy --prod || or_resume 3 "the web deploy failed; its build log is at the Inspect link above"
+step "Copy the short production address from the 'Aliased' line, https://<project>.vercel.app,"
+note "not the 'Production' line: that link belongs to this one deploy and may sit behind a Vercel login."
+step "Check it in a private browser window: the demo garden, no login."
 ask WEB_URL "Paste the web address:"
 WEB_URL="${WEB_URL%/}"
 write_env WEB_URL "$WEB_URL"
 pause
+fi
 
+[[ -n "$WEB_URL" ]] || or_resume 3 "no web address saved yet"
+
+if at 4; then
 stage "Cloudflare: let the web app talk to the API"
 say "The API only accepts browser calls (sign-in links) from the web app's own origin."
-(cd apps/server && npx wrangler deploy --var "WEB_ORIGIN:$WEB_URL")
+(cd apps/server && npx wrangler deploy --var "WEB_ORIGIN:$WEB_URL") || or_resume 4 "the API redeploy failed"
 note "Redeploying later? Pass the same --var, or move it into wrangler.jsonc's vars."
 pause
+fi
 
+if at 5; then
 stage "Check it end to end"
-curl -fsS "$API_URL/" && printf '\n'
+curl -fsS "$API_URL/" && printf '\n' || warn "the API did not answer at $API_URL/"
 open_url "$WEB_URL"
 step "The landing garden should show five demo pets under the headline."
 if confirm "Run the smoke test against production? It hatches two test pets named smoke and pal"; then
   npm run build:cli
-  BURROW_API_URL="$API_URL" npm run smoke
+  BURROW_API_URL="$API_URL" npm run smoke || or_resume 5 "the smoke test failed"
 fi
 pause
+fi
 
+if at 6; then
 stage "npm: publish burrow-pets"
 say "The published CLI defaults to these addresses (env vars and --api/--web still override):"
 note "api $API_URL"
 note "web $WEB_URL"
 if confirm "Publish burrow-pets to npm now? (this is public and versions can't be reused)"; then
   npx -y npm@12 whoami >/dev/null 2>&1 || npx -y npm@12 login
-  (cd packages/cli && BURROW_PUBLISH_API="$API_URL" BURROW_PUBLISH_WEB="$WEB_URL" npx -y npm@12 publish --access public)
+  (cd packages/cli && BURROW_PUBLISH_API="$API_URL" BURROW_PUBLISH_WEB="$WEB_URL" npx -y npm@12 publish --access public) || or_resume 6 "npm publish failed"
   say "✓ published. Try it in a fresh terminal: npx burrow-pets init"
 else
   SKIPPED+=("npm publish: cd packages/cli && BURROW_PUBLISH_API=$API_URL BURROW_PUBLISH_WEB=$WEB_URL npx -y npm@12 publish --access public")
+fi
 fi
 
 finish
