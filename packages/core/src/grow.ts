@@ -6,6 +6,8 @@ import type { WaitLedger } from './waits'
 // waiting agent. Caps per pet-local day bound what faked events can earn.
 export const GROW = {
   stopPay: 3,
+  /** Claude Code fires Stop at the end of every reply; only a run that worked this long counts as a task. */
+  minRunMs: 60_000,
   quickPay: 2,
   okPay: 1,
   quickMs: 60_000,
@@ -68,10 +70,26 @@ export const growthOf = (m: { growth?: PetGrowth }): PetGrowth => m.growth ?? { 
 const OPENS = new Set(['needs_input', 'error'])
 
 /**
- * Folds one event into a pet's growth. `prev` is the wait ledger before this event, so a reply's wait is
- * `ev.t - prev.open[ev.session]`. Day and week counters roll over first, on the pet's local date.
+ * How long the run a stop ends lasted: from the session's first event after its previous stop. `before`
+ * is the pet's stored events before this one. Null for anything but a stop, or a stop with no run before it.
  */
-export function earn(g: Growth, prev: WaitLedger, ev: Ev, day: string): Growth {
+export function runLength(before: readonly Ev[], ev: Ev): number | null {
+  if (ev.type !== 'stop') return null
+  let start: number | null = null
+  for (const e of before) {
+    if (e.session !== ev.session) continue
+    if (e.type === 'stop') start = null
+    else start ??= e.t
+  }
+  return start === null ? null : ev.t - start
+}
+
+/**
+ * Folds one event into a pet's growth. `prev` is the wait ledger before this event, so a reply's wait is
+ * `ev.t - prev.open[ev.session]`; `runMs` is runLength() for a stop. Day and week counters roll over first,
+ * on the pet's local date.
+ */
+export function earn(g: Growth, prev: WaitLedger, ev: Ev, day: string, runMs: number | null = null): Growth {
   let next = g
   if (day !== g.day) next = { ...next, day, stops: 0, replies: 0 }
   const week = weekOf(day)
@@ -87,7 +105,7 @@ export function earn(g: Growth, prev: WaitLedger, ev: Ev, day: string): Growth {
     if (waited <= GROW.quickMs) pay(GROW.quickPay, 'replies')
     else if (waited <= GROW.okMs) pay(GROW.okPay, 'replies')
   }
-  if (ev.type === 'stop' && next.stops < GROW.stopCap) pay(GROW.stopPay, 'stops')
+  if (ev.type === 'stop' && runMs !== null && runMs >= GROW.minRunMs && next.stops < GROW.stopCap) pay(GROW.stopPay, 'stops')
   return next
 }
 

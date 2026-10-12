@@ -19,10 +19,11 @@ All numbers live in `packages/core/src/grow.ts` as `GROW`.
 
 | Source | Pays | Cap per pet-local day |
 |---|---|---|
-| `stop` (a finished task) | 3 | 30 paid stops |
+| `stop` ending a run of at least 60 s (a finished task) | 3 | 30 paid stops |
 | A wait (`needs_input` or `error`) closed by that session's next other event within 60 s | 2 | 20 paid replies (shared) |
 | ...closed within 3 min | 1 | |
 
+- Claude Code fires Stop at the end of every reply, so a stop pays only when its run (from the session's first event after its previous stop) lasted a minute or more; quick chat replies pay nothing. Added 2026-10-12 after noticing replies, not tasks, were being paid.
 - A wait's length is measured with the same ledger that feeds "waited on you today": the open time before the event, minus the event time. Waits closed by the abandonment cap pay nothing.
 - Caps reset at the pet's local midnight (its `tz`). They bound cheating: anyone can post their own events, so faking earns at most 130 koban a day.
 - `weekKoban` counts koban earned (not spent) in the pet's ISO week (`2026-W42`) and resets when the week changes. Spending never lowers it.

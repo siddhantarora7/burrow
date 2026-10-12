@@ -46,9 +46,13 @@ await new Promise((r) => setTimeout(r, 300))
 run([hook, 'stop'], claudeInput)
 await new Promise((r) => setTimeout(r, 1000))
 
-// growth: the friend's pet earns 3 from a finished task; a socket that never signed in cannot spend it,
+// growth: the friend's pet earns 2 + 2 from two quick replies; a socket that never signed in cannot spend them,
 // a feed (5) is refused, a play (3) goes through and every socket hears about it
-run([join(friendHome, 'burrow-hook.mjs'), 'stop'], JSON.stringify({ session_id: 'pal-session' }), envFor(friendHome))
+const palHook = (type, extra = {}) => run([join(friendHome, 'burrow-hook.mjs'), type], JSON.stringify({ session_id: 'pal-session', ...extra }), envFor(friendHome))
+for (let i = 0; i < 2; i++) {
+  palHook('notify', { notification_type: 'permission_prompt' })
+  palHook('prompt')
+}
 await new Promise((r) => setTimeout(r, 500))
 const stranger = new WebSocket(`${API.replace(/^http/, 'ws')}/v1/burrows/${cfg.burrows[0]}/ws`)
 await new Promise((r) => (stranger.onopen = r))
@@ -69,10 +73,11 @@ if (!got.some((m) => m.t === 'welcome' && m.me === friend.petId)) fail('hello wi
 const pokes = got.filter((m) => m.t === 'poke')
 if (pokes.length !== 1 || pokes[0].from !== friend.petId || pokes[0].to !== cfg.petId) fail(`expected exactly one poke, got ${JSON.stringify(pokes)}`)
 if (!(mine.at(-1)?.today?.waitedMs > 0)) fail('waited-on-you time should grow once the wait closes')
-if (mine.at(-1)?.growth?.koban !== 5) fail(`a finished task (3) that also ends a quick wait (2) should pay 5, got ${JSON.stringify(mine.at(-1)?.growth)}`)
+// the stop ended a run of about a second: a reply, not a task, so only the quick answer to the wait pays
+if (mine.at(-1)?.growth?.koban !== 2) fail(`a quick answer should pay 2 and a one-second run nothing, got ${JSON.stringify(mine.at(-1)?.growth)}`)
 if (!['onigiri:baby', 'tofu:baby'].every((k) => got[0].catalog?.includes(k))) fail(`the catalog should hold both babies, got ${JSON.stringify(got[0].catalog)}`)
 const grows = got.filter((m) => m.t === 'grow')
-if (grows.length !== 1 || grows[0].petId !== friend.petId || grows[0].effect !== 'play' || grows[0].growth.koban !== 0 || grows[0].growth.xp !== 5) fail(`expected one play on the friend's pet, got ${JSON.stringify(grows)}`)
+if (grows.length !== 1 || grows[0].petId !== friend.petId || grows[0].effect !== 'play' || grows[0].growth.koban !== 1 || grows[0].growth.xp !== 5) fail(`expected one play on the friend's pet, got ${JSON.stringify(grows)}`)
 if (types.join() !== 'prompt,needs_input,stop') throw new Error(`unexpected events: ${types.join()}`)
 if (/secret|leak|smoke-session/.test(raw)) throw new Error('private data reached the burrow')
 run(['packages/cli/dist/cli.mjs', 'uninstall'])

@@ -1,5 +1,5 @@
 import { DurableObject } from 'cloudflare:workers'
-import { care, CLAIM_TTL_MS, earn, emptyLedger, foldWait, LEGACY_XP, newGrowth, newId, parseWireEvent, publicGrowth, SECRET_LEN, type CareAction, type Ev, type Growth, type MemberProfile, type PetGrowth, type Today, type WaitLedger } from '@burrow/core'
+import { care, CLAIM_TTL_MS, earn, runLength, emptyLedger, foldWait, LEGACY_XP, newGrowth, newId, parseWireEvent, publicGrowth, SECRET_LEN, type CareAction, type Ev, type Growth, type MemberProfile, type PetGrowth, type Today, type WaitLedger } from '@burrow/core'
 import { allowRate, capList, CLAIM_CODE_LEN, localDate, pruneClaims, sha256Hex, type Claim, type Hatch } from './logic'
 
 interface Profile extends MemberProfile {
@@ -104,9 +104,9 @@ export class PetDO extends DurableObject<Env> {
     stats.lastEventAt = now
     // earn() reads the ledger from before this event: a reply's wait is ev.t minus when it opened
     const prev = (await this.ctx.storage.get<WaitLedger>('ledger')) ?? emptyLedger(day)
-    const growth = earn(await this.loadGrowth(now), prev, ev, day)
-    const ledger = foldWait(prev, ev, day)
     const events = (await this.ctx.storage.get<Ev[]>('events')) ?? []
+    const growth = earn(await this.loadGrowth(now), prev, ev, day, runLength(events, ev))
+    const ledger = foldWait(prev, ev, day)
     events.push(ev)
     await this.ctx.storage.put({ stats, ledger, growth, events: events.filter((e) => e.t > now - 86_400_000).slice(-200) })
 

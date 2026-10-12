@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Ev, EventType } from '../src/events'
-import { care, earn, GROW, growthOf, LEGACY_XP, newGrowth, nextStageAt, publicGrowth, stageOf, weekOf, type Growth } from '../src/grow'
+import { care, earn, GROW, growthOf, LEGACY_XP, newGrowth, nextStageAt, publicGrowth, runLength, stageOf, weekOf, type Growth } from '../src/grow'
 import { emptyLedger, foldWait, type WaitLedger } from '../src/waits'
 
 const T0 = 1_791_000_000_000
@@ -10,12 +10,16 @@ const ev = (type: EventType, t: number, session = 'aaaaaaaaaaaa'): Ev => ({ v: 1
 /** Feeds events through the wait ledger and earn() the way PetDO does: earn sees the ledger before the event. */
 function run(events: Ev[], g: Growth = newGrowth(DAY), day = DAY): Growth {
   let ledger: WaitLedger = emptyLedger(day)
+  const seen: Ev[] = []
   for (const e of events) {
-    g = earn(g, ledger, e, day)
+    g = earn(g, ledger, e, day, runLength(seen, e))
     ledger = foldWait(ledger, e, day)
+    seen.push(e)
   }
   return g
 }
+/** A real task: a prompt, then the agent works for `ms` and stops. */
+const task = (t: number, ms = 90_000, session = 'aaaaaaaaaaaa') => [ev('prompt', t, session), ev('heartbeat', t + ms / 2, session), ev('stop', t + ms, session)]
 
 describe('stages', () => {
   it.each([[0, 'baby'], [99, 'baby'], [100, 'grown'], [399, 'grown'], [400, 'evolved'], [5000, 'evolved']] as const)('%i xp is %s', (xp, stage) => {
@@ -36,10 +40,20 @@ describe('weekOf', () => {
 
 describe('earn', () => {
   it('pays 3 for a finished task, up to 30 a day', () => {
-    expect(run([ev('stop', T0)]).koban).toBe(3)
-    const many = run(Array.from({ length: 31 }, (_, i) => ev('stop', T0 + i * 1000)))
+    expect(run(task(T0)).koban).toBe(3)
+    const many = run(Array.from({ length: 31 }, (_, i) => task(T0 + i * 200_000)).flat())
     expect(many.koban).toBe(30 * GROW.stopPay)
     expect(many.stops).toBe(30)
+  })
+
+  it('a quick chat reply is not a task: the run must last a minute', () => {
+    expect(run(task(T0, 20_000)).koban).toBe(0)
+    expect(run(task(T0, 60_000)).koban).toBe(3)
+  })
+
+  it('a stop with no run before it pays nothing', () => {
+    expect(run([ev('stop', T0)]).koban).toBe(0)
+    expect(run([...task(T0), ev('stop', T0 + 200_000)]).koban).toBe(3)
   })
 
   it('pays 2 for answering within a minute, 1 within three, nothing later', () => {
@@ -64,16 +78,16 @@ describe('earn', () => {
   })
 
   it('resets the caps on a new day, but keeps the balance', () => {
-    const full = run(Array.from({ length: 30 }, (_, i) => ev('stop', T0 + i)))
-    const next = run([ev('stop', T0 + 86_400_000)], full, '2026-10-13')
+    const full = run(Array.from({ length: 30 }, (_, i) => task(T0 + i * 200_000)).flat())
+    const next = run(task(T0 + 86_400_000), full, '2026-10-13')
     expect(next.stops).toBe(1)
     expect(next.koban).toBe(31 * GROW.stopPay)
   })
 
   it('counts koban earned this week, and starts over on a new week', () => {
-    const g = run([ev('stop', T0)], newGrowth('2026-10-11'), '2026-10-11')
+    const g = run(task(T0), newGrowth('2026-10-11'), '2026-10-11')
     expect(g.weekKoban).toBe(3)
-    const monday = run([ev('stop', T0 + 86_400_000)], g, '2026-10-12')
+    const monday = run(task(T0 + 86_400_000), g, '2026-10-12')
     expect(monday.week).toBe('2026-W42')
     expect(monday.weekKoban).toBe(3)
     expect(monday.koban).toBe(6)
@@ -107,5 +121,17 @@ describe('growthOf', () => {
   })
   it('publishes only the public fields', () => {
     expect(Object.keys(publicGrowth(newGrowth(DAY))).sort()).toEqual(['koban', 'week', 'weekKoban', 'xp'])
+  })
+})
+
+describe('runLength', () => {
+  it('measures from the first event after the session\'s last stop', () => {
+    const before = [ev('prompt', T0), ev('stop', T0 + 5_000), ev('prompt', T0 + 10_000), ev('heartbeat', T0 + 40_000)]
+    expect(runLength(before, ev('stop', T0 + 100_000))).toBe(90_000)
+  })
+  it('ignores other sessions, and is null when nothing ran since the last stop', () => {
+    const before = [ev('prompt', T0, 'bbbbbbbbbbbb'), ev('stop', T0 + 1_000)]
+    expect(runLength(before, ev('stop', T0 + 2_000))).toBeNull()
+    expect(runLength(before, ev('prompt', T0 + 2_000))).toBeNull()
   })
 })
