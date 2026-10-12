@@ -3,9 +3,10 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { bottomReserve, layoutGarden, pixelScale, POKE_GAP_MS, tagGap, TIMING, type DeriveResult, type GardenLayout, type Member, type PetColor, type PetState, type Species } from '@burrow/core'
 import { heartsAt, heartVisible, liveRipples, stepFly, stepHeart, stepLeaf, type Fly, type Heart, type Leaf, type Ripple } from '@/lib/pixel/ambient'
 import { hash, paletteAt, phaseAt, type Palette } from '@/lib/pixel/palette'
-import { bakeGlow, bakeGround, bakeLantern, bakeSky, sunPosition, type Buffer } from '@/lib/pixel/scene'
+import { bakeGlow, bakeGround, bakeLantern, bakeSky, GLOW, sunPosition, type Buffer } from '@/lib/pixel/scene'
 import { colorsFor, FPS, FRAMES, GRID, petGrid, toneOf } from '@/lib/pixel/sprites'
 import { tagLabel, VERB, waitedLine } from '@/lib/status'
+import { Pointer } from './icons'
 
 const BOT = 28
 const CX = 16
@@ -105,15 +106,17 @@ interface Props {
   me?: string | null
   pokes?: ReadonlyArray<{ from: string; to: string; t: number }>
   onPoke?: (petId: string) => void
+  /** The one-time boop hint and room for the bottom pills; both off inside the landing page's frame. */
+  showHint?: boolean
 }
 
-export function PixelBurrow({ members, states, offset, hour, me = null, pokes = [], onPoke }: Props) {
+export function PixelBurrow({ members, states, offset, hour, me = null, pokes = [], onPoke, showHint = true }: Props) {
   const screen = useScreen()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [hover, setHover] = useState<string | null>(null)
   const [, tick] = useState(0)
 
-  const L: GardenLayout | null = useMemo(() => (screen ? layoutGarden(screen.W, screen.H, members.length, tagGap(screen.S), bottomReserve(screen.S, screen.H > screen.W)) : null), [screen, members.length])
+  const L: GardenLayout | null = useMemo(() => (screen ? layoutGarden(screen.W, screen.H, members.length, tagGap(screen.S), showHint ? bottomReserve(screen.S, screen.H > screen.W) : undefined) : null), [screen, members.length, showHint])
   const hourKey = Math.round(hour * 10) / 10
   const pal: Palette = useMemo(() => paletteAt(hourKey), [hourKey])
   const phase = useMemo(() => phaseAt(hourKey), [hourKey])
@@ -125,7 +128,7 @@ export function PixelBurrow({ members, states, offset, hour, me = null, pokes = 
             ground: toCanvas(bakeGround(L, pal, phase)),
             lantern: toCanvas(bakeLantern(L, pal, phase)),
             // warm lamplight: full-colour gold pixels on a dither pattern, two densities for the flicker
-            glow: [toCanvas(bakeGlow(26, 20, '#ffd27a', 0.42)), toCanvas(bakeGlow(26, 20, '#ffd27a', 0.5))],
+            glow: GLOW.strength.map((k) => toCanvas(bakeGlow(GLOW.rx, GLOW.ry, k))),
           }
         : null,
     [L, pal, phase],
@@ -272,7 +275,7 @@ export function PixelBurrow({ members, states, offset, hour, me = null, pokes = 
       if (phase.night) {
         // additive, dithered halo; the lantern is redrawn on top so its silhouette and window survive
         const bright = reduce || Math.sin(now / 90) + Math.sin(now / 37) * 0.5 > -0.2
-        ctx.drawImage(layers.glow[bright ? 1 : 0]!, L.lantern.x - 26, L.lantern.y - 12 - 20)
+        ctx.drawImage(layers.glow[bright ? 1 : 0]!, L.lantern.x - GLOW.rx, L.lantern.y - 12 - GLOW.ry)
         ctx.drawImage(layers.lantern, 0, 0)
       }
 
@@ -410,9 +413,10 @@ export function PixelBurrow({ members, states, offset, hour, me = null, pokes = 
           </button>
         )
       })}
-      {hint && members.length > 0 && (
-        <p className={`hint chip ${phase.night ? 'chip-night' : ''} fixed bottom-[4.5rem] left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-full px-4 py-2 text-xs font-medium sm:bottom-4 sm:left-auto sm:right-6 sm:translate-x-0`}>
-          {hint}
+      {showHint && hint && members.length > 0 && (
+        <p className={`hint chip ${phase.night ? 'chip-night' : ''} pill fixed bottom-[4.5rem] left-1/2 z-20 -translate-x-1/2 sm:bottom-6 sm:left-auto sm:right-6 sm:translate-x-0`}>
+          <Pointer className="opacity-60" />
+          <span className="lbl">{hint}</span>
         </p>
       )}
     </div>

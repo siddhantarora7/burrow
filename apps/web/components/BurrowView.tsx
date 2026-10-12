@@ -8,8 +8,8 @@ import type { BurrowState } from '@/lib/burrowState'
 import { usePetStates } from '@/lib/usePetStates'
 import { useAlerts } from '@/lib/useAlerts'
 import { burrowTitle, VERB } from '@/lib/status'
-
-const COMMAND = 'npx burrow-pets init'
+import { INIT, inviteCommand } from '@/lib/commands'
+import { Bell, BellOff, Check, Copy, ShieldCheck, Terminal, UserPlus, VolumeOff } from './icons'
 
 // The visitor's own clock drives the light. The server cannot know it, so it renders the
 // chrome only (null) instead of guessing a time of day.
@@ -30,7 +30,7 @@ function useHour(): number | null {
 }
 
 /** The header mark: a mochi sprite, drawn once. */
-function Mark() {
+export function Mark() {
   const ref = useRef<HTMLCanvasElement>(null)
   useEffect(() => {
     const c = ref.current
@@ -39,54 +39,80 @@ function Mark() {
     ctx.clearRect(0, 0, 32, 32)
     ctx.drawImage(spriteCanvas('mochi', 'sakura', 'idle', 0, false), 0, 0)
   }, [])
-  return <canvas ref={ref} width={32} height={32} className="h-8 w-8 [image-rendering:pixelated]" aria-hidden="true" />
+  return <canvas ref={ref} width={32} height={32} className="h-7 w-7 [image-rendering:pixelated]" aria-hidden="true" />
 }
 
 export function BurrowView({ id }: { id: string }) {
-  return <BurrowScreen {...useBurrow(id)} />
+  return <BurrowScreen {...useBurrow(id)} invite={id} />
 }
 
+type ScreenProps = BurrowState & {
+  poke?: (to: string) => void
+  /** Header text beside the wordmark; defaults to the burrow's name. */
+  label?: string
+  /** Replaces the connection status, e.g. "demo". */
+  statusLabel?: string
+  /** This garden's id: the bottom pill then invites a friend into it. */
+  invite?: string
+  /** Inside the landing page's frame: the garden alone, no chrome. */
+  embed?: boolean
+}
+
+const ALERT_ICON = { 'alerts on': Bell, 'chime only': Bell, 'alerts off': BellOff, 'click for sound': VolumeOff } as const
+
 /** The garden page for any source of members: the live WebSocket, or the synthetic demo. */
-export function BurrowScreen({ status, burrow, members, offset, me, pokes, poke, label, statusLabel, hero = false }: BurrowState & { poke?: (to: string) => void; label?: string; statusLabel?: string; hero?: boolean }) {
+export function BurrowScreen({ status, burrow, members, offset, me, pokes, poke, label, statusLabel, invite, embed = false }: ScreenProps) {
   const states = usePetStates(members, offset)
   const alerts = useAlerts({ me, members, states, pokes })
   const hour = useHour()
 
   // A background tab still answers "is it done, or waiting on me?"
   useEffect(() => {
-    document.title = burrowTitle(members.map((m) => ({ name: m.name, state: states.get(m.petId)?.state ?? 'sleep' })))
-  }, [members, states])
+    if (!embed) document.title = burrowTitle(members.map((m) => ({ name: m.name, state: states.get(m.petId)?.state ?? 'sleep' })))
+  }, [members, states, embed])
 
   const night = hour !== null && phaseAt(hour).night
+  const skin = `chip ${night ? 'chip-night' : ''}`
   const statusText = statusLabel ?? (status === 'live' ? 'live' : status === 'not_found' ? 'not found' : status === 'reconnecting' ? 'reconnecting…' : 'connecting…')
+  const dot = statusLabel ? 'dot-demo' : status === 'live' ? 'dot-live' : status === 'not_found' ? 'dot-gone' : 'dot-wait'
+  const AlertIcon = ALERT_ICON[alerts.label]
 
   return (
     <main className="garden relative min-h-[100dvh] w-full overflow-x-hidden" style={{ background: hour === null ? 'var(--paper)' : paletteAt(hour).gravel }}>
-      <header className="fixed inset-x-0 top-0 z-20 flex items-center gap-2 px-3 py-3 sm:px-6">
-        <span className={`chip ${night ? 'chip-night' : ''} flex items-center gap-1.5 rounded-full py-0.5 pl-1.5 pr-4 font-display text-lg font-bold`}>
-          <Mark />
-          burrow
-          {(label ?? burrow?.name) && <span className="ml-1 hidden text-sm font-medium opacity-70 sm:inline">{label ?? burrow?.name}</span>}
-        </span>
-        <nav className={`chip ${night ? 'chip-night' : ''} ml-auto flex items-center gap-3 rounded-full py-1 pl-3 pr-1 text-xs font-medium`}>
-          <Link href="/privacy" className="underline-offset-4 hover:underline">privacy</Link>
-          {me && (
-            <button type="button" onClick={alerts.press} className="underline-offset-4 hover:underline" title="alerts when your agent waits on you, or a friend pokes you">
-              {alerts.label}
-            </button>
-          )}
-          <span role="status" className="chip-solid rounded-full px-2.5 py-1">{statusText}</span>
-        </nav>
-      </header>
+      {!embed && (
+        <header className="fixed inset-x-0 top-0 z-20 flex items-center gap-2 px-3 py-3 sm:px-6 sm:py-5">
+          <Link href="/" className={`${skin} pill gap-2 pl-2 pr-4`}>
+            <Mark />
+            <span className="lbl text-base font-bold">burrow</span>
+            {(label ?? burrow?.name) && <span className="lbl hidden border-l border-current/20 pl-2.5 opacity-70 sm:block">{label ?? burrow?.name}</span>}
+          </Link>
+          <nav className={`${skin} pill ml-auto gap-0.5 px-1`}>
+            {me && (
+              <button type="button" onClick={alerts.press} className="pill-btn" title="alerts when your agent waits on you, or a friend pokes you">
+                <AlertIcon />
+                <span className="lbl">{alerts.label}</span>
+              </button>
+            )}
+            <Link href="/privacy" className="pill-btn" aria-label="privacy">
+              <ShieldCheck />
+              <span className="lbl hidden sm:block">privacy</span>
+            </Link>
+            <span role="status" className="flex h-8 items-center gap-2 pl-2.5 pr-3.5">
+              <span className={`dot ${dot}`} aria-hidden="true" />
+              <span className="lbl">{statusText}</span>
+            </span>
+          </nav>
+        </header>
+      )}
 
-      {hero && <Hero night={night} />}
+      {hour !== null && <PixelBurrow members={members} states={states} offset={offset} hour={hour} me={me} pokes={pokes} onPoke={poke} showHint={!embed} />}
 
-      {hour !== null && <PixelBurrow members={members} states={states} offset={offset} hour={hour} me={me} pokes={pokes} onPoke={poke} />}
-
-      {status === 'not_found' ? (
-        <Notice night={night} title="this burrow doesn't exist." body="check the link for typos, or start your own garden:" />
+      {embed ? null : status === 'not_found' ? (
+        <Notice night={night} title="this burrow doesn't exist." body="check the link for typos, or start your own garden:" command={INIT} />
       ) : status === 'live' && members.length === 0 ? (
-        <Notice night={night} title="nobody lives here yet." body="hatch the first pet from your terminal:" />
+        <Notice night={night} title="nobody lives here yet." body="hatch the first pet from your terminal:" command={invite ? inviteCommand(location.origin, invite) : INIT} />
+      ) : invite ? (
+        <InvitePill night={night} burrowId={invite} />
       ) : (
         <CommandPill night={night} />
       )}
@@ -101,52 +127,60 @@ export function BurrowScreen({ status, burrow, members, offset, me, pokes, poke,
   )
 }
 
-/** The front door: what this is, over the sky of a demo garden. */
-function Hero({ night }: { night: boolean }) {
-  return (
-    <section className={`chip ${night ? 'chip-night' : ''} fixed inset-x-3 top-[4.25rem] z-10 max-w-md rounded-2xl p-5 sm:left-6 sm:right-auto sm:top-20`}>
-      <h1 className="font-display text-2xl font-bold leading-tight tracking-tight sm:text-3xl">everyone&apos;s agents, one burrow.</h1>
-      <p className="mt-2 text-sm opacity-80 sm:text-base">
-        a tiny pet reacts live to your Claude Code agent and chimes when it&apos;s waiting on you. your friends&apos; pets share the garden, and can poke you.
-      </p>
-      <p className="mt-3 text-xs opacity-70">
-        these pets are a demo. <Link href="/privacy" className="underline underline-offset-4">what gets sent</Link>: four fields, never your code.
-      </p>
-    </section>
-  )
-}
-
-function CopyButton() {
+/** A copy button that says what it copied for two seconds. */
+export function CopyButton({ text, label = 'copy', className = '' }: { text: string; label?: string; className?: string }) {
   const [copied, setCopied] = useState(false)
+  useEffect(() => {
+    if (!copied) return
+    const t = setTimeout(() => setCopied(false), 2000)
+    return () => clearTimeout(t)
+  }, [copied])
   return (
     <button
       type="button"
-      className="chip-solid rounded-full px-3 py-1 font-display text-xs font-bold transition-transform active:scale-[0.97]"
-      onClick={() => navigator.clipboard?.writeText(COMMAND).then(() => setCopied(true), () => {})}
+      className={`pill-btn chip-solid font-bold ${className}`}
+      onClick={() => navigator.clipboard?.writeText(text).then(() => setCopied(true), () => {})}
     >
-      {copied ? 'copied' : 'copy'}
+      {copied ? <Check /> : <Copy />}
+      <span className="lbl" aria-live="polite">{copied ? 'copied' : label}</span>
     </button>
   )
 }
 
+const bottomPill = 'fixed bottom-4 left-1/2 z-20 -translate-x-1/2 sm:bottom-6 sm:left-6 sm:translate-x-0'
+
 function CommandPill({ night }: { night: boolean }) {
   return (
-    <div className={`chip ${night ? 'chip-night' : ''} fixed bottom-4 left-1/2 z-20 flex -translate-x-1/2 items-center gap-3 whitespace-nowrap rounded-full py-1.5 pl-4 pr-1.5 text-sm sm:left-6 sm:translate-x-0`}>
-      <span className="hidden font-display font-bold sm:inline">get a pet</span>
-      <code className="font-mono text-[13px]">{COMMAND}</code>
-      <CopyButton />
+    <div className={`chip ${night ? 'chip-night' : ''} pill ${bottomPill} gap-3 pr-1`}>
+      <Terminal className="opacity-60" />
+      <code className="lbl font-mono text-[13px]">{INIT}</code>
+      <CopyButton text={INIT} />
     </div>
   )
 }
 
-function Notice({ title, body, night }: { title: string; body: string; night: boolean }) {
+/** Your garden grows by invitation: the command a friend runs to move their new pet in here. */
+function InvitePill({ night, burrowId }: { night: boolean; burrowId: string }) {
+  const [command, setCommand] = useState<string | null>(null)
+  useEffect(() => setCommand(inviteCommand(location.origin, burrowId)), [burrowId])
+  if (!command) return null
+  return (
+    <div className={`chip ${night ? 'chip-night' : ''} pill ${bottomPill} gap-3 pr-1`} title={command}>
+      <UserPlus className="opacity-70" />
+      <span className="lbl font-bold">invite a friend</span>
+      <CopyButton text={command} label="copy command" />
+    </div>
+  )
+}
+
+function Notice({ title, body, night, command }: { title: string; body: string; night: boolean; command: string }) {
   return (
     <div className={`chip ${night ? 'chip-night' : ''} fixed inset-x-4 bottom-8 z-20 mx-auto max-w-md rounded-2xl p-5 text-center`}>
       <p className="font-display text-lg font-bold">{title}</p>
       <p className="mt-1 text-sm opacity-80">{body}</p>
-      <div className="mt-3 inline-flex items-center gap-3 whitespace-nowrap rounded-full bg-black/5 py-1.5 pl-4 pr-1.5 font-mono text-sm">
-        {COMMAND}
-        <CopyButton />
+      <div className="mt-3 flex items-center gap-3 rounded-full bg-current/5 py-1 pl-4 pr-1">
+        <code className="min-w-0 flex-1 truncate text-left font-mono text-[13px]">{command}</code>
+        <CopyButton text={command} />
       </div>
     </div>
   )

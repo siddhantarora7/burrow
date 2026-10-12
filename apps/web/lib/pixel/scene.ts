@@ -222,12 +222,15 @@ export function bakeLantern(L: GardenLayout, pal: Palette, phase: Phase): Buffer
 }
 
 /** An ordered-dither halo: solid near the centre, thinning to scattered pixels at the edge. */
-export function bakeGlow(rx: number, ry: number, color: string, strength: number): Buffer {
+/** Lamplight: bright gold near the lantern, a dimmer gold toward the edge, both as whole dithered pixels. */
+export const GLOW = { rx: 17, ry: 12, core: '#ffd27a', dim: '#a8854f', strength: [0.34, 0.42] } as const
+
+export function bakeGlow(rx: number, ry: number, strength: number): Buffer {
   const b = makeBuffer(rx * 2 + 1, ry * 2 + 1)
   for (let y = -ry; y <= ry; y++)
     for (let x = -rx; x <= rx; x++) {
       const e = (x / rx) ** 2 + (y / ry) ** 2
-      if (e <= 1 && dither(x + rx, y + ry, (1 - e) ** 2.2 * strength)) px(b, x + rx, y + ry, color)
+      if (e <= 1 && dither(x + rx, y + ry, (1 - e) ** 2.6 * strength)) px(b, x + rx, y + ry, e < 0.3 ? GLOW.core : GLOW.dim)
     }
   return b
 }

@@ -290,7 +290,7 @@ A cozy 16-bit palette: muted, warm scenery that relights by the clock, with satu
 
 ### Secondary
 - **Sprite accents**: white eye glints and `pet-blush` cheeks on every face; `laptop-lid` and `laptop-edge` for the work pose; `alert-red` on the white speech bubble of the waiting pose; `crumb-gold` and `crumb-blue` for eating; `sparkle` gold stars for cheering; `nori` for the onigiri band.
-- **Lantern Gold** (`lantern-light`): the toro's window and its dithered halo at night. The same gold family returns in the chrome as `alert-ring`, so "light" and "needs you" share one warm signal.
+- **Lantern Gold** (`lantern-light`, with `lantern-dim` toward the edge): the toro's window and its small two-tone dithered pool of light at night. The same gold family returns in the chrome as `alert-ring`, so "light" and "needs you" share one warm signal.
 
 ### Tertiary
 - **Ambient life**: `koi-orange` and `koi-white` with `koi-spot`; `heart` for boops; `firefly` at night; `star` and `star-dim` for the twinkling night sky. Each is a 1 to 5 pixel mark, never a mass.
@@ -298,7 +298,7 @@ A cozy 16-bit palette: muted, warm scenery that relights by the clock, with satu
 ### Neutral
 - **Scene roles** (`<role>-day`, `<role>-dusk`, `<role>-night`): sky bands `sky0` to `sky3` (top to horizon), `far` and `snow` (the mountain), `forest`/`forestHi`, wall `tile`/`tileHi`/`plaster`/`plasterLine`, ground `gravel`/`rakeD`/`rakeL`, rock `stone`/`stoneD`/`stoneH`, `moss`/`mossD`/`mossH`, `bush`/`bushH`/`bloom`, maple `maple`/`mapleH`/`mapleD`/`trunk`, pond `water`/`waterD`/`waterH`/`pad`, `cloud`/`cloudD`, and `sun` (which is the moon at night). Most roles come as a base, a highlight (`H`/`Hi`) and a dark (`D`).
 - **Day/dusk/night keyframes**: night until 05:00, night to dusk by 06:12, dusk to day by 07:30, day until 17:00, day to dusk by 18:36, dusk to night by 20:00. The scene counts as night when the night weight passes one half; that flag also switches stars, lantern light, fireflies and the chrome.
-- **Chrome Ink and Paper** (`chrome-ink`, `chrome-paper`, `chrome-night-ink`): warm sumi black and washi white for all HTML text and solid pills, exposed to CSS as `--ink` and `--paper`. Plain pages (privacy, the placeholder landing) follow the OS theme: paper on ink-dark `#181a20` in dark mode, with `.chip-os` chips taking the night skin. The page background behind the canvas is the current `gravel` colour, so overscroll and loading never flash a foreign colour.
+- **Chrome Ink and Paper** (`chrome-ink`, `chrome-paper`, `chrome-night-ink`): warm sumi black and washi white for all HTML text and solid pills, exposed to CSS as `--ink` and `--paper`. Plain pages (the landing page and privacy) follow the OS theme: paper on ink-dark `#181a20` in dark mode, with `.chip-os` chips taking the night skin. The page background behind the canvas is the current `gravel` colour, so overscroll and loading never flash a foreign colour.
 - **Focus and selection**: the focus ring is `focus-ring` deep blue (4.6:1 or better on day and dusk gravel) and switches to `focus-ring-night` paper on night chips and dark plain pages; the garden pins its own ring so an OS dark theme never leaks into a daytime garden. Selected text sits on `selection`, the sakura pet's rim light, in chrome ink.
 
 ### Named Rules
@@ -341,7 +341,7 @@ Spatial model (all in garden pixels, from `layoutGarden`):
 - **Growth.** Up to 24 members. Rows past the first screen start below the fold and extend the gravel; the page scrolls instead of shrinking pets. Earlier members keep their stones as others join.
 - **Props yield to pets.** Bushes skip any x within 22 px of a pet in the first 40 px of gravel; moss islands keep clear of heads and tags; raked rings circle every stone, the pond and the lantern.
 
-Chrome sits on fixed insets: header 12 px (24 px from `sm`), command pill 16 px from the bottom (centred on phones, left-aligned from `sm`), hint above the pill on phones and bottom-right from `sm`. Tags hang 6 garden pixels below each pet's feet, centred on the stone.
+Chrome sits on fixed insets: header 12 px (20 px from `sm`), the bottom pill 16 px from the bottom (24 px from `sm`; centred on phones, left-aligned from `sm`), hint above the pill on phones and bottom-right from `sm`. Embedded in the landing page's frame the garden has no chrome, no hint and no bottom reserve. Tags hang 6 garden pixels below each pet's feet, centred on the stone.
 
 ## Elevation & Depth
 
@@ -389,17 +389,23 @@ The glance signal and a control.
 - **Behaviour:** a real `<button>`; activating it boops the pet. Its accessible name starts with exactly the visible text, then adds the detail ("ada needs you: waiting on you for 3m. press to boop."), so speech users can say what they see (WCAG 2.5.3).
 
 ### Chips (header, nav, status, hint)
-- **Style:** frosted pill (chip float). Header pairs the 32 px mochi mark with the wordmark and, from `sm`, the burrow name at 70%. Nav carries a `privacy` link (underline on hover) and a solid status pill (`live`, `connecting…`, `reconnecting…`, `demo`) with `role="status"`.
-- **Night:** dark frosted fill, solid pill inverts to paper with ink text.
-- **Alerts chip:** a text button in the nav, only when signed in. Its label is the state: `alerts on`, `alerts off`, `chime only` (no notification permission) or `click for sound` (the browser has not unlocked audio yet; any click or key press does). Pressing it does the next useful thing: turn alerts on, ask for notifications, or turn them off. The chime is two synthesised sine notes (660 then 880 Hz, half a second).
-- **Hint:** one time only ("click a pet to boop it, or click the pond" with a mouse or trackpad, "tap" on touch screens), fades in over 0.5s with opacity alone, gone after the first boop or pond tap.
+- **One pill size:** every chip over the garden is a `.pill`: 40px tall, 16px side padding, display face at 500 and 0.875rem, icon and label on one centred line. Controls inside a pill are `.pill-btn`: 32px tall, a soft fill on hover, 0.97 press. Labels carry `.lbl` (`text-box: trim-both ex alphabetic`) because Zen Maru sits low in its line box; never on text that also clips overflow, or its ascenders are cut.
+- **Icons:** 16px outline icons in the Lucide style, inlined in `components/icons.tsx` (no icon package), at 1.9 stroke in the current text colour, always beside a word (icon-only only where an `aria-label` names it, like `privacy` on phones).
+- **Header:** the brand pill links home: the 28px mochi mark, `burrow` in 700, and from `sm` the burrow name at 70% after a hairline. The nav pill holds the alerts button (signed in only), `privacy` with a shield, and the status: a dot and a word (`role="status"`). Dots: green `live`, amber blinking `connecting…`/`reconnecting…`, red `not found`, grey `demo`.
+- **Night:** dark frosted fill; solid buttons invert to paper with ink text.
+- **Alerts button:** its label is the state, with an icon: bell `alerts on` and `chime only` (no notification permission), bell-off `alerts off`, muted speaker `click for sound` (the browser has not unlocked audio yet; any click or key press does). Pressing it does the next useful thing: turn alerts on, ask for notifications, or turn them off. The chime is two synthesised sine notes (660 then 880 Hz, half a second).
+- **Hint:** a pill with a pointer icon, one time only ("click a pet to boop it, or click the pond" with a mouse or trackpad, "tap" on touch screens), fades in over 0.5s with opacity alone, gone after the first boop or pond tap.
 
-### Hero (landing only)
-- The front door at `/` is a five-pet demo garden, labelled `demo` in the status pill and in the hero's small print. A notice-style panel (16px corners, 20px padding, max-w-md) sits top-left under the header: the display h1 "everyone's agents, one burrow." (2xl, 3xl from `sm`), one body line, and small print linking to privacy. It takes the night skin with the sky, like every chip.
+### Bottom pill
+- **On a burrow:** "invite a friend" with a person-plus icon and a solid `copy command` button that copies `npx burrow-pets init <this garden's link>`, the command that moves a friend's new pet straight in. The garden grows by invitation, so this is the one call to action on a burrow page.
+- **On the demo:** a terminal icon, `npx burrow-pets init` in Geist Mono, and a solid `copy` button.
+- **Copy buttons:** a copy icon and label that turn into a check and `copied` for two seconds (announced politely).
+- **Empty and not-found states:** the pill becomes a notice panel (16px corners, 20px padding, max-w-md) with a display title, one line of body and the command row; an empty burrow's command is the invite.
 
-### Command pill
-- **Style:** frosted pill, "get a pet" in display bold (from `sm`), the command in Geist Mono, then a solid copy button in display bold 0.75rem that reads `copied` once used and presses to 0.97.
-- **Empty and not-found states:** the pill becomes a notice panel (16px corners, 20px padding, max-w-md) with a display title, one line of body and the same command row.
+### Landing page
+- A plain page that follows the OS theme, not the sky: paper and ink, `--muted` for secondary text, `--line` hairlines, `--soft` fills, `--raised` for the command field. Apple-quiet: one idea per section, generous space, nothing frosted.
+- **Order:** a header (mark and wordmark; `privacy` and `github` links), a centred hero (a hairline "for Claude Code" pill, the h1 "a tiny pet for your coding agent." in display 700 at 2.6rem, 4.5rem from `sm`, tracking -0.03em; one muted line; the command field with its copy button; "what gets sent →"), the live demo in a 28px-rounded frame with one deep soft shadow, three points with 20px icons in soft rounded squares, a closing "one command. no account." with the command again, and a hairline footer.
+- **Demo frame:** an iframe of `/demo?embed=1`: five pets at 16:9 from `sm`; two at 3:5 on phones, where the garden is portrait and stacks pets one per row. A segmented control under it previews `now` (the visitor's clock), `day`, `dusk` and `night`.
 
 ### Garden interactions
 - **Boop:** click a pet or its tag. A 0.45s hop of up to 5 px and three 5 x 5 pixel hearts rise and blink out.

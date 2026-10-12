@@ -9,14 +9,18 @@
 :root {
   --paper: #f7f4ec;
   --ink: #26241f;
+  --muted: #6b675e;
+  --line: rgba(38, 36, 31, 0.1);
+  --soft: rgba(38, 36, 31, 0.05);
+  --raised: #fffdf8;
   --focus: #2e4a7d;
   color-scheme: light;
 }
 /* Plain pages (privacy, landing) follow the OS theme; the garden's chrome follows its sky instead. */
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) { --paper: #181a20; --ink: #f1eee6; --focus: #f1eee6; color-scheme: dark; }
+  :root:not([data-theme="light"]) { --paper: #181a20; --ink: #f1eee6; --muted: #a8a49b; --line: rgba(255, 255, 255, 0.12); --soft: rgba(255, 255, 255, 0.06); --raised: #22252c; --focus: #f1eee6; color-scheme: dark; }
 }
-:root[data-theme="dark"] { --paper: #181a20; --ink: #f1eee6; --focus: #f1eee6; color-scheme: dark; }
+:root[data-theme="dark"] { --paper: #181a20; --ink: #f1eee6; --muted: #a8a49b; --line: rgba(255, 255, 255, 0.12); --soft: rgba(255, 255, 255, 0.06); --raised: #22252c; --focus: #f1eee6; color-scheme: dark; }
 
 body { background: var(--paper); color: var(--ink); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
 /* deep blue clears 4.6:1 on day and dusk gravel; .chip-night swaps in paper for the night garden */
@@ -46,9 +50,9 @@ body { background: var(--paper); color: var(--ink); font-family: var(--font-sans
 .garden { --focus: #2e4a7d; }
 
 /* Chrome over the garden follows the sky, not the OS theme: light frosted by day, dark at night. */
-.chip { color: #26241f; background: rgba(250, 249, 245, 0.8); border: 1px solid rgba(255, 255, 255, 0.9); box-shadow: 0 6px 20px rgba(38, 36, 31, 0.12); backdrop-filter: blur(12px) saturate(1.3); -webkit-backdrop-filter: blur(12px) saturate(1.3); }
+.chip { color: #26241f; background: rgba(252, 251, 248, 0.8); border: 1px solid rgba(255, 255, 255, 0.85); box-shadow: 0 1px 2px rgba(38, 36, 31, 0.06), 0 10px 28px -8px rgba(38, 36, 31, 0.22); backdrop-filter: blur(14px) saturate(1.4); -webkit-backdrop-filter: blur(14px) saturate(1.4); }
 .chip-solid { background: #26241f; color: #f7f4ec; }
-.chip-night { --focus: #f1eee6; color: #f1eee6; background: rgba(24, 26, 32, 0.76); border-color: rgba(255, 255, 255, 0.16); }
+.chip-night { --focus: #f1eee6; color: #f1eee6; background: rgba(24, 26, 32, 0.74); border-color: rgba(255, 255, 255, 0.14); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 10px 28px -8px rgba(0, 0, 0, 0.5); }
 .chip-night .chip-solid { background: #f1eee6; color: #26241f; }
 /* Chips on plain pages take the night skin when the OS is dark. */
 @media (prefers-color-scheme: dark) {
@@ -58,7 +62,32 @@ body { background: var(--paper); color: var(--ink); font-family: var(--font-sans
 @media (prefers-reduced-transparency: reduce) { .chip { backdrop-filter: none; -webkit-backdrop-filter: none; background: #faf9f5; } .chip-night { background: #181a20; } }
 @media (prefers-reduced-transparency: reduce) and (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .chip-os { background: #181a20; } }
 
+/* One pill size for all garden chrome: 40px tall, text and icons centred on one line. */
+.pill { display: inline-flex; align-items: center; gap: 0.5rem; height: 2.5rem; padding: 0 1rem; border-radius: 999px; font: 500 0.875rem / 1 var(--font-display); white-space: nowrap; }
+.pill svg { flex: none; }
+/* Zen Maru sets its letters low in the line box; trimming a label to its x-height centres lowercase text on the icons beside it. */
+.lbl { text-box: trim-both ex alphabetic; }
+/* Controls inside a pill: 32px tall, a soft fill on hover, so the pill's edge stays 4px away. */
+.pill-btn { display: inline-flex; align-items: center; gap: 0.375rem; height: 2rem; padding: 0 0.75rem; border-radius: 999px; font: inherit; transition: background-color 0.15s; }
+.pill-btn:hover { background: rgba(38, 36, 31, 0.07); }
+.chip-night .pill-btn:hover { background: rgba(255, 255, 255, 0.1); }
+.pill-btn.chip-solid:hover { background: #3a3730; }
+.chip-night .pill-btn.chip-solid:hover { background: #ffffff; }
+.pill-btn:active { scale: 0.97; }
+/* A status dot: green when live, amber while connecting, red when the burrow is missing, grey for the demo. */
+.dot { width: 0.5rem; height: 0.5rem; border-radius: 999px; background: currentColor; flex: none; }
+.dot-live { background: #3fae7a; box-shadow: 0 0 0 3px rgba(63, 174, 122, 0.22); }
+.dot-wait { background: #e0a43a; }
+.dot-gone { background: #d9534f; }
+.dot-demo { background: #a39d90; }
+@media (prefers-reduced-motion: no-preference) { .dot-wait { animation: dot-blink 1.2s ease-in-out infinite; } }
+@keyframes dot-blink { 50% { opacity: 0.35; } }
+
 .hint { animation: hint-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
 /* opacity only: the hint is centred with `translate`, which an animated translate would override */
 @keyframes hint-in { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .hint { animation: none; } }
+
+/* Plain pages draw the solid button in their own ink, so it inverts with the OS theme. */
+.on-page .chip-solid, .on-page .pill-btn.chip-solid:hover { background: var(--ink); color: var(--paper); }
+.on-page .pill-btn.chip-solid:hover { opacity: 0.86; }

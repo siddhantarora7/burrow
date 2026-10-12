@@ -148,3 +148,35 @@ describe('pet colours', () => {
     expect(contrast(t.shade, PET_INK)).toBeGreaterThanOrEqual(4.5)
   })
 })
+
+import { bakeGlow, GLOW } from '../lib/pixel/scene'
+
+describe('lantern glow', () => {
+  const colours = (b: ReturnType<typeof bakeGlow>) => {
+    const seen = new Map<string, number[]>()
+    for (let y = 0; y < b.h; y++)
+      for (let x = 0; x < b.w; x++) {
+        const i = (y * b.w + x) * 4
+        if (!b.data[i + 3]) continue
+        const k = `#${[0, 1, 2].map((j) => b.data[i + j]!.toString(16).padStart(2, '0')).join('')}`
+        const d = Math.hypot((x - (b.w - 1) / 2) / ((b.w - 1) / 2), (y - (b.h - 1) / 2) / ((b.h - 1) / 2))
+        seen.set(k, [...(seen.get(k) ?? []), d])
+      }
+    return seen
+  }
+
+  it('is opaque pixels in two golds, bright at the core and dim toward the edge', () => {
+    const b = bakeGlow(GLOW.rx, GLOW.ry, GLOW.strength[1])
+    const seen = colours(b)
+    expect([...seen.keys()].sort()).toEqual([GLOW.core, GLOW.dim].sort())
+    const mean = (xs: number[]) => xs.reduce((a, c) => a + c, 0) / xs.length
+    expect(mean(seen.get(GLOW.core)!)).toBeLessThan(mean(seen.get(GLOW.dim)!))
+    for (let i = 3; i < b.data.length; i += 4) expect([0, 255]).toContain(b.data[i])
+  })
+
+  it('stays a small pool around the lantern, not a wide square of dots', () => {
+    expect(GLOW.rx).toBeLessThanOrEqual(18)
+    const lit = [...colours(bakeGlow(GLOW.rx, GLOW.ry, GLOW.strength[1])).values()].flat().length
+    expect(lit / ((2 * GLOW.rx + 1) * (2 * GLOW.ry + 1))).toBeLessThan(0.3)
+  })
+})
