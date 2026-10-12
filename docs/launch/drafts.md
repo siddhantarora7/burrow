@@ -10,7 +10,7 @@ Every number in brackets comes from the dogfooding week with real friends. Do no
 
 I run Claude Code for long stretches and kept losing time to one thing: the agent stopped to ask for permission while I was in another window, and sat there. Burrow is a small fix for that, plus some company.
 
-`npx burrow-pets init` installs Claude Code hooks and hatches a pixel-art pet. Keep its garden open on a second screen: the pet works on a tiny laptop while your agent runs, eats when it finishes, and waves when it needs you. The tab chimes and can notify you. Friends' pets live in the same garden (`init <their link>`), so you see who's shipping, and a friend can poke you when your agent has been waiting.
+`npx burrow-pets init` installs Claude Code hooks and hatches a pixel-art pet. Keep its garden open on a second screen: the pet works on a tiny laptop while your agent runs, eats when it finishes, and waves when it needs you. The tab chimes and can notify you. Friends' pets live in the same garden (`init <their link>`), so you see who's shipping, and a friend can poke you when your agent has been waiting. Finished tasks and quick replies earn koban that feed your pet, and it grows from baby to evolved; each garden fills a shared catalog of 18 forms.
 
 Over a week with [N] friends, our agents waited on us for [X] minutes a day on average; [one honest observation about whether alerts and pokes changed it].
 
@@ -25,8 +25,9 @@ Demo (synthetic pets): [WEB_URL] · Code: [repo URL]
 1. my coding agent kept stopping to ask permission while i was in another tab. so i made it a pet that waves at me. [GIF of the garden]
 2. `npx burrow-pets init` → a pixel pet that works while Claude Code runs, eats when it finishes, waves when it needs you. the tab chimes.
 3. friends' pets share the garden. you see who's shipping, and you can poke a friend whose agent has been waiting on them. [GIF of a poke]
-4. each hook sends 4 fields: type, time, a salted session hash, a version. never your code. the server rejects anything else.
-5. a week with [N] friends: our agents waited on us [X] min a day. [observation]. try it: [WEB_URL]
+4. finished tasks and quick replies earn koban. feed your pet and it grows up; your garden fills one catalog together. [GIF of an evolution]
+5. each hook sends 4 fields: type, time, a salted session hash, a version. never your code. the server rejects anything else.
+6. a week with [N] friends: our agents waited on us [X] min a day. [observation]. try it: [WEB_URL]
 
 ## r/ClaudeAI
 

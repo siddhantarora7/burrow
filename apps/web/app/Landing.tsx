@@ -2,7 +2,7 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { CopyButton, Mark } from '@/components/BurrowView'
-import { ArrowRight, Bell, GitHub, ShieldCheck, Users } from '@/components/icons'
+import { ArrowRight, Bell, GitHub, ShieldCheck, Sparkles, Users } from '@/components/icons'
 import { INIT } from '@/lib/commands'
 
 const REPO = 'https://github.com/siddhantarora7/burrow'
@@ -17,6 +17,7 @@ const HOURS = [
 
 const POINTS = [
   { Icon: Bell, title: 'waves when it needs you', body: 'your pet works while Claude Code runs and eats when it finishes. when the agent stops to ask, it waves and the tab chimes.' },
+  { Icon: Sparkles, title: 'raise it together', body: 'finished tasks and quick replies earn koban. feed it and play with it, watch it grow from baby to evolved, and fill one catalog of 18 forms with your friends.' },
   { Icon: Users, title: 'one garden for friends', body: "friends' pets live in the same garden. see who's shipping and who's stuck, and poke a friend whose agent is waiting." },
   { Icon: ShieldCheck, title: 'four fields, never your code', body: 'each hook sends a type, a time, a salted session id and a version. the server rejects anything else.' },
 ]
@@ -59,7 +60,7 @@ export function Landing() {
           <p className="mx-auto mb-5 w-fit rounded-full border border-[var(--line)] px-3 py-1 text-[13px] font-medium text-[var(--muted)]">for Claude Code</p>
           <h1 className="text-balance text-[2.6rem] font-bold leading-[1.05] tracking-[-0.03em] sm:text-7xl">a tiny pet for your coding agent.</h1>
           <p className="mx-auto mt-6 max-w-xl text-pretty font-sans text-lg leading-relaxed text-[var(--muted)] sm:text-xl">
-            it works while your agent runs and waves the moment it needs you. your friends&apos; pets share the garden.
+            it works while your agent runs, waves the moment it needs you, and grows as you ship. your friends&apos; pets share the garden.
           </p>
           <div className="mt-9">
             <Command />
@@ -96,7 +97,7 @@ export function Landing() {
           </div>
         </section>
 
-        <section className="mx-auto grid max-w-5xl gap-10 px-5 py-24 sm:grid-cols-3 sm:gap-8 sm:px-8 sm:py-32">
+        <section className="mx-auto grid max-w-4xl gap-10 px-5 py-24 sm:grid-cols-2 sm:gap-x-14 sm:gap-y-12 sm:px-8 sm:py-32">
           {POINTS.map(({ Icon, title, body }) => (
             <div key={title}>
               <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--soft)]">

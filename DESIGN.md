@@ -285,7 +285,7 @@ Over the pixels sits a thin layer of modern HTML chrome: frosted pills in Zen Ma
 A cozy 16-bit palette: muted, warm scenery that relights by the clock, with saturated pets that never relight.
 
 ### Primary
-- **Pet tones** (`sakura-*`, `matcha-*`, `rice-*`, `yuzu-*`, `sora-*`, `fuji-*`): one ramp per member colour, each as base, highlight and shade. A pet wears its member's colour; each species defaults to its own (sakura mochi, matcha tofu, rice onigiri), and an unknown colour falls back to that default. These are the colour of the product; they are the only saturated, high-value masses on screen and they ignore the clock.
+- **Pet tones** (`sakura-*`, `matcha-*`, `rice-*`, `yuzu-*`, `sora-*`, `fuji-*`, `kinako-*`): one ramp per member colour, each as base, highlight and shade. A pet wears its member's colour; each species defaults to its own (sakura mochi, matcha tofu, rice onigiri, sora dango, yuzu taiyaki, kinako dorayaki), and an unknown colour falls back to that default. These are the colour of the product; they are the only saturated, high-value masses on screen and they ignore the clock.
 - **Pet Ink** (`pet-ink`, dark plum): the 1 px outline around every pet silhouette, arms included, and the feet, eyes and mouths. Also outlines the sleeping z so it reads over water, gravel or sky.
 
 ### Secondary
@@ -365,7 +365,7 @@ Two shape languages that never mix. In the canvas everything is built from whole
 ### Pet sprite (signature)
 Cozy, squishy, readable from across a desk.
 - **Grid:** 32 x 32, horizontal centre column 16, feet baseline row 28 with 4 one-pixel feet at row 29 when grounded. Drawn at the stone so feet sit 1 px above it.
-- **Silhouettes:** mochi a half-ellipse dome (rows 14 to 28); tofu a rounded rectangle (x 6 to 26, rows 14 to 28, 3 px corners); onigiri a rice triangle (rows 11 to 28) with a low nori band (rows 26 to 28), leaving rice between band and face.
+- **Silhouettes:** mochi a half-ellipse dome (rows 14 to 28); tofu a rounded rectangle (x 6 to 26, rows 14 to 28, 3 px corners); onigiri a rice triangle (rows 11 to 28) with a low nori band (rows 26 to 28), leaving rice between band and face; dango three dumplings a pixel apart on a skewer that shows between them and at both ends, the larger middle one carrying the face; taiyaki a fish-shaped cake facing left with a fanned tail, a small top fin and a dithered row of scales; dorayaki two pancakes with a solid dark anko band low between them.
 - **Light:** shade on the bottom two rows and the right edge, highlight on the top and left edges, a 2 px glint high on the left. Shading reads a snapshot of the silhouette, so it never cascades.
 - **Face:** at row 21 (mochi) or 20 (tofu, onigiri). Open eyes are 2 x 2 with a white top-left glint; closed eyes are a 2 px line; happy eyes are a 3 px caret. Blush two pixels either side, three rows down. Mouth changes with state.
 - **Outline:** every empty pixel 4-connected to the silhouette (arms included) becomes `pet-ink`; props are drawn over it.
@@ -377,6 +377,14 @@ Cozy, squishy, readable from across a desk.
   - sleep 3 @ 1.5: closed eyes, breathing squash, an outlined z climbing.
   - cheer 4 @ 8: squash then a 3 to 5 px jump with both arms up, open smile with tongue, two gold sparkles.
 - **Reduced motion:** frame 0 of each state, which still carries the state's prop and face.
+
+### Growth forms
+Every species comes in three forms; the catalog shows all 18.
+- **Baby** (under 100 xp): the grown silhouette at 78% about the feet, arms and feet scaled with it, the face on a per-species row (dango with closer eyes) that drops a row when the body squashes, so eyes never leave the body. Every state's props still fit.
+- **Grown** (100 xp): the forms above.
+- **Evolved** (400 xp): the grown form plus an outlined signature detail resting on the head's actual top, so it rides along with squashes and jumps: a pale sakura blossom (mochi), a green onion sprig (tofu), an umeboshi plum with a leaf (onigiri), a dollop of mitarashi glaze (dango), a golden crown fin (taiyaki), a chestnut (dorayaki). Two still gold sparkles sit beside it except while cheering.
+- **Silhouette:** an undiscovered form is every drawn pixel in one flat colour (ink at 18% by day, paper at 22% at night) under a "?".
+- Pets made before growth existed are grown, so nobody's pet shrinks.
 
 ### Name tag
 The glance signal and a control.
@@ -394,6 +402,10 @@ The glance signal and a control.
 - **Header:** the brand pill links home: the 28px mochi mark, `burrow` in 700, and from `sm` the burrow name at 70% after a hairline. The nav pill holds the alerts button (signed in only), `privacy` with a shield, and the status: a dot and a word (`role="status"`). Dots: green `live`, amber blinking `connecting…`/`reconnecting…`, red `not found`, grey `demo`.
 - **Night:** dark frosted fill; solid buttons invert to paper with ink text.
 - **Alerts button:** its label is the state, with an icon: bell `alerts on`, `allow notifications` (never asked yet) and `chime only` (permission refused), bell-off `alerts off`, muted speaker `click for sound` (the browser has not unlocked audio yet; any click or key press does). Pressing it does the next useful thing: turn alerts on, ask for notifications, or turn them off. The chime is two synthesised sine notes (660 then 880 Hz, half a second).
+- **Catalog and ranks:** two more nav buttons (book and trophy; labels from `md`). Each opens a native `<dialog>`: a nearly solid chip-skinned panel (0.96 by day, 0.95 at night) over a 40% dim, 16px corners, a title, one line of explanation and a close button; Esc or a click outside closes it. The catalog is a species-by-stage grid of 56px sprites; ranks list this week's koban with rank, sprite, name, stage, and your own row tinted.
+- **Care pill** (signed in, your pet lives here): bottom-right from `sm`, above the invite pill on phones. Your pet's sprite, name and stage with a 4px gold progress bar to the next stage (`role="progressbar"`), your koban with a gold coin icon, then `feed · 5` (utensils) and `play · 3` (sparkles), disabled at 40% without the koban. The hint moves above it.
+- **Growth moments:** a feed makes the pet eat for 2.4 s and a play makes it cheer for 2 s on every screen. When a pet reaches a new stage eight gold pixel rays spread from it over 1.2 s and a toast pill under the header says "kiwi grew up!" or "kiwi evolved!" for 4 s (announced politely). Loading a garden never celebrates.
+- **Phones:** below 420px the brand pill is the mark alone; below `sm` the alerts button is its icon (its label stays its accessible name).
 - **Hint:** a pill with a pointer icon, one time only ("click a pet to boop it, or click the pond" with a mouse or trackpad, "tap" on touch screens), fades in over 0.5s with opacity alone, gone after the first boop or pond tap.
 
 ### Bottom pill
@@ -404,7 +416,7 @@ The glance signal and a control.
 
 ### Landing page
 - A plain page that follows the OS theme, not the sky: paper and ink, `--muted` for secondary text, `--line` hairlines, `--soft` fills, `--raised` for the command field. Apple-quiet: one idea per section, generous space, nothing frosted.
-- **Order:** a header (mark and wordmark; `privacy` and `github` links), a centred hero (a hairline "for Claude Code" pill, the h1 "a tiny pet for your coding agent." in display 700 at 2.6rem, 4.5rem from `sm`, tracking -0.03em; one muted line; the command field with its copy button; "what gets sent →"), the live demo in a 28px-rounded frame with one deep soft shadow, three points with 20px icons in soft rounded squares, a closing "one command. no account." with the command again, and a hairline footer.
+- **Order:** a header (mark and wordmark; `privacy` and `github` links), a centred hero (a hairline "for Claude Code" pill, the h1 "a tiny pet for your coding agent." in display 700 at 2.6rem, 4.5rem from `sm`, tracking -0.03em; one muted line; the command field with its copy button; "what gets sent →"), the live demo in a 28px-rounded frame with one deep soft shadow, four points in a two-by-two grid with 20px icons in soft rounded squares (waves when it needs you, raise it together, one garden for friends, four fields), a closing "one command. no account." with the command again, and a hairline footer.
 - **Demo frame:** an iframe of `/demo?embed=1`: five pets at 16:9 from `sm`; two at 3:5 on phones, where the garden is portrait and stacks pets one per row. A segmented control under it previews `now` (the visitor's clock), `day`, `dusk` and `night`.
 
 ### Garden interactions
