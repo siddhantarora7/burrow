@@ -37,6 +37,6 @@ Demo (synthetic pets): [WEB_URL] · Code: [repo URL]
 
 ## Before posting
 
-- [ ] README GIF: 20 s of the garden with a wave, a poke and a ripple (record on a real burrow).
+- [x] README GIF: `docs/garden.gif`, 10 s of the demo garden at dusk (two pets waving, a boop, koi). A real-burrow GIF of a poke or an evolution is still worth recording for the X thread.
 - [ ] A week of real use with real friends; fill every bracket above.
 - [ ] `scripts/ship.sh` done; `npx burrow-pets init` works from a clean machine.

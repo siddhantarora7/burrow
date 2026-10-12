@@ -1,5 +1,7 @@
 # burrow
 
+![a burrow garden at dusk: two pets wave because their agents need their humans, one works at a laptop](docs/garden.gif)
+
 A pixel pet for Claude Code that waves when your agent is waiting on you. Friends' pets can share the garden.
 
     npx burrow-pets init                 # hatch a pet, install the hooks, get your garden link
