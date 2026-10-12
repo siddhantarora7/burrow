@@ -10,6 +10,12 @@ const CYCLE: Array<[EventType, number]> = [
   ['prompt', 0], ['heartbeat', 20_000], ['heartbeat', 40_000], ['needs_input', 55_000], ['heartbeat', 70_000], ['stop', 85_000], ['session_end', 100_000],
 ]
 
+// Mixed stages and this week's koban, so the demo shows babies, evolved forms and a leaderboard.
+const XP = [420, 150, 40, 260, 480, 20, 130, 90, 410, 60, 200, 10]
+const WEEK_KOBAN = [64, 41, 22, 37, 58, 9, 30, 18, 51, 12, 27, 5]
+/** Forms an older member of the demo garden reached before moving on. */
+const DEMO_CATALOG = ['mochi:baby', 'tofu:baby', 'onigiri:grown', 'dorayaki:baby']
+
 /** Synthetic burrow for /demo: no network, every pet on its own staggered loop. */
 export function useDemoBurrow(count: number): BurrowState {
   const n = Math.max(1, Math.min(MAX_MEMBERS, count))
@@ -18,7 +24,8 @@ export function useDemoBurrow(count: number): BurrowState {
     const start = Date.now()
     const base: Member[] = Array.from({ length: n }, (_, i) => {
       const species = SPECIES[i % SPECIES.length]!
-      return { petId: `demo${i}`, name: NAMES[i]!, species, color: DEFAULT_COLOR[species], joinedAt: start, mealsTotal: 0, events: [] }
+      const growth = { xp: XP[i % XP.length]!, koban: 12, week: 'demo', weekKoban: WEEK_KOBAN[i % WEEK_KOBAN.length]! }
+      return { petId: `demo${i}`, name: NAMES[i]!, species, color: DEFAULT_COLOR[species], joinedAt: start, mealsTotal: 0, events: [], growth }
     })
     const period = 110_000
     const tick = () => {
@@ -44,5 +51,5 @@ export function useDemoBurrow(count: number): BurrowState {
     const timer = setInterval(tick, 1000)
     return () => clearInterval(timer)
   }, [n])
-  return { status: members.length ? 'live' : 'connecting', burrow: { id: 'demo', name: 'demo garden', env: 'garden', createdAt: 0, createdBy: 'demo' }, members, offset: 0, me: null, pokes: [] }
+  return { status: members.length ? 'live' : 'connecting', burrow: { id: 'demo', name: 'demo garden', env: 'garden', createdAt: 0, createdBy: 'demo' }, members, offset: 0, me: null, pokes: [], catalog: DEMO_CATALOG, cares: [] }
 }
