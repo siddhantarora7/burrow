@@ -22,8 +22,9 @@ export function pokeAlerts(pokes: ReadonlyArray<{ from: string; to: string; t: n
  * The alerts chip. Browsers keep sound locked until the page is clicked, and a second-screen tab is
  * often reloaded and never touched, so a locked chime is said out loud rather than failing silently.
  */
-export function alertChip({ on, permission, soundReady }: { on: boolean; permission: NotificationPermission; soundReady: boolean }): 'alerts off' | 'click for sound' | 'chime only' | 'alerts on' {
+export function alertChip({ on, permission, soundReady }: { on: boolean; permission: NotificationPermission; soundReady: boolean }): 'alerts off' | 'click for sound' | 'allow notifications' | 'chime only' | 'alerts on' {
   if (!on) return 'alerts off'
   if (!soundReady) return 'click for sound'
-  return permission === 'granted' ? 'alerts on' : 'chime only'
+  // never asked yet: say what pressing does, not that notifications were refused
+  return permission === 'granted' ? 'alerts on' : permission === 'default' ? 'allow notifications' : 'chime only'
 }

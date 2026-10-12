@@ -58,7 +58,7 @@ type ScreenProps = BurrowState & {
   embed?: boolean
 }
 
-const ALERT_ICON = { 'alerts on': Bell, 'chime only': Bell, 'alerts off': BellOff, 'click for sound': VolumeOff } as const
+const ALERT_ICON = { 'alerts on': Bell, 'allow notifications': Bell, 'chime only': Bell, 'alerts off': BellOff, 'click for sound': VolumeOff } as const
 
 /** The garden page for any source of members: the live WebSocket, or the synthetic demo. */
 export function BurrowScreen({ status, burrow, members, offset, me, pokes, poke, label, statusLabel, invite, embed = false }: ScreenProps) {

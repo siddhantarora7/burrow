@@ -39,7 +39,7 @@ describe('alertChip', () => {
     [{ on: true, permission: 'granted', soundReady: false }, 'click for sound'],
     [{ on: true, permission: 'denied', soundReady: false }, 'click for sound'],
     [{ on: true, permission: 'denied', soundReady: true }, 'chime only'],
-    [{ on: true, permission: 'default', soundReady: true }, 'chime only'],
+    [{ on: true, permission: 'default', soundReady: true }, 'allow notifications'],
     [{ on: true, permission: 'granted', soundReady: true }, 'alerts on'],
   ] as const)('%j → %s', (input, label) => expect(alertChip(input)).toBe(label))
 })
