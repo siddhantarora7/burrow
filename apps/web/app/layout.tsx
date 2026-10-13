@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
-import { Geist_Mono, Zen_Kaku_Gothic_New, Zen_Maru_Gothic } from 'next/font/google'
+import { Gaegu, Geist_Mono, Zen_Maru_Gothic } from 'next/font/google'
 import './globals.css'
 
 const display = Zen_Maru_Gothic({ weight: ['500', '700'], subsets: ['latin'], variable: '--font-zen-maru' })
-const body = Zen_Kaku_Gothic_New({ weight: ['400', '500', '700'], subsets: ['latin'], variable: '--font-zen-kaku' })
+// UI and body text use the system face (crisp, centred in pills); Gaegu writes the landing page's margin notes
+const hand = Gaegu({ weight: ['700'], subsets: ['latin'], variable: '--font-gaegu' })
 const mono = Geist_Mono({ subsets: ['latin'], variable: '--font-geist-mono' })
 
 const description = 'a pixel pet for Claude Code that waves when your agent is waiting on you. friends can share the garden.'
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${display.variable} ${body.variable} ${mono.variable}`}>
+    <html lang="en" className={`${display.variable} ${hand.variable} ${mono.variable}`}>
       <body>{children}</body>
     </html>
   )

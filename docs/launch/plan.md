@@ -1,6 +1,6 @@
 # Launch plan
 
-Written 2026-10-12. Post copy lives in `drafts.md`; this file is the order of things.
+Written 2026-10-12. Post copy lives in `drafts.md` (including the vision paragraph on more pets and features); this file is the order of things.
 
 ## Where things stand
 
@@ -11,8 +11,9 @@ Written 2026-10-12. Post copy lives in `drafts.md`; this file is the order of th
 
 ## 1. Before anyone else sees it (you, about 10 minutes)
 
-1. Publish the CLI: `scripts/ship.sh 6`. npm will ask for your two-factor code.
-2. In a fresh terminal, run `npx burrow-pets init`, open the link it prints, and check that a pet hatches as a baby, the care pill appears and the tab chimes when Claude Code asks for permission.
+1. Publish the CLI: `scripts/ship.sh 6`. npm will ask for your two-factor code. Do this **before** the new landing page goes live: it promises six pets and 18 forms, and npm still serves 0.1.0 with three.
+2. In a fresh terminal, run `npx burrow-pets init`, pick a dango, open the link it prints, and check that a pet hatches as a baby, the care pill appears and the tab chimes when Claude Code asks for permission.
+3. Then push `main` (it deploys the redesigned site) and check the share card with a link preview (paste the URL in a DM to yourself).
 
 ## 2. A week with friends (3 to 5 people)
 

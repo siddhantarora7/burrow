@@ -41,7 +41,7 @@ export function CatalogPanel({ catalog, members, night, onClose }: { catalog: st
   const found = discovered(catalog, members)
   const ink = night ? 'rgba(241, 238, 230, 0.22)' : 'rgba(38, 36, 31, 0.18)'
   return (
-    <Panel title="catalog" sub={`${found.size} of ${SPECIES.length * STAGES.length} forms found in this garden. grow pets and invite friends to find the rest.`} night={night} onClose={onClose}>
+    <Panel title="catalog" sub={`${found.size} of ${SPECIES.length * STAGES.length} found in this garden.`} night={night} onClose={onClose}>
       <div className="grid grid-cols-[4.5rem_repeat(3,1fr)] items-center gap-x-2 gap-y-1">
         <span />
         {STAGES.map((s) => <span key={s} className="pb-1 text-center text-[12px] font-medium opacity-60">{s}</span>)}
@@ -66,7 +66,7 @@ export function CatalogPanel({ catalog, members, night, onClose }: { catalog: st
 
 export function RanksPanel({ members, me, night, onClose }: { members: Member[]; me: string | null; night: boolean; onClose: () => void }) {
   return (
-    <Panel title="this week" sub="koban earned from finished tasks and quick replies. starts over every monday." night={night} onClose={onClose}>
+    <Panel title="this week" sub="koban earned this week. resets monday." night={night} onClose={onClose}>
       <ol className="flex flex-col gap-1">
         {ranks(members).map((r, i) => (
           <li key={r.member.petId} className={`flex items-center gap-3 rounded-xl px-2 py-1.5 ${r.member.petId === me ? 'bg-current/[0.07]' : ''}`}>

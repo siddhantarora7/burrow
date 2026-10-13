@@ -2,7 +2,8 @@
 
 @theme {
   --font-display: var(--font-zen-maru), ui-rounded, system-ui, sans-serif;
-  --font-sans: var(--font-zen-kaku), system-ui, sans-serif;
+  --font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-hand: var(--font-gaegu), "Comic Sans MS", cursive;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 }
 
@@ -16,12 +17,7 @@
   --focus: #2e4a7d;
   color-scheme: light;
 }
-/* Plain pages (privacy, landing) follow the OS theme; the garden's chrome follows its sky instead. */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) { --paper: #181a20; --ink: #f1eee6; --muted: #a8a49b; --line: rgba(255, 255, 255, 0.12); --soft: rgba(255, 255, 255, 0.06); --raised: #22252c; --focus: #f1eee6; color-scheme: dark; }
-}
-:root[data-theme="dark"] { --paper: #181a20; --ink: #f1eee6; --muted: #a8a49b; --line: rgba(255, 255, 255, 0.12); --soft: rgba(255, 255, 255, 0.06); --raised: #22252c; --focus: #f1eee6; color-scheme: dark; }
-
+/* Plain pages (landing, privacy) are always light; the garden's chrome follows its sky instead. */
 body { background: var(--paper); color: var(--ink); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
 /* deep blue clears 4.6:1 on day and dusk gravel; .chip-night swaps in paper for the night garden */
 :focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: 8px; }
@@ -54,18 +50,12 @@ body { background: var(--paper); color: var(--ink); font-family: var(--font-sans
 .chip-solid { background: #26241f; color: #f7f4ec; }
 .chip-night { --focus: #f1eee6; color: #f1eee6; background: rgba(24, 26, 32, 0.74); border-color: rgba(255, 255, 255, 0.14); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 10px 28px -8px rgba(0, 0, 0, 0.5); }
 .chip-night .chip-solid { background: #f1eee6; color: #26241f; }
-/* Chips on plain pages take the night skin when the OS is dark. */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .chip-os { color: #f1eee6; background: rgba(24, 26, 32, 0.76); border-color: rgba(255, 255, 255, 0.16); }
-}
-:root[data-theme="dark"] .chip-os { color: #f1eee6; background: rgba(24, 26, 32, 0.76); border-color: rgba(255, 255, 255, 0.16); }
 @media (prefers-reduced-transparency: reduce) { .chip { backdrop-filter: none; -webkit-backdrop-filter: none; background: #faf9f5; } .chip-night { background: #181a20; } }
-@media (prefers-reduced-transparency: reduce) and (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .chip-os { background: #181a20; } }
 
 /* One pill size for all garden chrome: 40px tall, text and icons centred on one line. */
-.pill { display: inline-flex; align-items: center; gap: 0.5rem; height: 2.5rem; padding: 0 1rem; border-radius: 999px; font: 500 0.875rem / 1 var(--font-display); white-space: nowrap; }
+.pill { display: inline-flex; align-items: center; gap: 0.5rem; height: 2.5rem; padding: 0 1rem; border-radius: 999px; font: 500 0.875rem / 1 var(--font-sans); white-space: nowrap; }
 .pill svg { flex: none; }
-/* Zen Maru sets its letters low in the line box; trimming a label to its x-height centres lowercase text on the icons beside it. */
+/* Trimming a label to its x-height centres lowercase text on the icons beside it. */
 .lbl { text-box: trim-both ex alphabetic; }
 /* Controls inside a pill: 32px tall, a soft fill on hover, so the pill's edge stays 4px away. */
 .pill-btn { display: inline-flex; align-items: center; gap: 0.375rem; height: 2rem; padding: 0 0.75rem; border-radius: 999px; font: inherit; transition: background-color 0.15s; }
@@ -99,30 +89,38 @@ body { background: var(--paper); color: var(--ink); font-family: var(--font-sans
 .pill-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .pill-btn:disabled:hover { background: transparent; }
 
-/* Landing hero: the garden's night sky (sky0 → sky2), fading into the page below. Always night, whatever the OS. */
-.night canvas.twinkle, .night > canvas { mask-image: linear-gradient(#000 55%, transparent); }
-.night { color: #f1eee6; background: linear-gradient(180deg, #0c1230 0%, #141c42 45%, #1c2752 72%, var(--paper) 100%); --focus: #f1eee6; }
-@media (prefers-reduced-motion: no-preference) {
-  .twinkle { animation: twinkle 3.2s ease-in-out infinite; }
-  .floater { animation: bob 5s ease-in-out infinite; }
-}
-@keyframes twinkle { 50% { opacity: 0.15; } }
-@keyframes bob { 50% { translate: 0 -10px; } }
-.floater canvas { filter: drop-shadow(0 18px 24px rgba(0, 0, 0, 0.35)); }
-/* a grouped nav on the night sky */
-.navgroup { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.14); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+/* The mark's lids close for a beat every few seconds. */
+.logo-lid { opacity: 0; }
+@media (prefers-reduced-motion: no-preference) { .logo-lid { animation: logo-blink 5.5s infinite; } }
+@keyframes logo-blink { 0%, 93%, 97%, 100% { opacity: 0; } 94%, 96% { opacity: 1; } }
 
-/* The command, raised like a key: a soft lower edge that presses down on hover. */
-.raised { background: var(--raised); color: var(--ink); border: 1px solid var(--line); box-shadow: 0 4px 0 rgba(38, 36, 31, 0.1), 0 14px 30px -12px rgba(38, 36, 31, 0.3); transition: translate 0.15s, box-shadow 0.15s; }
-.raised:hover { translate: 0 1px; box-shadow: 0 3px 0 rgba(38, 36, 31, 0.1), 0 10px 24px -12px rgba(38, 36, 31, 0.3); }
-.raised-dark { background: #f7f4ec; color: #26241f; border-color: transparent; box-shadow: 0 4px 0 #b9b3a3, 0 18px 40px -12px rgba(0, 0, 0, 0.6); }
-.raised-dark:hover { box-shadow: 0 3px 0 #b9b3a3, 0 14px 32px -12px rgba(0, 0, 0, 0.6); }
-.raised-dark .chip-solid, .raised-dark .pill-btn.chip-solid:hover { background: #26241f; color: #f7f4ec; }
+/* Landing: a floating nav, the command raised like a key, cards and margin notes in a hand. */
+.navbar { background: rgba(255, 255, 255, 0.82); border: 1px solid rgba(38, 36, 31, 0.07); box-shadow: 0 1px 2px rgba(38, 36, 31, 0.05), 0 12px 32px -12px rgba(38, 36, 31, 0.18); backdrop-filter: blur(16px) saturate(1.5); -webkit-backdrop-filter: blur(16px) saturate(1.5); }
+.raised { background: #fff; color: var(--ink); border: 1px solid var(--line); box-shadow: 0 4px 0 rgba(38, 36, 31, 0.08), 0 16px 34px -14px rgba(38, 36, 31, 0.28); transition: translate 0.15s, box-shadow 0.15s; }
+.raised:hover { translate: 0 1px; box-shadow: 0 3px 0 rgba(38, 36, 31, 0.08), 0 12px 26px -14px rgba(38, 36, 31, 0.28); }
 @media (prefers-reduced-motion: reduce) { .raised, .raised:hover { transition: none; translate: none; } }
-
-/* Moments beside the demo: small cards in the chip's light skin; the alert one wears the waiting tag's gold ring. */
-.moment { color: #26241f; background: rgba(252, 251, 248, 0.96); border: 1px solid rgba(38, 36, 31, 0.08); box-shadow: 0 1px 2px rgba(38, 36, 31, 0.06), 0 18px 40px -14px rgba(12, 18, 48, 0.35); }
-.moment-alert { color: #f7f4ec; background: #26241f; border-color: transparent; box-shadow: 0 0 0 3px rgba(240, 198, 78, 0.8), 0 18px 40px -14px rgba(12, 18, 48, 0.45); }
+.hand { font-family: var(--font-hand); font-weight: 700; letter-spacing: 0.01em; }
+.card { border-radius: 32px; overflow: hidden; position: relative; }
+.card-light { background: linear-gradient(180deg, #fbfaf6, #f1eee6); border: 1px solid rgba(38, 36, 31, 0.07); box-shadow: inset 0 1px 0 #fff; }
+.card-sky { color: #fff; background: linear-gradient(165deg, #8fb2f6 0%, #6a8fe6 55%, #5a7ddb 100%); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35); }
+.card-gold { background: linear-gradient(165deg, #ffe39a 0%, #ffd06a 60%, #f7bf4f 100%); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5); }
+.card-white { background: #fff; border: 1px solid rgba(38, 36, 31, 0.06); box-shadow: 0 1px 2px rgba(38, 36, 31, 0.04); border-radius: 28px; }
+/* a word in a headline, set in a pill with its icon */
+.inpill { display: inline-flex; align-items: center; gap: 0.3em; padding: 0.02em 0.42em 0.06em 0.34em; margin: 0 0.06em; border-radius: 999px; vertical-align: 0.04em; line-height: 1.15; }
+.inpill svg { width: 0.72em; height: 0.72em; }
+.card-sky .inpill { background: rgba(255, 255, 255, 0.22); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35); }
+.card-light .inpill { background: #fff; box-shadow: 0 1px 2px rgba(38, 36, 31, 0.08), inset 0 0 0 1px rgba(38, 36, 31, 0.06); }
+.card-gold .inpill { background: rgba(255, 255, 255, 0.55); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.7); }
+/* a mock window inside a card */
+.term { color: #e9e6dd; background: #2b2a27; border-radius: 18px; box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06) inset, 0 24px 48px -20px rgba(20, 18, 30, 0.45); }
+.glass { background: rgba(26, 40, 96, 0.22); border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 18px; }
+.ground { background: repeating-linear-gradient(90deg, #d8cfb8 0 4px, #cfc5ac 4px 8px); }
+@media (prefers-reduced-motion: no-preference) {
+  .float { animation: float 4.5s ease-in-out infinite; }
+  .appear > * { animation: appear 7s infinite both; }
+}
+@keyframes float { 50% { translate: 0 -6px; } }
+@keyframes appear { 0% { opacity: 0; } 8%, 85% { opacity: 1; } 95%, 100% { opacity: 0; } }
 
 /* "+3" over a pet that just earned koban: gold display numerals with an ink edge, rising and fading. */
 .koban-pop { z-index: 6; font: 700 clamp(13px, 1.1vw, 17px) / 1 var(--font-display); color: #ffd34f; text-shadow: 0 1px 0 #2a2033, 1px 0 0 #2a2033, -1px 0 0 #2a2033, 0 -1px 0 #2a2033; pointer-events: none; animation: koban-rise 1.6s cubic-bezier(0.16, 1, 0.3, 1) both; }

@@ -176,15 +176,18 @@ typography:
     fontFamily: "Zen Maru Gothic, ui-rounded, system-ui, sans-serif"
     fontWeight: 500
   body:
-    fontFamily: "Zen Kaku Gothic New, system-ui, sans-serif"
+    fontFamily: "ui-sans-serif, -apple-system, system-ui, sans-serif"
     fontSize: "0.875rem"
     fontWeight: 400
     lineHeight: 1.43
   label:
-    fontFamily: "Zen Kaku Gothic New, system-ui, sans-serif"
+    fontFamily: "ui-sans-serif, -apple-system, system-ui, sans-serif"
     fontSize: "0.75rem"
     fontWeight: 500
     lineHeight: 1.33
+  hand:
+    fontFamily: "Gaegu, cursive"
+    fontWeight: 700
   command:
     fontFamily: "Geist Mono, ui-monospace, monospace"
     fontSize: "13px"
@@ -298,7 +301,7 @@ A cozy 16-bit palette: muted, warm scenery that relights by the clock, with satu
 ### Neutral
 - **Scene roles** (`<role>-day`, `<role>-dusk`, `<role>-night`): sky bands `sky0` to `sky3` (top to horizon), `far` and `snow` (the mountain), `forest`/`forestHi`, wall `tile`/`tileHi`/`plaster`/`plasterLine`, ground `gravel`/`rakeD`/`rakeL`, rock `stone`/`stoneD`/`stoneH`, `moss`/`mossD`/`mossH`, `bush`/`bushH`/`bloom`, maple `maple`/`mapleH`/`mapleD`/`trunk`, pond `water`/`waterD`/`waterH`/`pad`, `cloud`/`cloudD`, and `sun` (which is the moon at night). Most roles come as a base, a highlight (`H`/`Hi`) and a dark (`D`).
 - **Day/dusk/night keyframes**: night until 05:00, night to dusk by 06:12, dusk to day by 07:30, day until 17:00, day to dusk by 18:36, dusk to night by 20:00. The scene counts as night when the night weight passes one half; that flag also switches stars, lantern light, fireflies and the chrome.
-- **Chrome Ink and Paper** (`chrome-ink`, `chrome-paper`, `chrome-night-ink`): warm sumi black and washi white for all HTML text and solid pills, exposed to CSS as `--ink` and `--paper`. Plain pages (the landing page and privacy) follow the OS theme: paper on ink-dark `#181a20` in dark mode, with `.chip-os` chips taking the night skin. The page background behind the canvas is the current `gravel` colour, so overscroll and loading never flash a foreign colour.
+- **Chrome Ink and Paper** (`chrome-ink`, `chrome-paper`, `chrome-night-ink`): warm sumi black and washi white for all HTML text and solid pills, exposed to CSS as `--ink` and `--paper`. Plain pages (the landing page and privacy) are always light: ink on paper, whatever the OS theme. The page background behind the canvas is the current `gravel` colour, so overscroll and loading never flash a foreign colour.
 - **Focus and selection**: the focus ring is `focus-ring` deep blue (4.6:1 or better on day and dusk gravel) and switches to `focus-ring-night` paper on night chips and dark plain pages; the garden pins its own ring so an OS dark theme never leaks into a daytime garden. Selected text sits on `selection`, the sakura pet's rim light, in chrome ink.
 
 ### Named Rules
@@ -311,13 +314,14 @@ A cozy 16-bit palette: muted, warm scenery that relights by the clock, with satu
 ## Typography
 
 **Display Font:** Zen Maru Gothic (with ui-rounded, system-ui)
-**Body Font:** Zen Kaku Gothic New (with system-ui)
+**Body Font:** the system UI face (SF Pro on Apple, Segoe UI, Roboto), for body copy and every pill
+**Hand Font:** Gaegu 700, for margin notes on the landing page only
 **Label/Mono Font:** Geist Mono (with ui-monospace), for commands only
 
-**Character:** a soft, rounded Japanese gothic for everything the garden says, a plain gothic for small print, and a mono that marks the one thing to type. The rounded display matches the pets' squishy silhouettes without imitating pixel type.
+**Character:** a soft, rounded Japanese gothic for headings, names and the wordmark, the system face for everything you read or press (its metrics centre cleanly in a pill), a hand for the odd note in the margin, and a mono that marks the one thing to type. The rounded display matches the pets' squishy silhouettes without imitating pixel type.
 
 ### Hierarchy
-- **Display** (700, 1.125rem): the `burrow` wordmark beside the mochi mark, the notice titles, "get a pet". On the privacy page the same face carries the h1 (700, 2.25rem, tight tracking) and h2 (700, 1.5rem).
+- **Display** (700, 1.125rem): the `burrow` wordmark beside the mark, the notice titles, "get a pet". On the privacy page the same face carries the h1 (700, 2.25rem, tight tracking) and h2 (700, 1.5rem).
 - **Tag** (700, clamp(12px, 1vw, 15px), line-height 1): the pet's name; its verb follows at 500 and 75% opacity. Detail text on hover or focus drops to 500 at 0.85em.
 - **Body** (400, 0.875rem): notice body copy at 80% opacity; the privacy page runs 1.125rem lead and default body at max-w-2xl.
 - **Label** (500, 0.75rem): nav link, status pill, the one-time hint.
@@ -397,9 +401,9 @@ The glance signal and a control.
 - **Behaviour:** a real `<button>`; activating it boops the pet. Its accessible name starts with exactly the visible text, then adds the detail ("ada needs you: waiting on you for 3m. press to boop."), so speech users can say what they see (WCAG 2.5.3).
 
 ### Chips (header, nav, status, hint)
-- **One pill size:** every chip over the garden is a `.pill`: 40px tall, 16px side padding, display face at 500 and 0.875rem, icon and label on one centred line. Controls inside a pill are `.pill-btn`: 32px tall, a soft fill on hover, 0.97 press. Labels carry `.lbl` (`text-box: trim-both ex alphabetic`) because Zen Maru sits low in its line box; never on text that also clips overflow, or its ascenders are cut.
+- **One pill size:** every chip over the garden is a `.pill`: 40px tall, 16px side padding, the system face at 500 and 0.875rem, icon and label on one centred line. Controls inside a pill are `.pill-btn`: 32px tall, a soft fill on hover, 0.97 press. Labels carry `.lbl` (`text-box: trim-both ex alphabetic`) so lowercase sits centred on the icons; never on text that also clips overflow, or its ascenders are cut.
 - **Icons:** 16px outline icons in the Lucide style, inlined in `components/icons.tsx` (no icon package), at 1.9 stroke in the current text colour, always beside a word (icon-only only where an `aria-label` names it, like `privacy` on phones).
-- **Header:** the brand pill links home: the 28px mochi mark, `burrow` in 700, and from `sm` the burrow name at 70% after a hairline. The nav pill holds the alerts button (signed in only), `privacy` with a shield, and the status: a dot and a word (`role="status"`). Dots: green `live`, amber blinking `connecting…`/`reconnecting…`, red `not found`, grey `demo`.
+- **Header:** the brand pill links home: the mark at 15px, `burrow` in 700, and from `sm` the burrow name at 70% after a hairline. The nav pill holds the alerts button (signed in only), `privacy` with a shield, and the status: a dot and a word (`role="status"`). Dots: green `live`, amber blinking `connecting…`/`reconnecting…`, red `not found`, grey `demo`.
 - **Night:** dark frosted fill; solid buttons invert to paper with ink text.
 - **Alerts button:** its label is the state, with an icon: bell `alerts on`, `allow notifications` (never asked yet) and `chime only` (permission refused), bell-off `alerts off`, muted speaker `click for sound` (the browser has not unlocked audio yet; any click or key press does). Pressing it does the next useful thing: turn alerts on, ask for notifications, or turn them off. The chime is two synthesised sine notes (660 then 880 Hz, half a second).
 - **Catalog and ranks:** two more nav buttons (book and trophy; labels from `md`). Each opens a native `<dialog>`: a nearly solid chip-skinned panel (0.96 by day, 0.95 at night) over a 40% dim, 16px corners, a title, one line of explanation and a close button; Esc or a click outside closes it. The catalog is a species-by-stage grid of 56px sprites; ranks list this week's koban with rank, sprite, name, stage, and your own row tinted.
@@ -416,14 +420,20 @@ The glance signal and a control.
 - **Copy buttons:** a copy icon and label that turn into a check and `copied` for two seconds (announced politely).
 - **Empty and not-found states:** the pill becomes a notice panel (16px corners, 20px padding, max-w-md) with a display title, one line of body and the command row; an empty burrow's command is the invite.
 
+### The mark
+- **Logo** (`components/Logo.tsx`): a mochi drawn on an 18×10 pixel grid, one SVG path with `shape-rendering: crispEdges`. The body takes `currentColor`; the eyes and the little smile are holes, so it reads on paper, on the night chip and in a dark browser tab. Two sakura blush marks are the only fixed colour. Its lids close for a beat every 5.5s (none with reduced motion).
+- **Sizes:** in a lockup the mark is scaled to a whole number of screen pixels per grid pixel (multiples of 10px tall) so its edges stay crisp. The wordmark beside it is Zen Maru 700 at -0.045em, the mark about 0.82 of the type size.
+- **Icons:** `app/icon.svg` (the mark, switching to paper in a dark browser), `apple-icon.png` (180px, the mark on paper), `opengraph-image.png` / `twitter-image.png` (1200×630 on paper: the lockup, "your agent waits. / your pet waves.", the command, and a big waving mochi over the gold-ringed "Claude is waiting on you" pill).
+
 ### Landing page
-- **Hero, always night:** the garden's night sky (`sky0` → `sky2`) as a vertical gradient that fades into the page's own paper (light or dark), with hashed 2px pixel stars on a canvas and a sparser warm layer that twinkles. Paper-coloured text. A grouped pill nav (translucent white, hairline) holds `how it works`, `privacy`, `github` and a filled paper `get a pet`.
-- **Headline:** "your agent is waiting, / your pet waves." in display 700 (2.5rem, 4.5rem from `sm`, tracking -0.03em) with an animated waving mochi inline after it (negative margins, so it never stretches the line). One muted line under it, then the install command as a raised paper key (a 4px lower edge that presses on hover) beside an outlined `see a live garden →`, and a small-print line ("free and open source. no account. four fields, never your code.").
-- **Floating pets** (from `lg`): four 128px animated sprites around the headline, each showing one thing a pet does (an evolved mochi waving with its bubble, an onigiri asleep, a baby taiyaki cheering, an evolved tofu at its laptop), bobbing 10px over 5s on staggered delays with a soft drop shadow. Still with reduced motion.
-- **Demo frame:** an iframe of `/demo?embed=1` that overlaps the hero's fade, 28px corners, one deep navy shadow; five pets at 16:9 from `sm`, two at 3:5 on phones. A `now / day / dusk / night` segmented control under it.
-- **Moments** (from `xl`): four small tilted cards in the frame's margins, each a real garden moment with a sprite or coin: "kiwi needs you" in the alert skin with its gold ring, "+3 koban", "dora grew up!", "ada poked you".
-- **Then:** "how it works" (three numbered cards: hatch, keep it open, invite friends), "what it does" (four points in a two-by-two grid), a closing "one command. no account." with three pets and the command again, and a hairline footer. Section labels are small muted eyebrows above display headings.
-- **Share and icons:** `app/icon.png` (the mochi, 64px) and `apple-icon.png` (180px on night navy); `opengraph-image.png` / `twitter-image.png` (1200×630: the headline, the command and four pets on the night sky), generated from the real sprites.
+Light, warm paper throughout; sections are a display heading with a muted second half ("what your pet does *while Claude codes*").
+- **Nav:** one floating pill centred at the top (white, 82% with blur, hairline, soft shadow): the mark and `burrow`, a hairline, `how it works`, `garden`, `privacy`, a GitHub icon and a solid ink `get a pet`. Phones keep the brand, GitHub and `get a pet`.
+- **Hero** (one screen): from `xl` three columns, the lockup at 84px on the left, a 256px mochi in the middle, the headline on the right; below `xl` they stack and centre. The mochi acts out a looped Claude Code session (working, waiting with a ticking 0:SS, answered, running tests, eating when done) and a status pill under it says what Claude is doing; while Claude waits the pill takes the alert skin with its gold ring. Clicking the pet boops it (a cheer). A hand note "boop it" points at it from `sm`. Headline "your agent waits. / your pet waves." (second line muted), one line under it, the raised install command, and "free · open source · no account".
+- **Cards** (`#how`): big 32px-corner cards in the Cluely manner, each title carrying one word in an inline pill with its icon. Sky blue "it works while Claude runs" (a ticking run clock, the pet at its laptop, a frosted list of tool calls), light "when Claude asks, it waves" (the real tab title and a dark permission prompt with the pet perched on it), and a wide gold "your friends live here too" (four pets on a strip of gravel, one waiting with a "you poked ada" bubble).
+- **Evolution** (pinned scroll, 420svh): the screen holds while the scroll drives one mochi from baby (idle) through eating koban that arc in from the side (xp to 100), a burst of gold sparkles as it grows up, playing to 400 xp, a second burst as it evolves into its sakura form, and finally a cross-fade to the 18-form catalog filling in. Chapters list on the left from `lg` (the current one in ink with its line of body, the rest at 35%), a single chapter above the pet on phones. A white card under the pet shows its name, stage, koban and an xp bar.
+- **Garden** (`#garden`): "see it live." with the `now / day / dusk / night` control on the same line, then the iframe of `/demo?embed=1` (32px corners, five pets at 16:9 from `sm`, two at 3:5 on phones) and a hand note "boop a pet".
+- **Privacy** (`#privacy`): a hand eyebrow "privacy, in plain words", "it knows when. never what.", four white cards each fronted by an animated pet (four fields; your code stays home; no account; read every line) and a wide card that shows what Claude sees beside what burrow gets, the real four-field event, with "that's it." circled in red.
+- **Close:** three pets, "one command. no account.", the command, three numbered steps, a hairline footer with the mark.
 
 ### Garden interactions
 - **Boop:** click a pet or its tag. A 0.45s hop of up to 5 px and three 5 x 5 pixel hearts rise and blink out.

@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
-import { PixelBurrow, spriteCanvas } from './PixelBurrow'
+import { useEffect, useState, useSyncExternalStore } from 'react'
+import { PixelBurrow } from './PixelBurrow'
 import { paletteAt, phaseAt } from '@/lib/pixel/palette'
 import { useBurrow } from '@/lib/useBurrow'
 import type { BurrowState } from '@/lib/burrowState'
@@ -14,6 +14,7 @@ import { CarePill } from './CarePill'
 import { CatalogPanel, RanksPanel, type PanelName } from './Panels'
 import { growthOf, stageOf, type CareAction, type Member } from '@burrow/core'
 import { Sprite } from './Sprite'
+import { Logo } from './Logo'
 import { toneOf } from '@/lib/pixel/sprites'
 
 // The visitor's own clock drives the light. The server cannot know it, so it renders the
@@ -32,19 +33,6 @@ const clockKey = () => {
 function useHour(): number | null {
   const minutes = useSyncExternalStore(subscribeClock, clockKey, () => null)
   return minutes === null ? null : minutes / 60
-}
-
-/** The header mark: a mochi sprite, drawn once. */
-export function Mark() {
-  const ref = useRef<HTMLCanvasElement>(null)
-  useEffect(() => {
-    const c = ref.current
-    if (!c) return
-    const ctx = c.getContext('2d')!
-    ctx.clearRect(0, 0, 32, 32)
-    ctx.drawImage(spriteCanvas('mochi', 'sakura', 'idle', 0, false), 0, 0)
-  }, [])
-  return <canvas ref={ref} width={32} height={32} className="h-7 w-7 [image-rendering:pixelated]" aria-hidden="true" />
 }
 
 export function BurrowView({ id }: { id: string }) {
@@ -91,7 +79,7 @@ export function BurrowScreen({ status, burrow, members, offset, me, pokes, poke,
       {!embed && (
         <header className="fixed inset-x-0 top-0 z-20 flex items-center gap-2 px-3 py-3 sm:px-6 sm:py-5">
           <Link href="/" aria-label="burrow home" className={`${skin} pill gap-2 px-1.5 min-[420px]:pl-2 min-[420px]:pr-4`}>
-            <Mark />
+            <Logo size={15} className="min-[420px]:ml-1" />
             <span className="lbl hidden text-base font-bold min-[420px]:block">burrow</span>
             {(label ?? burrow?.name) && <span className="lbl hidden border-l border-current/20 pl-2.5 opacity-70 sm:block">{label ?? burrow?.name}</span>}
           </Link>

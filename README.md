@@ -33,7 +33,7 @@ Each hook sends only `{ "v": 1, "type": "stop", "at": 1791234567890, "session": 
     npm test                  # unit tests
     npm run smoke             # end-to-end against the local server
 
-The landing page at `/` frames a live demo garden; http://localhost:3000/demo?n=6 shows it full screen with more synthetic pets (up to `n=24`; add `&h=21.5` to preview night).
+The landing page at `/` frames a live demo garden; http://localhost:3000/demo?n=6 shows it full screen with more demo pets (up to `n=24`; add `&h=21.5` to preview night).
 
 Monorepo: `packages/core` (state machine, schema), `packages/cli` (`burrow-pets`), `apps/server` (Workers + Durable Objects), `apps/web` (Next.js). Design: `docs/superpowers/specs/2026-10-04-burrow-design.md` and the launch design `docs/superpowers/specs/2026-10-11-burrow-launch-design.md`.
 

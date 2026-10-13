@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { Logo } from '@/components/Logo'
 
 export const metadata: Metadata = { title: 'privacy · burrow' }
 
@@ -8,10 +9,10 @@ const PAYLOAD = '{ "v": 1, "type": "stop", "at": 1791234567890, "session": "3f9a
 export default function Privacy() {
   return (
     <main className="mx-auto max-w-2xl px-6 py-16 sm:py-24">
-      <Link href="/" className="font-display text-xl font-bold">burrow</Link>
+      <Link href="/" className="inline-flex items-center gap-2.5 font-display text-xl font-bold tracking-[-0.03em]"><Logo size={20} />burrow</Link>
       <h1 className="mt-10 font-display text-4xl font-bold tracking-tight">what your pet knows about you</h1>
       <p className="mt-4 text-lg opacity-80">almost nothing. each time Claude Code does something, the hook sends exactly this, and the server refuses anything else:</p>
-      <pre className="chip chip-os mt-6 whitespace-pre-wrap break-words rounded-2xl p-5 font-mono text-sm">{PAYLOAD}</pre>
+      <pre className="chip mt-6 whitespace-pre-wrap break-words rounded-2xl p-5 font-mono text-sm">{PAYLOAD}</pre>
       <dl className="mt-8 grid gap-4 sm:grid-cols-[8rem_1fr]">
         <dt className="font-display font-bold">type</dt>
         <dd className="opacity-80">what happened: a prompt, a finished task, a request for your input, a session starting or ending.</dd>

@@ -3,7 +3,7 @@ import { Landing } from './Landing'
 
 export const metadata: Metadata = {
   title: 'burrow · a tiny pet for your coding agent',
-  description: 'a pixel pet that works while Claude Code runs and waves when it needs you, in a garden shared with your friends.',
+  description: 'a pixel pet for Claude Code. it waves when your agent needs you, in a garden you share with friends.',
 }
 
 export default function Home() {

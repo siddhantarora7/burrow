@@ -1,1 +1,1 @@
-burrow: a pixel pet for Claude Code that waves when your agent is waiting on you
+burrow: a pixel pet for Claude Code. your agent waits, your pet waves.
