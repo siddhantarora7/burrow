@@ -35,15 +35,15 @@ const { positionals, values } = parseArgs({
 const USAGE = `
   ${bold('burrow-pets')}  a tiny pet that reacts live to claude code
 
-  npx burrow-pets init [link]   hatch a pet and install the hooks (with a friend's link: move in with them)
-  npx burrow-pets join <link>   also live in a friend's burrow
-  npx burrow-pets open [link]   a sign-in link for this browser (alerts and pokes)
-  npx burrow-pets status        your pet, your burrows, hook status
-  npx burrow-pets stats [--week] [link]  your garden's day (or week) as a table
-  npx burrow-pets privacy       exactly what gets sent
-  npx burrow-pets usage on|off  share token and cost totals with your garden (off by default)
-  npx burrow-pets statusline on|off  your pet and friends in claude code's status line
-  npx burrow-pets uninstall     remove the hooks and your local pet data
+  npx burrow-pets init [link]               hatch a pet and install the hooks (with a friend's link: move in with them)
+  npx burrow-pets join <link>               also live in a friend's burrow
+  npx burrow-pets open [link]               a sign-in link for this browser (alerts and pokes)
+  npx burrow-pets status                    your pet, your burrows, hook status
+  npx burrow-pets stats [--week] [link]     your garden's day (or week) as a table
+  npx burrow-pets privacy                   exactly what gets sent
+  npx burrow-pets usage on|off              share token and cost totals with your garden (off by default)
+  npx burrow-pets statusline on|off         your pet and friends in claude code's status line
+  npx burrow-pets uninstall                 remove the hooks and your local pet data
 `
 
 async function ask(question: string): Promise<string> {
