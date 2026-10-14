@@ -1,4 +1,4 @@
-import { derive, type DayStats, type Member } from '@burrow/core'
+import { derive, memberDay, memberWeek, type DayStats, type Member } from '@burrow/core'
 import { fmtDur } from './statusline'
 
 const BLOCKS = '▁▂▃▄▅▆▇█'
@@ -12,9 +12,9 @@ const fmtTokens = (n: number) => (n >= 1e6 ? `${(n / 1e6).toFixed(n >= 1e8 ? 0 :
 const fmtReply = (ms: number) => (ms < 60_000 ? `${Math.round(ms / 1000)}s` : fmtDur(ms))
 
 /** The garden's day or week as a plain table, sorted by finished work rather than spend. */
-export function statsTable(o: { burrowName: string; members: Member[]; me: string; week: boolean; webUrl: string; burrowId: string; color: boolean; now: number }): string {
+export function statsTable(o: { burrowName: string; members: Member[]; me: string; week: boolean; webUrl: string; burrowId: string; color: boolean; now: number; todayKey: string }): string {
   const c = (code: string, s: string) => (o.color ? `\x1b[${code}m${s}\x1b[0m` : s)
-  const pick = (m: Member): DayStats | undefined => (o.week ? m.week : (m.today as DayStats | undefined))
+  const pick = (m: Member): DayStats | undefined => (o.week ? memberWeek(m, o.todayKey) : memberDay(m, o.todayKey))
   const rows = o.members
     .map((m) => ({ m, s: pick(m) }))
     .sort((a, b) => (b.s?.tasks ?? 0) - (a.s?.tasks ?? 0) || (b.s?.activeMs ?? 0) - (a.s?.activeMs ?? 0))

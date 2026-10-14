@@ -41,7 +41,7 @@ export function reduce(state: BurrowState, action: Action): BurrowState {
               events: [...m.events, msg.ev].slice(-MAX_MEMBER_EVENTS),
               mealsTotal: m.mealsTotal + (msg.ev.type === 'stop' ? 1 : 0),
               ...(msg.today ? { today: msg.today } : {}),
-              ...(msg.week ? { week: msg.week } : {}),
+              ...(msg.days ? { days: msg.days } : {}),
               ...(msg.growth ? { growth: msg.growth } : {}),
             },
       )

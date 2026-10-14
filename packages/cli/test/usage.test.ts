@@ -56,11 +56,13 @@ describe('usageFor: the increase since the last event', () => {
     expect(await usageFor(h, 'abcdefabcdef', path)).toEqual({ cost: 0.75 })
     expect(JSON.parse(await readFile(join(h, 'sessions', 'abcdefabcdef.usage.json'), 'utf8')).costSent).toBe(2)
   })
-  it('never sends a negative cost', async () => {
+  it('treats a drop in cost as a reset, sending the new total rather than nothing', async () => {
     const h = await home()
     await writeFile(join(h, 'sessions', 'abcdefabcdef.cost'), '3')
     await usageFor(h, 'abcdefabcdef', undefined)
     await writeFile(join(h, 'sessions', 'abcdefabcdef.cost'), '1')
-    expect(await usageFor(h, 'abcdefabcdef', undefined)).toBeUndefined()
+    expect(await usageFor(h, 'abcdefabcdef', undefined)).toEqual({ cost: 1 })
+    await writeFile(join(h, 'sessions', 'abcdefabcdef.cost'), '1.5')
+    expect(await usageFor(h, 'abcdefabcdef', undefined)).toEqual({ cost: 0.5 })
   })
 })

@@ -92,7 +92,7 @@ export function RanksPanel({ members, me, night, onClose }: { members: Member[];
 /** The garden's numbers: today or the last 7 days, by finished work, each with its activity by hour. */
 export function StatsPanel({ members, me, night, onClose }: { members: Member[]; me: string | null; night: boolean; onClose: () => void }) {
   const [mode, setMode] = useState<StatMode>('today')
-  const rows = statRows(members, mode)
+  const rows = statRows(members, mode, new Date().toLocaleDateString('en-CA'))
   const max = Math.max(1, ...rows.flatMap((r) => r.s?.hourMs ?? []))
   return (
     <Panel title="stats" sub="worked out from each pet's hook events." night={night} onClose={onClose} wide>

@@ -4,10 +4,10 @@ import { spark, statsTable } from '../src/table'
 
 const MIN = 60_000
 const day = (over: Partial<DayStats>): DayStats => ({ day: '2026-10-13', waitedMs: 0, meals: 0, turns: 0, tasks: 0, activeMs: 0, replies: 0, replyMs: 0, hourMs: Array<number>(24).fill(0), ...over })
-const member = (petId: string, name: string, today?: DayStats, week?: DayStats): Member => ({
-  petId, name, species: 'mochi', color: 'sakura', joinedAt: 0, mealsTotal: 0, events: [], ...(today ? { today } : {}), ...(week ? { week } : {}),
+const member = (petId: string, name: string, ...days: DayStats[]): Member => ({
+  petId, name, species: 'mochi', color: 'sakura', joinedAt: 0, mealsTotal: 0, events: [], ...(days.length ? { days } : {}),
 })
-const base = { burrowName: "kiwi's garden", me: 'kiwi000000', webUrl: 'https://burrow.test', burrowId: 'abc', color: false, now: 0 }
+const base = { burrowName: "kiwi's garden", me: 'kiwi000000', webUrl: 'https://burrow.test', burrowId: 'abc', color: false, now: 0, todayKey: '2026-10-13' }
 
 describe('spark', () => {
   it('draws one block per value, scaled to the max', () => {
@@ -42,8 +42,12 @@ describe('statsTable', () => {
     expect(out).toContain('invite  npx burrow-pets init https://burrow.test/b/abc')
   })
   it('reads the week when asked', () => {
-    const w = statsTable({ ...base, members: [member('kiwi000000', 'kiwi', day({ tasks: 1 }), day({ tasks: 40 }))], week: true })
+    const w = statsTable({ ...base, members: [member('kiwi000000', 'kiwi', day({ day: '2026-10-10', tasks: 39 }), day({ tasks: 1 }))], week: true })
     expect(w).toContain('this week')
     expect(w).toMatch(/kiwi\s+0m\s+40/)
+  })
+  it('shows a pet not heard from today as empty, not yesterday\'s numbers', () => {
+    const t = statsTable({ ...base, members: [member('kiwi000000', 'kiwi', day({ day: '2026-10-12', tasks: 9, activeMs: 99 * MIN }))], week: false })
+    expect(t).toMatch(/kiwi\s+0m\s+0\s+0\s+–/)
   })
 })

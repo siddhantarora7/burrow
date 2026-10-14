@@ -72,9 +72,11 @@ export async function usageFor(home: string, session: string, transcript: string
   const out: WireUsage = {}
   if (read.tokens > 0) out.tokens = Math.min(read.tokens, 50_000_000)
   if (Number.isFinite(cost) && cost > 0) {
-    const delta = Math.round((cost - (prev?.costSent ?? 0)) * 1e6) / 1e6
+    const sent = prev?.costSent ?? 0
+    // Claude Code's session cost only grows, so a drop means it started again from 0
+    const delta = Math.round((cost < sent ? cost : cost - sent) * 1e6) / 1e6
     if (delta > 0) out.cost = Math.min(delta, 500)
-    st.costSent = Math.max(cost, prev?.costSent ?? 0)
+    st.costSent = cost
   }
   await mkdir(dir, { recursive: true })
   await writeFile(file, JSON.stringify(st))

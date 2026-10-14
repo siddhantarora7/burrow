@@ -3,11 +3,12 @@ import { mkdir, readdir, readFile, rename, stat, writeFile } from 'node:fs/promi
 import { join } from 'node:path'
 import { burrowHome, readConfig } from './config'
 import { sessionHash } from './hook'
-import { statusLines, type ClaudeStatus, type GardenSnap } from './statusline'
+import { shouldRefresh, statusLines, type ClaudeStatus, type GardenSnap } from './statusline'
 
 // Claude Code runs this for every status-line update. It must be quick, never wait on the network and never fail.
 const home = burrowHome()
 const cacheFile = join(home, 'garden.json')
+const attemptFile = join(home, 'garden.attempt')
 const MIN = 60_000
 
 function readStdin(timeoutMs: number): Promise<string> {
@@ -39,7 +40,12 @@ async function refresh(): Promise<void> {
 async function activeHere(now: number): Promise<boolean> {
   const dir = join(home, 'sessions')
   const names = await readdir(dir).catch(() => [] as string[])
-  for (const n of names) if (n.endsWith('.json') && !n.endsWith('.usage.json') && now - (await stat(join(dir, n))).mtimeMs < 10 * MIN) return true
+  for (const n of names) {
+    if (!n.endsWith('.json') || n.endsWith('.usage.json')) continue
+    // a session can end (and its file go) between readdir and stat
+    const s = await stat(join(dir, n)).catch(() => null)
+    if (s && now - s.mtimeMs < 10 * MIN) return true
+  }
   return false
 }
 
@@ -70,9 +76,11 @@ async function main(): Promise<void> {
   } catch {
     snap = null
   }
-  // once a minute while you work, every 5 minutes otherwise: a garden of friends costs few requests
-  const age = snap ? now - snap.fetchedAt : Infinity
-  if (age > MIN && (age > 5 * MIN || (await activeHere(now)))) {
+  // once a minute while you work, every 5 minutes otherwise, failures included: a garden of friends costs few requests
+  const attemptAt = Number(await readFile(attemptFile, 'utf8').catch(() => '')) || undefined
+  // the first check (as if active) skips reading the sessions folder when nothing can be due yet
+  if (shouldRefresh({ now, fetchedAt: snap?.fetchedAt, attemptAt, active: true }) && shouldRefresh({ now, fetchedAt: snap?.fetchedAt, attemptAt, active: await activeHere(now) })) {
+    await writeFile(attemptFile, String(now))
     spawn(process.execPath, [process.argv[1]!, '--refresh'], { detached: true, stdio: 'ignore' }).unref()
   }
 
@@ -82,7 +90,7 @@ async function main(): Promise<void> {
     if (theirs) console.log(theirs)
   }
   const me = { petId: cfg.petId, name: cfg.pet.name, species: cfg.pet.species }
-  for (const line of statusLines({ claude, me, snap, now, color: !process.env.NO_COLOR })) console.log(line)
+  for (const line of statusLines({ claude, me, snap, now, todayKey: new Date(now).toLocaleDateString('en-CA'), color: !process.env.NO_COLOR })) console.log(line)
 }
 
 main()

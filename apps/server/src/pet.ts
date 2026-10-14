@@ -1,5 +1,5 @@
 import { DurableObject } from 'cloudflare:workers'
-import { care, CLAIM_TTL_MS, earn, runLength, emptyBook, emptyLedger, foldStats, foldWait, sumWeek, type StatsBook, LEGACY_XP, newGrowth, newId, parseWireEvent, publicGrowth, SECRET_LEN, type CareAction, type Ev, type Growth, type MemberProfile, type PetGrowth, type Today, type WaitLedger } from '@burrow/core'
+import { care, CLAIM_TTL_MS, earn, runLength, emptyBook, emptyLedger, foldStats, foldWait, type StatsBook, LEGACY_XP, newGrowth, newId, parseWireEvent, publicGrowth, SECRET_LEN, type CareAction, type Ev, type Growth, type MemberProfile, type PetGrowth, type Today, type WaitLedger } from '@burrow/core'
 import { allowRate, capList, CLAIM_CODE_LEN, localDate, localHour, pruneClaims, sha256Hex, type Claim, type Hatch } from './logic'
 
 interface Profile extends MemberProfile {
@@ -117,9 +117,8 @@ export class PetDO extends DurableObject<Env> {
     await this.ctx.storage.put({ stats, ledger, growth, book, events: events.filter((e) => e.t > now - 86_400_000).slice(-200) })
 
     const today: Today = book.days.at(-1)!
-    const week = sumWeek(book.days, day)
     const burrows = (await this.ctx.storage.get<string[]>('burrows')) ?? []
-    await Promise.all(burrows.map((id) => this.env.BURROW.get(this.env.BURROW.idFromName(id)).ingest(profile.petId, ev, today, publicGrowth(growth), week)))
+    await Promise.all(burrows.map((id) => this.env.BURROW.get(this.env.BURROW.idFromName(id)).ingest(profile.petId, ev, today, publicGrowth(growth), book.days)))
     return { status: 204 }
   }
 

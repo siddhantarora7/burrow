@@ -4,20 +4,23 @@ import { dayLine, fmtCost, fmtDur, fmtTokens, statRows } from '../lib/stats'
 
 const MIN = 60_000
 const day = (over: Partial<DayStats> = {}): DayStats => ({ day: '2026-10-13', waitedMs: 0, meals: 0, turns: 0, tasks: 0, activeMs: 0, replies: 0, replyMs: 0, hourMs: Array<number>(24).fill(0), ...over })
-const member = (name: string, today?: DayStats, week?: DayStats): Member => ({ petId: name, name, species: 'mochi', color: 'sakura', joinedAt: 0, mealsTotal: 0, events: [], ...(today ? { today } : {}), ...(week ? { week } : {}) })
+const member = (name: string, days?: DayStats[]): Member => ({ petId: name, name, species: 'mochi', color: 'sakura', joinedAt: 0, mealsTotal: 0, events: [], ...(days ? { days } : {}) })
+const TODAY = '2026-10-13'
 
 describe('statRows', () => {
   it('sorts by tasks, then active time, with missing stats last', () => {
-    const rows = statRows([member('none'), member('b', day({ tasks: 3, activeMs: 5 })), member('a', day({ tasks: 3, activeMs: 9 })), member('c', day({ tasks: 9 }))], 'today')
+    const rows = statRows([member('none'), member('b', [day({ tasks: 3, activeMs: 5 })]), member('a', [day({ tasks: 3, activeMs: 9 })]), member('c', [day({ tasks: 9 })])], 'today', TODAY)
     expect(rows.map((r) => r.member.name)).toEqual(['c', 'a', 'b', 'none'])
     expect(rows[3]!.s).toBeUndefined()
   })
-  it('reads the week when asked', () => {
-    expect(statRows([member('a', day({ tasks: 1 }), day({ tasks: 7 }))], 'week')[0]!.s!.tasks).toBe(7)
+  it('sums the week from the pet\'s days', () => {
+    expect(statRows([member('a', [day({ day: '2026-10-11', tasks: 6 }), day({ tasks: 1 })])], 'week', TODAY)[0]!.s!.tasks).toBe(7)
   })
-  it('ignores an older garden\'s today that has no stats fields', () => {
-    const old = { ...member('old'), today: { day: '2026-10-13', waitedMs: 1, meals: 1 } }
-    expect(statRows([old], 'today')[0]!.s).toBeUndefined()
+  it('shows nothing for today when the pet hasn\'t been heard from today', () => {
+    expect(statRows([member('a', [day({ day: '2026-10-12', tasks: 6 })])], 'today', TODAY)[0]!.s).toBeUndefined()
+  })
+  it('drops days older than a week for an idle pet', () => {
+    expect(statRows([member('a', [day({ day: '2026-10-01', tasks: 6 })])], 'week', TODAY)[0]!.s).toBeUndefined()
   })
 })
 

@@ -21,8 +21,8 @@ export interface Member extends MemberProfile {
   events: Ev[]
   /** How long the agent waited on its human today, and tasks finished. Absent until the first event. */
   today?: Today
-  /** The last 7 days summed. Absent until the pet's first event after stats existed. */
-  week?: DayStats
+  /** The pet's last 7 days (oldest first). Viewers pick today and sum the week with memberDay / memberWeek. */
+  days?: DayStats[]
 }
 
 export interface BurrowInfo {
@@ -36,7 +36,7 @@ export interface BurrowInfo {
 export type ServerMsg =
   /** `catalog`: every `species:stage` form any member of this garden has been in. */
   | { t: 'snapshot'; burrow: BurrowInfo; members: Member[]; catalog: string[]; serverNow: number }
-  | { t: 'event'; petId: string; ev: Ev; today?: Today; week?: DayStats; growth?: PetGrowth; serverNow: number }
+  | { t: 'event'; petId: string; ev: Ev; today?: Today; days?: DayStats[]; growth?: PetGrowth; serverNow: number }
   | { t: 'member'; member: Member; serverNow: number }
   | { t: 'error'; code: 'not_found' }
   /** Answer to hello: whose pet this browser speaks for, or null if its web token is unknown. */

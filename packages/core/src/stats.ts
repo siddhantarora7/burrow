@@ -95,3 +95,17 @@ export function sumWeek(days: DayStats[], day: string): DayStats {
   }
   return w
 }
+
+/** The pet's day matching the viewer's today, if it has one: a pet that hasn't been heard from today shows nothing. */
+export function memberDay(m: { days?: DayStats[] }, todayKey: string): DayStats | undefined {
+  return m.days?.find((d) => d.day === todayKey)
+}
+
+/** The 7 days up to the viewer's today, worked out at view time so an idle pet's old days drop out. */
+export function memberWeek(m: { days?: DayStats[] }, todayKey: string): DayStats | undefined {
+  const recent = (m.days ?? []).filter((d) => {
+    const age = dayNum(todayKey) - dayNum(d.day)
+    return age >= 0 && age < 7
+  })
+  return recent.length ? sumWeek(recent, todayKey) : undefined
+}

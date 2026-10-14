@@ -37,7 +37,7 @@ export class BurrowDO extends DurableObject<Env> {
     return ((await this.ctx.storage.get<Member[]>('members')) ?? []).length >= MAX_MEMBERS
   }
 
-  async ingest(petId: string, ev: Ev, today?: Today, growth?: PetGrowth, week?: DayStats): Promise<void> {
+  async ingest(petId: string, ev: Ev, today?: Today, growth?: PetGrowth, days?: DayStats[]): Promise<void> {
     const members = (await this.ctx.storage.get<Member[]>('members')) ?? []
     const m = members.find((x) => x.petId === petId)
     if (!m) return
@@ -45,10 +45,10 @@ export class BurrowDO extends DurableObject<Env> {
     if (ev.type === 'stop') m.mealsTotal++
     if (today) m.today = today
     if (growth) m.growth = growth
-    if (week) m.week = week
+    if (days) m.days = days
     await this.ctx.storage.put({ members, catalog: await this.catalogWith([m]) })
     // The Worker that stamped ev.t may run on a machine whose clock is slightly ahead of this one.
-    this.broadcast({ t: 'event', petId, ev, today, week, growth, serverNow: Math.max(Date.now(), ev.t) })
+    this.broadcast({ t: 'event', petId, ev, today, days, growth, serverNow: Math.max(Date.now(), ev.t) })
   }
 
   /** A member's owner fed or played with it (PetDO already charged the koban). */

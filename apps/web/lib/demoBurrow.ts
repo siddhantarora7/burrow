@@ -17,19 +17,19 @@ const WEEK_KOBAN = [64, 41, 22, 37, 58, 9, 30, 18, 51, 12, 27, 5]
 const DEMO_CATALOG = ['mochi:baby', 'tofu:baby', 'onigiri:grown', 'dorayaki:baby']
 
 /** Made-up numbers for the stats panel: a work-day curve per pet, a few sharing usage. */
-function demoDay(i: number, day: string, days = 1): DayStats {
+function demoDay(i: number, day: string): DayStats {
   const MIN = 60_000
   const hourMs = Array.from({ length: 24 }, (_, h) => {
     const peak = 10 + ((i * 3) % 8)
     const d = Math.abs(h - peak)
-    return d > 5 || (h + i) % 7 === 0 ? 0 : Math.round((50 - d * 9) * MIN * days * (0.6 + ((i * 7) % 5) / 10))
+    return d > 5 || (h + i) % 7 === 0 ? 0 : Math.round((50 - d * 9) * MIN * (0.6 + ((i * 7) % 5) / 10))
   })
   const activeMs = hourMs.reduce((a, b) => a + b, 0)
   const s: DayStats = {
-    day, hourMs, activeMs, waitedMs: (4 + ((i * 11) % 19)) * MIN * days, meals: 6 * days, turns: (12 + ((i * 13) % 40)) * days,
-    tasks: (3 + ((i * 5) % 11)) * days, replies: (2 + (i % 4)) * days, replyMs: (2 + (i % 4)) * days * (15_000 + ((i * 9_000) % 90_000)),
+    day, hourMs, activeMs, waitedMs: (4 + ((i * 11) % 19)) * MIN, meals: 6, turns: 12 + ((i * 13) % 40),
+    tasks: 3 + ((i * 5) % 11), replies: 2 + (i % 4), replyMs: (2 + (i % 4)) * (15_000 + ((i * 9_000) % 90_000)),
   }
-  if (i % 3 === 0) Object.assign(s, { tokens: (8 + i * 17) * 1_000_000 * days, costUsd: (6 + i * 9.5) * days })
+  if (i % 3 === 0) Object.assign(s, { tokens: (8 + i * 17) * 1_000_000, costUsd: 6 + i * 9.5 })
   return s
 }
 
@@ -43,7 +43,7 @@ export function useDemoBurrow(count: number): BurrowState {
       const species = SPECIES[i % SPECIES.length]!
       const growth = { xp: XP[i % XP.length]!, koban: 12, week: 'demo', weekKoban: WEEK_KOBAN[i % WEEK_KOBAN.length]! }
       const day = new Date(start).toLocaleDateString('en-CA')
-      return { petId: `demo${i}`, name: NAMES[i]!, species, color: DEFAULT_COLOR[species], joinedAt: start, mealsTotal: 0, events: [], growth, today: demoDay(i, day), week: demoDay(i, day, 5) }
+      return { petId: `demo${i}`, name: NAMES[i]!, species, color: DEFAULT_COLOR[species], joinedAt: start, mealsTotal: 0, events: [], growth, today: demoDay(i, day), days: [4, 3, 2, 1, 0].map((ago) => demoDay(i + ago, new Date(start - ago * 86_400_000).toLocaleDateString('en-CA'))) }
     })
     const period = 110_000
     const tick = () => {

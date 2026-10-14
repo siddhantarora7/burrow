@@ -94,11 +94,11 @@ describe('growth in the burrow state', () => {
     expect(s.cares).toHaveLength(10)
     expect(s.cares.at(-1)!.t).toBe(11)
   })
-  it('stores today and week from an event', () => {
+  it('stores today and the last days from an event', () => {
     let s = reduce(initialState, { kind: 'msg', clientNow: 0, msg: { t: 'snapshot', burrow, members: [member('p1')], catalog: [], serverNow: 0 } })
     const day = { day: '2026-10-13', waitedMs: 0, meals: 0, turns: 2, tasks: 1, activeMs: 9, replies: 0, replyMs: 0, hourMs: Array<number>(24).fill(0) }
-    s = reduce(s, { kind: 'msg', clientNow: 0, msg: { t: 'event', petId: 'p1', ev: ev('stop', 1), today: day, week: { ...day, tasks: 5 }, serverNow: 1 } })
+    s = reduce(s, { kind: 'msg', clientNow: 0, msg: { t: 'event', petId: 'p1', ev: ev('stop', 1), today: day, days: [{ ...day, tasks: 5 }], serverNow: 1 } })
     expect(s.members[0]!.today?.turns).toBe(2)
-    expect(s.members[0]!.week?.tasks).toBe(5)
+    expect(s.members[0]!.days?.[0]?.tasks).toBe(5)
   })
 })

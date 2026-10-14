@@ -204,7 +204,7 @@ async function stats(): Promise<void> {
   const snap = (await res.json()) as { burrow: { name: string }; members: Member[]; serverNow: number }
   console.log(statsTable({
     burrowName: snap.burrow.name, members: snap.members, me: cfg.petId, week: !!values.week,
-    webUrl: cfg.webUrl, burrowId: id, color: !!process.stdout.isTTY && !process.env.NO_COLOR, now: snap.serverNow,
+    webUrl: cfg.webUrl, burrowId: id, color: !!process.stdout.isTTY && !process.env.NO_COLOR, now: snap.serverNow, todayKey: new Date().toLocaleDateString('en-CA'),
   }))
 }
 

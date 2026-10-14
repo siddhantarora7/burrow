@@ -1,17 +1,16 @@
-import type { DayStats, Member } from '@burrow/core'
+import { memberDay, memberWeek, type DayStats, type Member } from '@burrow/core'
 
 export type StatMode = 'today' | 'week'
 
-/** A member's numbers for the panel. An older garden's `today` (waits and meals only) counts as no stats. */
-export function statsOf(m: Member, mode: StatMode): DayStats | undefined {
-  const s = mode === 'week' ? m.week : m.today
-  return s && typeof s.turns === 'number' && Array.isArray(s.hourMs) ? (s as DayStats) : undefined
+/** A member's numbers for the viewer's today or the 7 days up to it, from the pet's own days. */
+export function statsOf(m: Member, mode: StatMode, todayKey: string): DayStats | undefined {
+  return mode === 'week' ? memberWeek(m, todayKey) : memberDay(m, todayKey)
 }
 
 /** Members by finished work, then active time; members without stats last. */
-export function statRows(members: Member[], mode: StatMode): Array<{ member: Member; s: DayStats | undefined }> {
+export function statRows(members: Member[], mode: StatMode, todayKey: string): Array<{ member: Member; s: DayStats | undefined }> {
   return members
-    .map((member) => ({ member, s: statsOf(member, mode) }))
+    .map((member) => ({ member, s: statsOf(member, mode, todayKey) }))
     .sort((a, b) => Number(!a.s) - Number(!b.s) || (b.s?.tasks ?? 0) - (a.s?.tasks ?? 0) || (b.s?.activeMs ?? 0) - (a.s?.activeMs ?? 0))
 }
 

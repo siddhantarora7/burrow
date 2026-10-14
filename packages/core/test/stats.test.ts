@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { TIMING } from '../src/derive'
 import type { Ev, EventType } from '../src/events'
-import { emptyBook, emptyDay, foldStats, sumWeek, type DayStats, type FoldCtx, type StatsBook } from '../src/stats'
+import { emptyBook, emptyDay, foldStats, memberDay, memberWeek, sumWeek, type DayStats, type FoldCtx, type StatsBook } from '../src/stats'
 import { emptyLedger } from '../src/waits'
 
 const T0 = 1_791_000_000_000
@@ -75,5 +75,19 @@ describe('sumWeek', () => {
     expect(w.hourMs[9]).toBe(200)
     expect(w.tokens).toBe(10)
     expect(w.costUsd).toBeUndefined()
+  })
+})
+
+describe('memberDay / memberWeek: what a viewer shows, from the pet\'s last 7 days', () => {
+  const d = (day: string, tasks: number): DayStats => ({ ...emptyDay(day), tasks })
+  const m = (days?: DayStats[]) => ({ days })
+  it('shows today only when the pet has a day for it', () => {
+    expect(memberDay(m([d('2026-10-12', 4), d('2026-10-13', 2)]), '2026-10-13')?.tasks).toBe(2)
+    expect(memberDay(m([d('2026-10-12', 4)]), '2026-10-13')).toBeUndefined()
+    expect(memberDay(m(), '2026-10-13')).toBeUndefined()
+  })
+  it('sums the week up to the viewer\'s today, dropping older days, even for an idle pet', () => {
+    expect(memberWeek(m([d('2026-10-05', 9), d('2026-10-08', 3)]), '2026-10-13')?.tasks).toBe(3)
+    expect(memberWeek(m([d('2026-10-01', 9)]), '2026-10-13')).toBeUndefined()
   })
 })
