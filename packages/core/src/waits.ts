@@ -1,5 +1,6 @@
 import { TIMING } from './derive'
 import type { Ev, EventType } from './events'
+import type { DayStats } from './stats'
 
 /** How long a pet's agent has waited on its human today. Folded event by event in PetDO. */
 export interface WaitLedger {
@@ -10,12 +11,8 @@ export interface WaitLedger {
   open: Record<string, number>
 }
 
-/** What a burrow shows about a pet's day. */
-export interface Today {
-  day: string
-  waitedMs: number
-  meals: number
-}
+/** What a burrow shows about a pet's day. Gardens from before stats existed carry only the first three. */
+export type Today = Pick<DayStats, 'day' | 'waitedMs' | 'meals'> & Partial<DayStats>
 
 const OPENS: readonly EventType[] = ['needs_input', 'error']
 

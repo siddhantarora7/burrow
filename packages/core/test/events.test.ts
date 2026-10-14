@@ -24,3 +24,25 @@ describe('parseWireEvent', () => {
     expect(parseWireEvent(body)).toEqual({ ok: false, error })
   })
 })
+
+describe('parseWireEvent: the opt-in usage key', () => {
+  it.each(['stop', 'session_end'])('accepts usage on %s', (type) => {
+    const body = { ...good, type, usage: { tokens: 1200, cost: 0.42 } }
+    expect(parseWireEvent(body)).toEqual({ ok: true, value: body })
+  })
+  it('accepts an empty usage object', () => {
+    expect(parseWireEvent({ ...good, usage: {} }).ok).toBe(true)
+  })
+  it.each([
+    [{ ...good, type: 'prompt', usage: { tokens: 1 } }, 'usage only on stop or session_end'],
+    [{ ...good, usage: { tokens: 1.5 } }, 'usage.tokens must be an integer up to 50M'],
+    [{ ...good, usage: { tokens: -1 } }, 'usage.tokens must be an integer up to 50M'],
+    [{ ...good, usage: { tokens: 50_000_001 } }, 'usage.tokens must be an integer up to 50M'],
+    [{ ...good, usage: { cost: Number.NaN } }, 'usage.cost must be 0 to 500'],
+    [{ ...good, usage: { cost: 501 } }, 'usage.cost must be 0 to 500'],
+    [{ ...good, usage: { tokens: 5, extra: 1 } }, 'usage takes only tokens and cost'],
+    [{ ...good, usage: [] }, 'usage takes only tokens and cost'],
+  ])('rejects %j', (body, error) => {
+    expect(parseWireEvent(body)).toEqual({ ok: false, error })
+  })
+})
