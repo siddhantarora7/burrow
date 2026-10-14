@@ -23,9 +23,15 @@ export default function Privacy() {
       </dl>
       <h2 className="mt-12 font-display text-2xl font-bold">never sent</h2>
       <p className="mt-3 opacity-80">your prompts, Claude&apos;s replies, code, file paths, folder or repo names, tool names, or anything Claude reads or writes.</p>
+      <h2 className="mt-12 font-display text-2xl font-bold">if you share usage</h2>
+      <p className="mt-3 opacity-80">
+        off unless you run <code className="font-mono text-sm">npx burrow-pets usage on</code>. then each stop also carries two numbers,{' '}
+        <code className="font-mono text-sm">{'"usage": { "tokens": 1200, "cost": 0.42 }'}</code>: the tokens Claude Code recorded since the last one, summed on your machine
+        from its transcript, and the increase in Claude Code&apos;s own cost estimate. nothing else from the transcript leaves your machine.
+      </p>
       <h2 className="mt-12 font-display text-2xl font-bold">what the server works out</h2>
       <p className="mt-3 opacity-80">
-        everything in the garden comes from those fields: your pet&apos;s state, how long your agent waited on you today, and the koban it earns (finished runs and quick answers). nothing else is collected to make that work.
+        everything in the garden comes from those fields: your pet&apos;s state, how long your agent waited on you today, the koban it earns (finished runs and quick answers), and your stats (turns, tasks, active time, reply times, by hour, for 7 days). anyone with your garden&apos;s link can see them. nothing else is collected to make that work.
       </p>
       <h2 className="mt-12 font-display text-2xl font-bold">this website</h2>
       <p className="mt-3 opacity-80">counts page views with Vercel Web Analytics, which uses no cookies and does not identify visitors. it never sees your pet or your agent.</p>

@@ -1,6 +1,6 @@
 {
   "name": "burrow-pets",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "A tiny pet that reacts live to Claude Code, in a garden shared with your friends.",
   "license": "MIT",
   "type": "module",

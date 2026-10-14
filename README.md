@@ -19,9 +19,13 @@ The garden is pixel art: a raked zen garden under Mt Fuji whose light follows yo
 
 Claude Code sends no hook when you press Esc, so a run that goes silent shows your pet dozing ("quiet") after 2 minutes and idle after 4.
 
+**Stats.** Every pet's day is worked out from the same events: turns, tasks finished, active time, how long the agent waited on you and how fast you answered, hour by hour. `npx burrow-pets stats` prints your garden's day (`--week` for the last 7) as a table, the garden's `stats` panel shows the same, and `npx burrow-pets statusline on` puts your pet in Claude Code's status line with your day, Claude's 5h and 7d limits, and any friend whose agent is waiting. If you already have a status line, burrow's prints under it and `statusline off` puts yours back. The status line reads a local cache and refreshes it at most once a minute while you work.
+
+**Cost and tokens, if you choose.** `npx burrow-pets usage on` adds two numbers to each stop: tokens, summed on your machine from Claude Code's transcript, and cost, Claude Code's own estimate (it reaches burrow through the status line). They show in stats and never change koban or ranks.
+
 ## Privacy
 
-Each hook sends only `{ "v": 1, "type": "stop", "at": 1791234567890, "session": "3f9a1c0e7b2d" }`. Never your prompts, code, file paths, repo names, or tool names. The server rejects anything else.
+Each hook sends only `{ "v": 1, "type": "stop", "at": 1791234567890, "session": "3f9a1c0e7b2d" }`, plus `"usage": { "tokens", "cost" }` on stops if you turned usage sharing on. Never your prompts, code, file paths, repo names, or tool names. The server rejects anything else. The website counts page views with Vercel Web Analytics (no cookies).
 
 ## Develop
 

@@ -6,7 +6,8 @@ Voice: lowercase, short, a person who made a thing. One GIF or clip per post. Di
 
 ## Before posting
 
-- [ ] **Publish CLI 0.2.0 first** (`scripts/ship.sh 6`). npm still serves 0.1.0, which offers three pets; the site and these posts promise six and a catalog of 18. Then run `npx burrow-pets init` in a fresh terminal and pick a dango.
+- [x] **Publish CLI 0.2.0 first** (done 2026-10-13).
+- [ ] Before mentioning stats or the status line: deploy the API, push the site, publish CLI 0.3.0.
 - [ ] Push the new site only after that (pushing `main` deploys it).
 - [ ] A week with friends; fill every bracket.
 - [ ] Clips: the hero loop, a real poke, a pet evolving. `docs/garden.gif` covers the garden.
@@ -16,6 +17,10 @@ Voice: lowercase, short, a person who made a thing. One GIF or clip per post. Di
 Paste this, or a slice of it, wherever a post has room. These are plans, so they are worded as plans.
 
 > what's next: more pets (melonpan, kakigori and ramune are sketched), forms that branch on how you raise them (a pet you mostly feed grows differently from one you mostly play with), seasonal looks for spring, summer, autumn and winter, and things to spend koban on for the garden itself: lanterns, bonsai, new koi. further out: a desk pet that lives in your menu bar so you don't need the tab, support for other agents beyond Claude Code, and a weekly garden goal you hit together. tell me which one you want first.
+
+## New in 0.3 (for any post that has room)
+
+> burrow now lives in Claude Code's status line too: your pet, your day, Claude's 5h / 7d limits, and a heads-up when a friend's agent is stuck. `npx burrow-pets stats` prints the garden as a table (tasks, active time, how long agents waited on you, how fast you answered). Token and cost totals are there if you opt in; koban still only rewards finished work.
 
 ## Show HN
 

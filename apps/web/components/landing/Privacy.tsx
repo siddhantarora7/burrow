@@ -4,7 +4,7 @@ import { Sprite } from '@/components/Sprite'
 import { REPO } from './bits'
 
 const POINTS: Array<{ species: Species; color: PetColor; state: PetState; title: string; body: React.ReactNode }> = [
-  { species: 'mochi', color: 'sakura', state: 'idle', title: 'four fields. that’s all.', body: 'a type, a time, a salted session id and a version. the server turns away anything else.' },
+  { species: 'mochi', color: 'sakura', state: 'idle', title: 'four fields. that’s all.', body: 'a type, a time, a salted session id and a version. token and cost totals only if you turn them on.' },
   { species: 'onigiri', color: 'rice', state: 'sleep', title: 'your code stays home.', body: 'no prompts, replies, file names or paths ever leave your machine.' },
   { species: 'tofu', color: 'matcha', state: 'cheer', title: 'no account.', body: <>your pet lives in <code className="font-mono text-[14px]">~/.burrow</code> on your machine. no email, no password.</> },
   { species: 'dango', color: 'sora', state: 'work', title: 'read every line.', body: <>MIT licensed. the hook and the server are <a href={REPO} className="underline underline-offset-4">on GitHub</a>.</> },
