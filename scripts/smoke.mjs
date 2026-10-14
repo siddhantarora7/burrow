@@ -93,6 +93,12 @@ if (me?.today?.tokens !== 1000 || me.today.costUsd !== 0.5) fail(`shared usage s
 if (!(me.today.turns >= 1) || me.days?.at(-1)?.tokens !== 1000) fail(`today should count turns and the last days should carry usage, got ${JSON.stringify({ today: me.today, days: me.days })}`)
 if (!run(['packages/cli/dist/cli.mjs', 'stats']).includes('smoke')) fail('burrow-pets stats should list the pet')
 if ((await fetch(`${API}/v1/burrows/zzzzzzzzzz/snapshot`)).status !== 404) fail('an unknown garden has no snapshot')
+// rename: the same pet in the same garden, a new name for it and for the garden named after it
+run(['packages/cli/dist/cli.mjs', 'rename', 'Kiwi', 'Two'])
+const renamedSnap = await (await fetch(`${API}/v1/burrows/${cfg.burrows[0]}/snapshot`)).json()
+if (renamedSnap.members.find((m) => m.petId === cfg.petId)?.name !== 'kiwi two' || renamedSnap.burrow.name !== "kiwi two's burrow") fail(`rename should reach the garden, got ${JSON.stringify(renamedSnap.burrow)}`)
+if (JSON.parse(readFileSync(join(home, 'config.json'), 'utf8')).pet.name !== 'kiwi two') fail('rename should update the local config')
+if ((await fetch(`${API}/v1/pets/rename`, { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${cfg.token}` }, body: JSON.stringify({ name: '!!' }) })).status !== 400) fail('a bad name is refused')
 run(['packages/cli/dist/cli.mjs', 'uninstall'])
 run(['packages/cli/dist/cli.mjs', 'uninstall'], '', envFor(friendHome))
-console.log(`smoke ok: two friends, claim once, hello, one poke, waited-today, koban earned and spent once, catalog, stats and opt-in usage; ${types.join(' -> ')}; no private data on the wire`)
+console.log(`smoke ok: two friends, claim once, hello, one poke, waited-today, koban earned and spent once, catalog, stats, opt-in usage and rename; ${types.join(' -> ')}; no private data on the wire`)

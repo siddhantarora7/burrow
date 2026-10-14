@@ -39,6 +39,7 @@ const USAGE = `
   npx burrow-pets join <link>               also live in a friend's burrow
   npx burrow-pets open [link]               a sign-in link for this browser (alerts and pokes)
   npx burrow-pets status                    your pet, your burrows, hook status
+  npx burrow-pets rename <name>             give your pet a new name, in every garden
   npx burrow-pets stats [--week] [link]     your garden's day (or week) as a table
   npx burrow-pets privacy                   exactly what gets sent
   npx burrow-pets usage on|off              share token and cost totals with your garden (off by default)
@@ -193,6 +194,18 @@ async function privacy(): Promise<void> {
   console.log(`\n${privacyBlock(!!cfg?.usage)}\n\n  hooks:\n${hookTable()}\n`)
 }
 
+/** `rename <name>`: the same pet and gardens, a new name everywhere. */
+async function rename(): Promise<void> {
+  const home = burrowHome()
+  const cfg = await readConfig(home)
+  if (!cfg) throw new Error('no pet yet. run npx burrow-pets init')
+  const name = cleanName(positionals.slice(1).join(' '))
+  if (!name) throw new Error('pass a name: npx burrow-pets rename <name> (1-16 letters, digits, spaces, - or _)')
+  const r = await api<{ name: string }>(cfg.apiUrl, '/v1/pets/rename', { name }, cfg.token)
+  await writeConfig(home, { ...cfg, pet: { ...cfg.pet, name: r.name } })
+  console.log(`\n  ${FACE[cfg.pet.species]}  ${cfg.pet.name} is now ${bold(r.name)}, in every garden it lives in.\n`)
+}
+
 /** `stats [--week] [link]`: the garden's numbers, from the same snapshot the page gets. */
 async function stats(): Promise<void> {
   const cfg = await readConfig(burrowHome())
@@ -260,7 +273,7 @@ async function uninstall(): Promise<void> {
   console.log(`\n  removed ${removed} hooks and ${dim(home)}. bye for now.\n`)
 }
 
-const commands: Record<string, () => Promise<void>> = { init, join, open, status, stats, privacy, usage, statusline, uninstall }
+const commands: Record<string, () => Promise<void>> = { init, join, open, status, rename, stats, privacy, usage, statusline, uninstall }
 const cmd = positionals[0]
 if (values.help || !cmd || !commands[cmd]) {
   console.log(USAGE)

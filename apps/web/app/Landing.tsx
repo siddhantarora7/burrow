@@ -9,6 +9,7 @@ import { Evolution } from '@/components/landing/Evolution'
 import { Hero } from '@/components/landing/Hero'
 import { Privacy } from '@/components/landing/Privacy'
 import { Command, Note, REPO } from '@/components/landing/bits'
+import { GardenDoor } from '@/components/landing/GardenDoor'
 
 // The frame previews the garden at one hour; "now" follows the visitor's own clock like a real burrow.
 const HOURS = [
@@ -19,15 +20,6 @@ const HOURS = [
 ] as const
 
 function Nav() {
-  // set by the garden page once this browser's pet lives there
-  const [home, setHome] = useState<string | null>(null)
-  useEffect(() => {
-    try {
-      setHome(localStorage.getItem('burrow:home'))
-    } catch {
-      // storage blocked: no shortcut home
-    }
-  }, [])
   const link = 'lbl hidden h-9 items-center rounded-full px-3.5 transition-colors hover:bg-[#26241f]/[0.06] md:flex'
   return (
     <nav className="navbar fixed left-1/2 top-4 z-30 flex h-[52px] -translate-x-1/2 items-center gap-0.5 whitespace-nowrap rounded-full p-1.5 text-[14px] font-medium">
@@ -39,8 +31,8 @@ function Nav() {
       <a href="#how" className={link}>how it works</a>
       <a href="#garden" className={link}>garden</a>
       <a href="#privacy" className={link}>privacy</a>
-      {home && <Link href={`/b/${home}`} className="lbl flex h-9 items-center rounded-full px-3.5 font-semibold transition-colors hover:bg-[#26241f]/[0.06]">my garden</Link>}
-      <a href={REPO} className="flex size-9 items-center justify-center rounded-full transition-colors hover:bg-[#26241f]/[0.06]" aria-label="GitHub">
+      <GardenDoor className="lbl flex h-9 items-center rounded-full px-3 font-semibold transition-colors hover:bg-[#26241f]/[0.06] sm:px-3.5" />
+      <a href={REPO} className="hidden size-9 items-center justify-center rounded-full transition-colors hover:bg-[#26241f]/[0.06] sm:flex" aria-label="GitHub">
         <GitHub size={17} />
       </a>
       <a href="#start" className="lbl ml-1 flex h-9 items-center rounded-full bg-[#26241f] px-4 font-semibold text-[#f7f4ec] transition-opacity hover:opacity-85">get a pet</a>

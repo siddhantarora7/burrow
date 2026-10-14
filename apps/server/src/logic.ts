@@ -1,4 +1,4 @@
-import { cleanName, DEFAULT_COLOR, EVENT_RETENTION_MS, isId, isPetColor, isSpecies, MAX_MEMBER_EVENTS, type Ev, type PetColor, type Species, formKey, growthOf, stageOf, type PetGrowth } from '@burrow/core'
+import { burrowName, cleanName, DEFAULT_COLOR, type BurrowInfo, type Member, EVENT_RETENTION_MS, isId, isPetColor, isSpecies, MAX_MEMBER_EVENTS, type Ev, type PetColor, type Species, formKey, growthOf, stageOf, type PetGrowth } from '@burrow/core'
 
 export async function sha256Hex(s: string): Promise<string> {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s))
@@ -79,4 +79,12 @@ export function withForms(catalog: readonly string[], members: ReadonlyArray<{ s
     if (!out.includes(k)) out.push(k)
   }
   return out
+}
+
+/** A pet's new name in one garden. The founder's garden follows the name while it is still the default one. */
+export function renamed(members: Member[], info: BurrowInfo, petId: string, name: string): { members: Member[]; info: BurrowInfo; changed: boolean } {
+  const m = members.find((x) => x.petId === petId)
+  if (!m) return { members, info, changed: false }
+  const nextInfo = info.createdBy === petId && info.name === burrowName(m.name) ? { ...info, name: burrowName(name) } : info
+  return { members: members.map((x) => (x.petId === petId ? { ...x, name } : x)), info: nextInfo, changed: true }
 }

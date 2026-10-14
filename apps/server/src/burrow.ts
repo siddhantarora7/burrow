@@ -1,6 +1,6 @@
 import { DurableObject } from 'cloudflare:workers'
 import { canPoke, isCareAction, MAX_MEMBERS, parseToken, type BurrowInfo, type CareAction, type ClientMsg, type Ev, type Member, type MemberProfile, type PetGrowth, type ServerMsg, type Today, type DayStats } from '@burrow/core'
-import { pruneEvents, withForms } from './logic'
+import { pruneEvents, renamed, withForms } from './logic'
 
 export class BurrowDO extends DurableObject<Env> {
   constructor(ctx: DurableObjectState, env: Env) {
@@ -49,6 +49,16 @@ export class BurrowDO extends DurableObject<Env> {
     await this.ctx.storage.put({ members, catalog: await this.catalogWith([m]) })
     // The Worker that stamped ev.t may run on a machine whose clock is slightly ahead of this one.
     this.broadcast({ t: 'event', petId, ev, today, days, growth, serverNow: Math.max(Date.now(), ev.t) })
+  }
+
+  /** A member took a new name: store it (and the garden's, if it was named after the founder) and tell every page. */
+  async rename(petId: string, name: string, now: number): Promise<void> {
+    const info = await this.info()
+    if (!info) return
+    const r = renamed((await this.ctx.storage.get<Member[]>('members')) ?? [], info, petId, name)
+    if (!r.changed) return
+    await this.ctx.storage.put({ members: r.members, info: r.info })
+    this.broadcast({ t: 'rename', petId, name, ...(r.info.name !== info.name ? { burrowName: r.info.name } : {}), serverNow: now })
   }
 
   /** A member's owner fed or played with it (PetDO already charged the koban). */

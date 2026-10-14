@@ -31,6 +31,12 @@ export function reduce(state: BurrowState, action: Action): BurrowState {
     case 'member':
       if (state.members.some((m) => m.petId === msg.member.petId)) return state
       return { ...state, members: [...state.members, msg.member], offset: msg.serverNow - clientNow }
+    case 'rename':
+      return {
+        ...state,
+        members: state.members.map((m) => (m.petId === msg.petId ? { ...m, name: msg.name } : m)),
+        ...(msg.burrowName && state.burrow ? { burrow: { ...state.burrow, name: msg.burrowName } } : {}),
+      }
     case 'event': {
       if (!state.members.some((m) => m.petId === msg.petId)) return state
       const members = state.members.map((m) =>

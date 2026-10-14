@@ -8,6 +8,7 @@ A pixel pet for Claude Code that waves when your agent is waiting on you. Friend
     npx burrow-pets init <friend's link> # or move straight into a friend's garden
     npx burrow-pets join <link>          # an existing pet can live in several gardens
     npx burrow-pets open                 # a one-time link that signs this browser in
+    npx burrow-pets rename <name>        # rename your pet everywhere it lives
 
 Your pet eats when Claude Code finishes a task, waves when it needs your input, works on a tiny laptop during long runs, and sleeps when you're away. Friends' pets live in the same garden, so you can see who's shipping, who's stuck, and who fell asleep.
 

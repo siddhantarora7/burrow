@@ -101,4 +101,10 @@ describe('growth in the burrow state', () => {
     expect(s.members[0]!.today?.turns).toBe(2)
     expect(s.members[0]!.days?.[0]?.tasks).toBe(5)
   })
+  it('renames a member, and the garden when it was named after them', () => {
+    let s = reduce(initialState, { kind: 'msg', clientNow: 0, msg: { t: 'snapshot', burrow, members: [member('p1')], catalog: [], serverNow: 0 } })
+    s = reduce(s, { kind: 'msg', clientNow: 0, msg: { t: 'rename', petId: 'p1', name: 'kiwi', burrowName: "kiwi's burrow", serverNow: 1 } })
+    expect(s.members[0]!.name).toBe('kiwi')
+    expect(s.burrow?.name).toBe("kiwi's burrow")
+  })
 })

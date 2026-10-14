@@ -59,6 +59,16 @@ export default {
       return json({ error: r.status === 401 ? 'bad token' : 'slow down' }, r.status)
     }
 
+    // `npx burrow-pets rename <name>`: the CLI token renames its own pet, in every garden.
+    if (req.method === 'POST' && url.pathname === '/v1/pets/rename') {
+      const tok = bearer(req)
+      if (!tok) return json({ error: 'bad token' }, 401)
+      const body = (await readJson(req)) as { name?: unknown } | null
+      const r = await pet(env, tok.petId).rename(tok.secret, body?.name, now)
+      if ('name' in r) return json(r, 200)
+      return json({ error: r.error === 'bad name' ? 'names are 1-16 letters, digits, spaces, - or _' : r.error }, r.error === 'bad token' ? 401 : r.error === 'slow down' ? 429 : 400)
+    }
+
     // A fresh sign-in link for `npx burrow-pets open`.
     if (req.method === 'POST' && url.pathname === '/v1/claims') {
       const tok = bearer(req)

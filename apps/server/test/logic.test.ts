@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Ev } from '@burrow/core'
-import { allowRate, capList, localDate, localHour, parseClaim, pruneClaims, pruneEvents, sha256Hex, validateHatch } from '../src/logic'
+import { allowRate, capList, localDate, localHour, renamed, parseClaim, pruneClaims, pruneEvents, sha256Hex, validateHatch } from '../src/logic'
 
 describe('sha256Hex', () => {
   it('matches the known vector', async () => {
@@ -106,5 +106,22 @@ describe('localHour', () => {
     expect(localHour(Date.UTC(2026, 9, 13, 23, 30), 'Asia/Tokyo')).toBe(8)
     expect(localHour(Date.UTC(2026, 9, 13, 23, 30), 'UTC')).toBe(23)
     expect(localHour(Date.UTC(2026, 9, 13, 0, 5), 'UTC')).toBe(0)
+  })
+})
+
+describe('renamed: a pet takes a new name in a garden', () => {
+  const info = { id: 'b1', name: "test's burrow", env: 'garden' as const, createdAt: 1, createdBy: 'p1' }
+  const m = (petId: string, name: string) => ({ petId, name, species: 'mochi' as const, color: 'sakura' as const, joinedAt: 1, mealsTotal: 0, events: [] })
+  it('renames the member and, for the founder, a garden still named after them', () => {
+    const r = renamed([m('p1', 'test'), m('p2', 'ada')], info, 'p1', 'kiwi')
+    expect(r.members.map((x) => x.name)).toEqual(['kiwi', 'ada'])
+    expect(r.info.name).toBe("kiwi's burrow")
+  })
+  it('leaves the garden name alone for anyone else', () => {
+    expect(renamed([m('p1', 'test'), m('p2', 'ada')], info, 'p2', 'bea').info.name).toBe("test's burrow")
+  })
+  it('does nothing for a pet that does not live here', () => {
+    const r = renamed([m('p2', 'ada')], info, 'p1', 'kiwi')
+    expect(r.changed).toBe(false)
   })
 })

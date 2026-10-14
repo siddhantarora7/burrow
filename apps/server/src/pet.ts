@@ -1,5 +1,5 @@
 import { DurableObject } from 'cloudflare:workers'
-import { care, CLAIM_TTL_MS, earn, runLength, emptyBook, emptyLedger, foldStats, foldWait, type StatsBook, LEGACY_XP, newGrowth, newId, parseWireEvent, publicGrowth, SECRET_LEN, type CareAction, type Ev, type Growth, type MemberProfile, type PetGrowth, type Today, type WaitLedger } from '@burrow/core'
+import { care, cleanName, CLAIM_TTL_MS, earn, runLength, emptyBook, emptyLedger, foldStats, foldWait, type StatsBook, LEGACY_XP, newGrowth, newId, parseWireEvent, publicGrowth, SECRET_LEN, type CareAction, type Ev, type Growth, type MemberProfile, type PetGrowth, type Today, type WaitLedger } from '@burrow/core'
 import { allowRate, capList, CLAIM_CODE_LEN, localDate, localHour, pruneClaims, sha256Hex, type Claim, type Hatch } from './logic'
 
 interface Profile extends MemberProfile {
@@ -18,6 +18,7 @@ export class PetDO extends DurableObject<Env> {
   private stamps: number[] = []
   private redeemStamps: number[] = []
   private careStamps: number[] = []
+  private renameStamps: number[] = []
 
   /** Stored growth; a pet hatched before growth existed starts grown. */
   private async loadGrowth(now: number): Promise<Growth> {
@@ -120,6 +121,22 @@ export class PetDO extends DurableObject<Env> {
     const burrows = (await this.ctx.storage.get<string[]>('burrows')) ?? []
     await Promise.all(burrows.map((id) => this.env.BURROW.get(this.env.BURROW.idFromName(id)).ingest(profile.petId, ev, today, publicGrowth(growth), book.days)))
     return { status: 204 }
+  }
+
+  /** A new name from the CLI token, everywhere the pet lives; an error for a bad token, a bad name or too many tries. */
+  async rename(secret: string, raw: unknown, now: number): Promise<{ name: string } | { error: 'bad token' | 'bad name' | 'slow down' }> {
+    const tokens = (await this.ctx.storage.get<string[]>('tokens')) ?? []
+    if (!tokens.includes(await sha256Hex(secret))) return { error: 'bad token' }
+    const rate = allowRate(this.renameStamps, now, 5, 60_000)
+    this.renameStamps = rate.stamps
+    if (!rate.ok) return { error: 'slow down' }
+    const name = cleanName(raw)
+    if (!name) return { error: 'bad name' }
+    const p = (await this.ctx.storage.get<Profile>('profile'))!
+    await this.ctx.storage.put('profile', { ...p, name })
+    const burrows = (await this.ctx.storage.get<string[]>('burrows')) ?? []
+    await Promise.all(burrows.map((id) => this.env.BURROW.get(this.env.BURROW.idFromName(id)).rename(p.petId, name, now)))
+    return { name }
   }
 
   /** Feed or play, paid in koban; every garden the pet lives in sees it. Null without enough koban. */

@@ -42,6 +42,8 @@ export type ServerMsg =
   /** Answer to hello: whose pet this browser speaks for, or null if its web token is unknown. */
   | { t: 'welcome'; me: string | null }
   | { t: 'poke'; from: string; to: string; serverNow: number }
+  /** A pet took a new name; `burrowName` when the garden was named after it. */
+  | { t: 'rename'; petId: string; name: string; burrowName?: string; serverNow: number }
   /** A signed-in owner fed or played with their pet. */
   | { t: 'grow'; petId: string; growth: PetGrowth; effect: CareAction; serverNow: number }
 
