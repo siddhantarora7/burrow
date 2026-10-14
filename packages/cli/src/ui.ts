@@ -11,7 +11,7 @@ export const FACE: Record<Species, string> = { mochi: '(•ᴗ•)', tofu: '[•
 
 export const SAMPLE_PAYLOAD = '{ "v": 1, "type": "stop", "at": 1791234567890, "session": "3f9a1c0e7b2d" }'
 
-export function privacyBlock(): string {
+export function privacyBlock(usage = false): string {
   return [
     `  each hook sends only this:`,
     ``,
@@ -22,6 +22,11 @@ export function privacyBlock(): string {
     `  ${dim('session  a salted hash, so sessions can be told apart but never traced back')}`,
     ``,
     `  never your prompts, code, file paths, repo names, or tool names.`,
+    ``,
+    usage
+      ? `  usage sharing is ${bold('on')}: stops also carry ${bold('"usage": { "tokens": 1200, "cost": 0.42 }')}`
+      : `  usage sharing is off. ${dim('npx burrow-pets usage on')} adds ${bold('"usage": { "tokens", "cost" }')} to stops`,
+    `  ${dim('tokens are summed on this machine from claude code\'s transcript; cost is claude code\'s own estimate')}`,
   ].join('\n')
 }
 

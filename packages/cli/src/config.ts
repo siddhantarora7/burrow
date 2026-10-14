@@ -12,6 +12,10 @@ export interface BurrowConfig {
   salt: string
   burrows: string[]
   pet: { name: string; species: Species; color: PetColor }
+  /** Opt-in: stops also carry token and cost increases. */
+  usage?: boolean
+  /** The status line that was there before burrow's, run first and restored on uninstall. */
+  statusThen?: string
 }
 
 export const HOOK_FILE = 'burrow-hook.mjs'

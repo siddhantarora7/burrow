@@ -38,6 +38,7 @@ const USAGE = `
   npx burrow-pets open [link]   a sign-in link for this browser (alerts and pokes)
   npx burrow-pets status        your pet, your burrows, hook status
   npx burrow-pets privacy       exactly what gets sent
+  npx burrow-pets usage on|off  share token and cost totals with your garden (off by default)
   npx burrow-pets uninstall     remove the hooks and your local pet data
 `
 
@@ -123,6 +124,8 @@ async function init(): Promise<void> {
     color = interactive ? pickColor(await ask(`  colour: ${colorMenu(species)}  > `), species) : pickColor('', species)
   }
 
+  const usage = !!interactive && /^y/i.test(await ask(`  share token and cost totals with your garden? ${dim('(y/N)')}  > `))
+
   const apiUrl = (values.api ?? process.env.BURROW_API_URL ?? DEFAULT_API).replace(/\/$/, '')
   const webUrl = (values.web ?? process.env.BURROW_WEB_URL ?? DEFAULT_WEB).replace(/\/$/, '')
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -130,7 +133,7 @@ async function init(): Promise<void> {
 
   const cfg: BurrowConfig = {
     apiUrl, webUrl, petId: body.petId, token: body.token, salt: randomBytes(16).toString('hex'),
-    burrows: [body.burrowId], pet: { name, species, color },
+    burrows: [body.burrowId], pet: { name, species, color }, ...(usage ? { usage: true } : {}),
   }
   await writeConfig(home, cfg)
   const added = await installHooks({ home, settingsPath, hookSource })
@@ -139,7 +142,7 @@ async function init(): Promise<void> {
   ${FACE[species]}  ${green('hatched')} ${bold(name)} the ${species}
 
   installed ${added.length} claude code hooks in ${dim(settingsPath)}
-${privacyBlock()}
+${privacyBlock(usage)}
 
   ${invite ? 'you moved into a friend\'s burrow.' : 'your burrow is ready. send the plain link to friends; keep it open on a second screen.'}
 
@@ -177,7 +180,24 @@ async function status(): Promise<void> {
 }
 
 async function privacy(): Promise<void> {
-  console.log(`\n${privacyBlock()}\n\n  hooks:\n${hookTable()}\n`)
+  const cfg = await readConfig(burrowHome())
+  console.log(`\n${privacyBlock(!!cfg?.usage)}\n\n  hooks:\n${hookTable()}\n`)
+}
+
+/** `usage on|off`: whether stops carry token and cost increases. */
+async function usage(): Promise<void> {
+  const home = burrowHome()
+  const cfg = await readConfig(home)
+  if (!cfg) throw new Error('no pet yet. run npx burrow-pets init')
+  const want = positionals[1]
+  if (want !== 'on' && want !== 'off') {
+    console.log(`\n  usage sharing is ${bold(cfg.usage ? 'on' : 'off')}. ${dim('npx burrow-pets usage on|off')}\n`)
+    return
+  }
+  await writeConfig(home, { ...cfg, usage: want === 'on' })
+  // older installs copied a hook script without the transcript reader
+  await installHooks({ home, settingsPath: claudeSettingsPath(), hookSource: joinPath(here, HOOK_FILE) })
+  console.log(`\n${privacyBlock(want === 'on')}\n${want === 'on' ? `\n  ${dim('cost needs the burrow status line: npx burrow-pets statusline on')}\n` : ''}`)
 }
 
 async function uninstall(): Promise<void> {
@@ -192,7 +212,7 @@ async function uninstall(): Promise<void> {
   console.log(`\n  removed ${removed} hooks and ${dim(home)}. bye for now.\n`)
 }
 
-const commands: Record<string, () => Promise<void>> = { init, join, open, status, privacy, uninstall }
+const commands: Record<string, () => Promise<void>> = { init, join, open, status, privacy, usage, uninstall }
 const cmd = positionals[0]
 if (values.help || !cmd || !commands[cmd]) {
   console.log(USAGE)

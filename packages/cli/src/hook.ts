@@ -3,6 +3,7 @@ import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { EventType, WireEvent } from '@burrow/core'
 import { burrowHome, readConfig } from './config'
+import { usageFor } from './usage'
 
 export const HOOK_ARGS = ['session_start', 'prompt', 'heartbeat', 'notify', 'stop', 'error', 'session_end'] as const
 export type HookArg = (typeof HOOK_ARGS)[number]
@@ -10,6 +11,8 @@ export type HookArg = (typeof HOOK_ARGS)[number]
 export interface HookInput {
   session_id?: string
   notification_type?: string
+  /** Read on this machine to sum tokens when usage sharing is on. Never sent. */
+  transcript_path?: string
 }
 
 export interface LastSent {
@@ -21,7 +24,7 @@ export const HEARTBEAT_MIN_MS = 60_000
 const NEEDS_INPUT = new Set(['permission_prompt', 'agent_needs_input', 'elicitation_dialog'])
 const PASS_THROUGH = new Set<string>(['session_start', 'prompt', 'heartbeat', 'stop', 'error', 'session_end'])
 
-/** Keep two fields from Claude's hook JSON. Everything else is dropped here and never stored. */
+/** Keep three fields from Claude's hook JSON. Everything else is dropped here and never stored. */
 export function pickInput(raw: string): HookInput {
   let j: unknown
   try {
@@ -34,6 +37,7 @@ export function pickInput(raw: string): HookInput {
   const out: HookInput = {}
   if (typeof o.session_id === 'string') out.session_id = o.session_id
   if (typeof o.notification_type === 'string') out.notification_type = o.notification_type
+  if (typeof o.transcript_path === 'string') out.transcript_path = o.transcript_path
   return out
 }
 
@@ -80,13 +84,24 @@ export async function runHook(opts: { arg: string; stdin: string; env: NodeJS.Pr
   }
 
   const event: WireEvent = { v: 1, type, at: now, session }
-  try {
-    await fetch(`${cfg.apiUrl}/v1/events`, {
+  if (cfg.usage && (type === 'stop' || type === 'session_end')) {
+    const usage = await usageFor(home, session, input.transcript_path).catch(() => undefined)
+    if (usage) event.usage = usage
+  }
+  const post = (e: WireEvent) =>
+    fetch(`${cfg.apiUrl}/v1/events`, {
       method: 'POST',
       headers: { 'content-type': 'application/json', authorization: `Bearer ${cfg.token}` },
-      body: JSON.stringify(event),
+      body: JSON.stringify(e),
       signal: AbortSignal.timeout(3000),
     })
+  try {
+    const res = await post(event)
+    // a server from before usage sharing refuses the extra key: keep the beat, drop the numbers
+    if (res.status === 400 && event.usage) {
+      const { usage: _dropped, ...plain } = event
+      await post(plain)
+    }
   } catch {
     // Offline or API down: the pet misses one beat. Never bother the agent.
   }

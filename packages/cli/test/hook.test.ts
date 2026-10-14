@@ -1,4 +1,4 @@
-import { mkdtemp, readdir } from 'node:fs/promises'
+import { mkdtemp, readdir, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createServer } from 'node:net'
@@ -17,11 +17,11 @@ const fullClaudeInput = JSON.stringify({
   hook_event_name: 'Notification',
 })
 
-async function setup(apiUrl = 'http://api.test') {
+async function setup(apiUrl = 'http://api.test', usage = false) {
   const home = await mkdtemp(join(tmpdir(), 'burrow-hook-'))
   await writeConfig(home, {
     apiUrl, webUrl: 'http://web.test', petId: 'abcdefghjk', token: 'abcdefghjk.abcdefghjkmnpqrstvwxyz012',
-    salt: SALT, burrows: [], pet: { name: 'kiwi', species: 'mochi', color: 'sakura' },
+    salt: SALT, burrows: [], pet: { name: 'kiwi', species: 'mochi', color: 'sakura' }, ...(usage ? { usage: true } : {}),
   })
   return { BURROW_HOME: home }
 }
@@ -29,10 +29,11 @@ async function setup(apiUrl = 'http://api.test') {
 afterEach(() => vi.unstubAllGlobals())
 
 describe('pickInput', () => {
-  it('keeps only session_id and notification_type', () => {
+  it('keeps only session_id, notification_type and transcript_path (read locally, never sent)', () => {
     expect(pickInput(fullClaudeInput)).toEqual({
       session_id: '6c7f2a10-0000-4000-8000-123456789abc',
       notification_type: 'permission_prompt',
+      transcript_path: '/Users/me/.claude/projects/secret-repo/t.jsonl',
     })
   })
   it.each(['', 'not json', '[1,2]', 'null', '{"session_id": 7}'])('survives %j', (raw) => {
@@ -138,4 +139,37 @@ describe('runHook', () => {
     expect(Date.now() - started).toBeLessThan(4000)
     server.close()
   }, 8000)
+})
+
+describe('runHook: usage sharing', () => {
+  const stopWith = async (path: string) => JSON.stringify({ session_id: 's1', transcript_path: path })
+  async function transcriptFile() {
+    const dir = await mkdtemp(join(tmpdir(), 'burrow-t-'))
+    const path = join(dir, 't.jsonl')
+    await writeFile(path, JSON.stringify({ message: { id: 'm1', usage: { input_tokens: 1, cache_creation_input_tokens: 0, cache_read_input_tokens: 0, output_tokens: 9 } } }) + '\n')
+    return path
+  }
+  const bodies = (m: ReturnType<typeof vi.fn>) => m.mock.calls.map((c) => JSON.parse((c[1] as RequestInit).body as string))
+  it('adds usage to a stop when sharing is on', async () => {
+    const env = await setup('http://api.test', true)
+    const fetchMock = vi.fn(async () => new Response(null, { status: 204 }))
+    vi.stubGlobal('fetch', fetchMock)
+    await runHook({ arg: 'stop', stdin: await stopWith(await transcriptFile()), env })
+    expect(bodies(fetchMock)[0].usage).toEqual({ tokens: 10 })
+  })
+  it('never adds usage when sharing is off', async () => {
+    const env = await setup()
+    const fetchMock = vi.fn(async () => new Response(null, { status: 204 }))
+    vi.stubGlobal('fetch', fetchMock)
+    await runHook({ arg: 'stop', stdin: await stopWith(await transcriptFile()), env })
+    expect(Object.keys(bodies(fetchMock)[0]).sort()).toEqual(['at', 'session', 'type', 'v'])
+  })
+  it('resends once without usage when an older server refuses it', async () => {
+    const env = await setup('http://api.test', true)
+    const fetchMock = vi.fn(async () => new Response(null, { status: fetchMock.mock.calls.length === 1 ? 400 : 204 }))
+    vi.stubGlobal('fetch', fetchMock)
+    await runHook({ arg: 'stop', stdin: await stopWith(await transcriptFile()), env })
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(bodies(fetchMock)[1].usage).toBeUndefined()
+  })
 })
