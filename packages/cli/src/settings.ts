@@ -1,6 +1,6 @@
 import { copyFile, mkdir, readFile, realpath, rename, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
-import { HOOK_FILE } from './config'
+import { HOOK_FILE, STATUS_FILE } from './config'
 import type { HookArg } from './hook'
 
 export class SettingsError extends Error {}
@@ -50,6 +50,25 @@ export function addHooks(settings: unknown, scriptPath: string): { settings: Rec
     added.push(event)
   }
   return { settings: { ...root, hooks }, added }
+}
+
+const isBurrowStatus = (x: unknown) => isObj(x) && typeof x.command === 'string' && x.command.includes(STATUS_FILE)
+
+/** Makes burrow's script the status line. A status line that was already there comes back as `then`, to run first. */
+export function addStatusLine(settings: unknown, command: string): { settings: Record<string, unknown>; then?: string } {
+  if (!isObj(settings)) throw new SettingsError('settings.json must contain a JSON object')
+  const prev = settings.statusLine
+  if (isBurrowStatus(prev)) return { settings }
+  const then = isObj(prev) && typeof prev.command === 'string' ? prev.command : undefined
+  return { settings: { ...settings, statusLine: { type: 'command', command, refreshInterval: 30 } }, ...(then ? { then } : {}) }
+}
+
+/** Puts back the status line burrow replaced, or removes burrow's. Anyone else's status line is left alone. */
+export function removeStatusLine(settings: unknown, then?: string): Record<string, unknown> {
+  if (!isObj(settings)) throw new SettingsError('settings.json must contain a JSON object')
+  if (!isBurrowStatus(settings.statusLine)) return settings
+  const { statusLine: _ours, ...rest } = settings
+  return then ? { ...rest, statusLine: { type: 'command', command: then } } : rest
 }
 
 export function removeHooks(settings: unknown): { settings: Record<string, unknown>; removed: number } {

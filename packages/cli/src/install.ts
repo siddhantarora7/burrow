@@ -1,7 +1,7 @@
 import { copyFile, mkdir, readFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { HOOK_FILE } from './config'
-import { addHooks, SettingsError, updateSettingsFile } from './settings'
+import { HOOK_FILE, STATUS_FILE } from './config'
+import { addHooks, addStatusLine, removeStatusLine, SettingsError, updateSettingsFile } from './settings'
 
 /** Throws SettingsError if burrow could not merge into this settings file. Call before hatching. */
 export async function checkSettings(settingsPath: string): Promise<void> {
@@ -34,4 +34,22 @@ export async function installHooks(opts: { home: string; settingsPath: string; h
     return r.settings
   })
   return added
+}
+
+/** Copies the status-line script and makes it the status line. Returns the command it replaced, if any. */
+export async function installStatusLine(opts: { home: string; settingsPath: string; source: string }): Promise<string | undefined> {
+  await mkdir(opts.home, { recursive: true, mode: 0o700 })
+  const script = join(opts.home, STATUS_FILE)
+  await copyFile(opts.source, script)
+  let then: string | undefined
+  await updateSettingsFile(opts.settingsPath, join(opts.home, 'backups'), (s) => {
+    const r = addStatusLine(s, `node "${script}"`)
+    then = r.then
+    return r.settings
+  })
+  return then
+}
+
+export async function uninstallStatusLine(opts: { home: string; settingsPath: string; then?: string }): Promise<void> {
+  await updateSettingsFile(opts.settingsPath, join(opts.home, 'backups'), (s) => removeStatusLine(s, opts.then))
 }

@@ -19,6 +19,7 @@ export interface BurrowConfig {
 }
 
 export const HOOK_FILE = 'burrow-hook.mjs'
+export const STATUS_FILE = 'burrow-statusline.mjs'
 
 export function burrowHome(env: NodeJS.ProcessEnv = process.env): string {
   return env.BURROW_HOME || join(homedir(), '.burrow')

@@ -13,3 +13,4 @@ await build({
   define: { __BURROW_API__: JSON.stringify(api), __BURROW_WEB__: JSON.stringify(web) },
 })
 await build({ ...common, entryPoints: ['src/hook-entry.ts'], outfile: 'dist/burrow-hook.mjs' })
+await build({ ...common, entryPoints: ['src/statusline-entry.ts'], outfile: 'dist/burrow-statusline.mjs' })

@@ -5,9 +5,9 @@ import { fileURLToPath } from 'node:url'
 import { createInterface } from 'node:readline/promises'
 import { parseArgs } from 'node:util'
 import { cleanName, isSpecies, parseBurrowLink, SPECIES, type PetColor, type Species } from '@burrow/core'
-import { burrowHome, claudeSettingsPath, HOOK_FILE, readConfig, writeConfig, type BurrowConfig } from './config'
+import { burrowHome, claudeSettingsPath, HOOK_FILE, readConfig, STATUS_FILE, writeConfig, type BurrowConfig } from './config'
 import { claimUrl, colorMenu, pickColor } from './helpers'
-import { checkSettings, installHooks } from './install'
+import { checkSettings, installHooks, installStatusLine, uninstallStatusLine } from './install'
 import { removeHooks, SettingsError, updateSettingsFile } from './settings'
 import { bold, dim, FACE, green, hookTable, privacyBlock } from './ui'
 
@@ -39,6 +39,7 @@ const USAGE = `
   npx burrow-pets status        your pet, your burrows, hook status
   npx burrow-pets privacy       exactly what gets sent
   npx burrow-pets usage on|off  share token and cost totals with your garden (off by default)
+  npx burrow-pets statusline on|off  your pet and friends in claude code's status line
   npx burrow-pets uninstall     remove the hooks and your local pet data
 `
 
@@ -125,6 +126,7 @@ async function init(): Promise<void> {
   }
 
   const usage = !!interactive && /^y/i.test(await ask(`  share token and cost totals with your garden? ${dim('(y/N)')}  > `))
+  const wantStatus = !!interactive && !/^n/i.test(await ask(`  show your pet in claude code's status line? ${dim('(Y/n)')}  > `))
 
   const apiUrl = (values.api ?? process.env.BURROW_API_URL ?? DEFAULT_API).replace(/\/$/, '')
   const webUrl = (values.web ?? process.env.BURROW_WEB_URL ?? DEFAULT_WEB).replace(/\/$/, '')
@@ -137,6 +139,10 @@ async function init(): Promise<void> {
   }
   await writeConfig(home, cfg)
   const added = await installHooks({ home, settingsPath, hookSource })
+  if (wantStatus) {
+    const then = await installStatusLine({ home, settingsPath, source: joinPath(here, STATUS_FILE) })
+    if (then) await writeConfig(home, { ...cfg, statusThen: then })
+  }
 
   console.log(`
   ${FACE[species]}  ${green('hatched')} ${bold(name)} the ${species}
@@ -184,6 +190,28 @@ async function privacy(): Promise<void> {
   console.log(`\n${privacyBlock(!!cfg?.usage)}\n\n  hooks:\n${hookTable()}\n`)
 }
 
+/** `statusline on|off`: burrow's line in Claude Code, under any status line you already had. */
+async function statusline(): Promise<void> {
+  const home = burrowHome()
+  const cfg = await readConfig(home)
+  if (!cfg) throw new Error('no pet yet. run npx burrow-pets init')
+  const settingsPath = claudeSettingsPath()
+  if (positionals[1] === 'off') {
+    await uninstallStatusLine({ home, settingsPath, then: cfg.statusThen })
+    const { statusThen: _gone, ...rest } = cfg
+    await writeConfig(home, rest)
+    console.log(`\n  removed burrow's status line${cfg.statusThen ? ' and put yours back' : ''}.\n`)
+    return
+  }
+  if (positionals[1] !== 'on') {
+    console.log(`\n  ${dim('npx burrow-pets statusline on|off')}\n`)
+    return
+  }
+  const then = await installStatusLine({ home, settingsPath, source: joinPath(here, STATUS_FILE) })
+  if (then) await writeConfig(home, { ...cfg, statusThen: then })
+  console.log(`\n  ${FACE[cfg.pet.species]}  ${cfg.pet.name} is in your status line${then ? ', under the one you had' : ''}. it shows up on claude code's next update.\n`)
+}
+
 /** `usage on|off`: whether stops carry token and cost increases. */
 async function usage(): Promise<void> {
   const home = burrowHome()
@@ -202,6 +230,8 @@ async function usage(): Promise<void> {
 
 async function uninstall(): Promise<void> {
   const home = burrowHome()
+  const cfg = await readConfig(home)
+  await uninstallStatusLine({ home, settingsPath: claudeSettingsPath(), then: cfg?.statusThen })
   let removed = 0
   await updateSettingsFile(claudeSettingsPath(), joinPath(home, 'backups'), (s) => {
     const r = removeHooks(s)
@@ -212,7 +242,7 @@ async function uninstall(): Promise<void> {
   console.log(`\n  removed ${removed} hooks and ${dim(home)}. bye for now.\n`)
 }
 
-const commands: Record<string, () => Promise<void>> = { init, join, open, status, privacy, usage, uninstall }
+const commands: Record<string, () => Promise<void>> = { init, join, open, status, privacy, usage, statusline, uninstall }
 const cmd = positionals[0]
 if (values.help || !cmd || !commands[cmd]) {
   console.log(USAGE)
