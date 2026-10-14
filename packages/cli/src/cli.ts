@@ -4,11 +4,12 @@ import { dirname, join as joinPath } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createInterface } from 'node:readline/promises'
 import { parseArgs } from 'node:util'
-import { cleanName, isSpecies, parseBurrowLink, SPECIES, type PetColor, type Species } from '@burrow/core'
+import { cleanName, isSpecies, parseBurrowLink, SPECIES, type Member, type PetColor, type Species } from '@burrow/core'
 import { burrowHome, claudeSettingsPath, HOOK_FILE, readConfig, STATUS_FILE, writeConfig, type BurrowConfig } from './config'
 import { claimUrl, colorMenu, pickColor } from './helpers'
 import { checkSettings, installHooks, installStatusLine, uninstallStatusLine } from './install'
 import { removeHooks, SettingsError, updateSettingsFile } from './settings'
+import { statsTable } from './table'
 import { bold, dim, FACE, green, hookTable, privacyBlock } from './ui'
 
 const here = dirname(fileURLToPath(import.meta.url))
@@ -26,6 +27,7 @@ const { positionals, values } = parseArgs({
     color: { type: 'string' },
     api: { type: 'string' },
     web: { type: 'string' },
+    week: { type: 'boolean' },
     help: { type: 'boolean', short: 'h' },
   },
 })
@@ -37,6 +39,7 @@ const USAGE = `
   npx burrow-pets join <link>   also live in a friend's burrow
   npx burrow-pets open [link]   a sign-in link for this browser (alerts and pokes)
   npx burrow-pets status        your pet, your burrows, hook status
+  npx burrow-pets stats [--week] [link]  your garden's day (or week) as a table
   npx burrow-pets privacy       exactly what gets sent
   npx burrow-pets usage on|off  share token and cost totals with your garden (off by default)
   npx burrow-pets statusline on|off  your pet and friends in claude code's status line
@@ -190,6 +193,21 @@ async function privacy(): Promise<void> {
   console.log(`\n${privacyBlock(!!cfg?.usage)}\n\n  hooks:\n${hookTable()}\n`)
 }
 
+/** `stats [--week] [link]`: the garden's numbers, from the same snapshot the page gets. */
+async function stats(): Promise<void> {
+  const cfg = await readConfig(burrowHome())
+  if (!cfg) throw new Error('no pet yet. run npx burrow-pets init')
+  const id = linkArg() ?? cfg.burrows[0]!
+  const res = await fetch(`${cfg.apiUrl}/v1/burrows/${id}/snapshot`, { signal: AbortSignal.timeout(10_000) })
+  if (res.status === 404) throw new Error("that burrow doesn't exist. check the link")
+  if (!res.ok) throw new Error(`request failed (${res.status})`)
+  const snap = (await res.json()) as { burrow: { name: string }; members: Member[]; serverNow: number }
+  console.log(statsTable({
+    burrowName: snap.burrow.name, members: snap.members, me: cfg.petId, week: !!values.week,
+    webUrl: cfg.webUrl, burrowId: id, color: !!process.stdout.isTTY && !process.env.NO_COLOR, now: snap.serverNow,
+  }))
+}
+
 /** `statusline on|off`: burrow's line in Claude Code, under any status line you already had. */
 async function statusline(): Promise<void> {
   const home = burrowHome()
@@ -242,7 +260,7 @@ async function uninstall(): Promise<void> {
   console.log(`\n  removed ${removed} hooks and ${dim(home)}. bye for now.\n`)
 }
 
-const commands: Record<string, () => Promise<void>> = { init, join, open, status, privacy, usage, statusline, uninstall }
+const commands: Record<string, () => Promise<void>> = { init, join, open, status, stats, privacy, usage, statusline, uninstall }
 const cmd = positionals[0]
 if (values.help || !cmd || !commands[cmd]) {
   console.log(USAGE)
