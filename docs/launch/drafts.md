@@ -35,7 +35,7 @@ Built on Cloudflare Workers with a Durable Object per pet and per garden (hibern
 
 Next I want branching evolutions, seasonal forms and a menu-bar pet so it works without a tab. Feedback on the pacing of the koban very welcome.
 
-Site: [WEB_URL] · Code: [repo URL]
+Site: https://burrow-taupe.vercel.app · Code: https://github.com/siddhantarora7/burrow
 
 **First comment (post it yourself right away):** why I built it in two lines, what's rough (Esc, koban pacing is a first guess, per-garden leaderboards only), what I'd like feedback on.
 
@@ -57,7 +57,7 @@ there's a small game on top: finished tasks and quick replies earn koban, koban 
 
 privacy was the first thing I designed. the hook sends four fields (type, time, a salted session id, a version). never prompts, code or paths, and the server rejects anything else.
 
-`npx burrow-pets init` · [WEB_URL] · open source, no account
+`npx burrow-pets init` · https://burrow-taupe.vercel.app · open source, no account
 
 [vision paragraph, trimmed to two lines]
 
@@ -77,7 +77,7 @@ the part I use most: when a `Notification` lands (permission prompt, question), 
 
 gotcha I hit: Claude Code fires no hook when you press Esc, so a run that just stops shows as "quiet" after 2 minutes. if anyone knows a cleaner signal for interrupts, I'd love it.
 
-`npx burrow-pets init` to try it, `npx burrow-pets uninstall` removes the hooks. code: [repo URL]
+`npx burrow-pets init` to try it, `npx burrow-pets uninstall` removes the hooks. code: https://github.com/siddhantarora7/burrow
 
 ## r/SideProject
 
@@ -94,7 +94,7 @@ things I learned:
 - a pure function for "what is my pet doing" made everything easier to test. it runs on the server and in the browser.
 - the game only works if it rewards the right thing. coins come from finished tasks and quick replies, never from burning tokens.
 
-[WEB_URL] · [repo URL]
+https://burrow-taupe.vercel.app · https://github.com/siddhantarora7/burrow
 
 where it goes next is up to whoever uses it: [vision paragraph]
 
@@ -117,7 +117,7 @@ A different post entirely: the art, not the product. Check the sub's rules on li
 > also a tiny tamagotchi: finished tasks earn koban → feed it → it evolves. 18 forms to collect.
 >
 > hooks send 4 fields, never code. `npx burrow-pets init`
-> [WEB_URL]
+> https://burrow-taupe.vercel.app
 >
 > next up: branching evolutions + seasonal forms. what would you want your pet to do?
 
@@ -127,7 +127,7 @@ A different post entirely: the art, not the product. Check the sub's rules on li
 >
 > I built burrow for that. a little pixel pet reacts to Claude Code in real time and waves at you when the agent's blocked. if you run it with friends you all share a garden, and you can poke whoever's agent is stuck.
 >
-> one command, no account: `npx burrow-pets init`. here's a live demo garden: [WEB_URL]#garden
+> one command, no account: `npx burrow-pets init`. here's a live demo garden: https://burrow-taupe.vercel.app#garden
 
 ## X thread
 
@@ -137,4 +137,4 @@ A different post entirely: the art, not the product. Check the sub's rules on li
 4. finished tasks and quick replies earn koban. feed it, play with it, watch it evolve. 18 forms to collect. [evolution clip]
 5. the hook sends 4 fields: type, time, a salted session id, a version. never your code.
 6. a week with [N] friends: our agents waited on us [X] min a day. [observation]
-7. next: branching evolutions, seasonal forms, a menu-bar pet. what should it do next? [WEB_URL]
+7. next: branching evolutions, seasonal forms, a menu-bar pet. what should it do next? https://burrow-taupe.vercel.app
