@@ -19,6 +19,15 @@ const HOURS = [
 ] as const
 
 function Nav() {
+  // set by the garden page once this browser's pet lives there
+  const [home, setHome] = useState<string | null>(null)
+  useEffect(() => {
+    try {
+      setHome(localStorage.getItem('burrow:home'))
+    } catch {
+      // storage blocked: no shortcut home
+    }
+  }, [])
   const link = 'lbl hidden h-9 items-center rounded-full px-3.5 transition-colors hover:bg-[#26241f]/[0.06] md:flex'
   return (
     <nav className="navbar fixed left-1/2 top-4 z-30 flex h-[52px] -translate-x-1/2 items-center gap-0.5 whitespace-nowrap rounded-full p-1.5 text-[14px] font-medium">
@@ -30,6 +39,7 @@ function Nav() {
       <a href="#how" className={link}>how it works</a>
       <a href="#garden" className={link}>garden</a>
       <a href="#privacy" className={link}>privacy</a>
+      {home && <Link href={`/b/${home}`} className="lbl flex h-9 items-center rounded-full px-3.5 font-semibold transition-colors hover:bg-[#26241f]/[0.06]">my garden</Link>}
       <a href={REPO} className="flex size-9 items-center justify-center rounded-full transition-colors hover:bg-[#26241f]/[0.06]" aria-label="GitHub">
         <GitHub size={17} />
       </a>

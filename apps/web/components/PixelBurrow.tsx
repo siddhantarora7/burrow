@@ -6,6 +6,7 @@ import { hash, paletteAt, phaseAt, type Palette } from '@/lib/pixel/palette'
 import { bakeGlow, bakeGround, bakeLantern, bakeSky, GLOW, sunPosition, type Buffer } from '@/lib/pixel/scene'
 import { colorsFor, FPS, FRAMES, GRID, petGrid, silhouette, toneOf } from '@/lib/pixel/sprites'
 import { tagLabel, VERB, waitedLine } from '@/lib/status'
+import { dayLine } from '@/lib/stats'
 import { Pointer, Sparkles } from './icons'
 import { careState, kobanGains, stageRises } from '@/lib/grow'
 
@@ -441,7 +442,7 @@ export function PixelBurrow({ members, states, offset, hour, me = null, pokes = 
         // a signed-in friend can poke a waiting pet, once a minute
         const pokable = !!onPoke && !!me && me !== m.petId && state === 'wave'
         const justPoked = Date.now() - (poked[m.petId] ?? -Infinity) < POKE_GAP_MS
-        const info = [me === m.petId ? 'you' : null, detail(r, now), waitedLine(m.today, todayKey)].filter(Boolean).join(' · ')
+        const info = [me === m.petId ? 'you' : null, detail(r, now), waitedLine(m.today, todayKey), dayLine(m.today, todayKey)].filter(Boolean).join(' · ')
         const more = pokable ? `${info} · ${justPoked ? 'poked' : 'press to poke'}` : info
         return (
           <button

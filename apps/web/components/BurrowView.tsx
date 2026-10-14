@@ -9,9 +9,9 @@ import { usePetStates } from '@/lib/usePetStates'
 import { useAlerts } from '@/lib/useAlerts'
 import { burrowTitle, VERB } from '@/lib/status'
 import { INIT, inviteCommand } from '@/lib/commands'
-import { Bell, BellOff, BookOpen, Check, Copy, ShieldCheck, Terminal, Trophy, UserPlus, VolumeOff } from './icons'
+import { BarChart, Bell, BellOff, BookOpen, Check, Copy, ShieldCheck, Terminal, Trophy, UserPlus, VolumeOff } from './icons'
 import { CarePill } from './CarePill'
-import { CatalogPanel, RanksPanel, type PanelName } from './Panels'
+import { CatalogPanel, RanksPanel, StatsPanel, type PanelName } from './Panels'
 import { growthOf, stageOf, type CareAction, type Member } from '@burrow/core'
 import { Sprite } from './Sprite'
 import { Logo } from './Logo'
@@ -63,6 +63,17 @@ export function BurrowScreen({ status, burrow, members, offset, me, pokes, poke,
   const alerts = useAlerts({ me, members, states, pokes })
   const hour = useHour()
 
+  // the landing page links back here ("my garden") once this browser's pet lives in this garden
+  useEffect(() => {
+    if (!embed && invite && mine) {
+      try {
+        localStorage.setItem('burrow:home', invite)
+      } catch {
+        // private mode: no way home, the CLI's open still works
+      }
+    }
+  }, [embed, invite, mine])
+
   // A background tab still answers "is it done, or waiting on me?"
   useEffect(() => {
     if (!embed) document.title = burrowTitle(members.map((m) => ({ name: m.name, state: states.get(m.petId)?.state ?? 'sleep' })))
@@ -84,6 +95,10 @@ export function BurrowScreen({ status, burrow, members, offset, me, pokes, poke,
             {(label ?? burrow?.name) && <span className="lbl hidden border-l border-current/20 pl-2.5 opacity-70 sm:block">{label ?? burrow?.name}</span>}
           </Link>
           <nav className={`${skin} pill ml-auto gap-0.5 px-1`}>
+            <button type="button" className="pill-btn" onClick={() => setPanel('stats')} aria-label="stats">
+              <BarChart />
+              <span className="lbl hidden md:block">stats</span>
+            </button>
             <button type="button" className="pill-btn" onClick={() => setPanel('catalog')} aria-label="catalog">
               <BookOpen />
               <span className="lbl hidden md:block">catalog</span>
@@ -114,6 +129,7 @@ export function BurrowScreen({ status, burrow, members, offset, me, pokes, poke,
 
       {showCare && <CarePill member={mine!} night={night} onCare={care!} />}
       {showCare && <Welcome member={mine!} night={night} />}
+      {panel === 'stats' && <StatsPanel members={members} me={me} night={night} onClose={() => setPanel(null)} />}
       {panel === 'catalog' && <CatalogPanel catalog={catalog} members={members} night={night} onClose={() => setPanel(null)} />}
       {panel === 'ranks' && <RanksPanel members={members} me={me} night={night} onClose={() => setPanel(null)} />}
 

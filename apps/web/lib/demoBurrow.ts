@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { MAX_MEMBERS, SPECIES, DEFAULT_COLOR, type Ev, type EventType, type Member } from '@burrow/core'
+import { MAX_MEMBERS, SPECIES, DEFAULT_COLOR, type Ev, type EventType, type Member, type DayStats } from '@burrow/core'
 import type { BurrowState } from './burrowState'
 
 const NAMES = ['kiwi', 'mika', 'jun', 'ada', 'theo', 'noor', 'sol', 'rin', 'bea', 'kai', 'lou', 'ivo', 'mei', 'oli', 'pax', 'remy', 'suki', 'tam', 'uma', 'vic', 'wren', 'yuki', 'zed', 'ash']
@@ -16,6 +16,23 @@ const WEEK_KOBAN = [64, 41, 22, 37, 58, 9, 30, 18, 51, 12, 27, 5]
 /** Forms an older member of the demo garden reached before moving on. */
 const DEMO_CATALOG = ['mochi:baby', 'tofu:baby', 'onigiri:grown', 'dorayaki:baby']
 
+/** Made-up numbers for the stats panel: a work-day curve per pet, a few sharing usage. */
+function demoDay(i: number, day: string, days = 1): DayStats {
+  const MIN = 60_000
+  const hourMs = Array.from({ length: 24 }, (_, h) => {
+    const peak = 10 + ((i * 3) % 8)
+    const d = Math.abs(h - peak)
+    return d > 5 || (h + i) % 7 === 0 ? 0 : Math.round((50 - d * 9) * MIN * days * (0.6 + ((i * 7) % 5) / 10))
+  })
+  const activeMs = hourMs.reduce((a, b) => a + b, 0)
+  const s: DayStats = {
+    day, hourMs, activeMs, waitedMs: (4 + ((i * 11) % 19)) * MIN * days, meals: 6 * days, turns: (12 + ((i * 13) % 40)) * days,
+    tasks: (3 + ((i * 5) % 11)) * days, replies: (2 + (i % 4)) * days, replyMs: (2 + (i % 4)) * days * (15_000 + ((i * 9_000) % 90_000)),
+  }
+  if (i % 3 === 0) Object.assign(s, { tokens: (8 + i * 17) * 1_000_000 * days, costUsd: (6 + i * 9.5) * days })
+  return s
+}
+
 /** Synthetic burrow for /demo: no network, every pet on its own staggered loop. */
 export function useDemoBurrow(count: number): BurrowState {
   const n = Math.max(1, Math.min(MAX_MEMBERS, count))
@@ -25,7 +42,8 @@ export function useDemoBurrow(count: number): BurrowState {
     const base: Member[] = Array.from({ length: n }, (_, i) => {
       const species = SPECIES[i % SPECIES.length]!
       const growth = { xp: XP[i % XP.length]!, koban: 12, week: 'demo', weekKoban: WEEK_KOBAN[i % WEEK_KOBAN.length]! }
-      return { petId: `demo${i}`, name: NAMES[i]!, species, color: DEFAULT_COLOR[species], joinedAt: start, mealsTotal: 0, events: [], growth }
+      const day = new Date(start).toLocaleDateString('en-CA')
+      return { petId: `demo${i}`, name: NAMES[i]!, species, color: DEFAULT_COLOR[species], joinedAt: start, mealsTotal: 0, events: [], growth, today: demoDay(i, day), week: demoDay(i, day, 5) }
     })
     const period = 110_000
     const tick = () => {
