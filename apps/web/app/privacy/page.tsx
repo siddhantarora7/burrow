@@ -27,6 +27,8 @@ export default function Privacy() {
       <p className="mt-3 opacity-80">
         everything in the garden comes from those fields: your pet&apos;s state, how long your agent waited on you today, and the koban it earns (finished runs and quick answers). nothing else is collected to make that work.
       </p>
+      <h2 className="mt-12 font-display text-2xl font-bold">this website</h2>
+      <p className="mt-3 opacity-80">counts page views with Vercel Web Analytics, which uses no cookies and does not identify visitors. it never sees your pet or your agent.</p>
       <h2 className="mt-12 font-display text-2xl font-bold">see it yourself</h2>
       <p className="mt-3 opacity-80">
         run <code className="font-mono text-sm">npx burrow-pets privacy</code> to print the same list, or{' '}
