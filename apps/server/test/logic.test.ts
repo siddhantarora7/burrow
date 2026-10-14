@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Ev } from '@burrow/core'
-import { allowRate, capList, localDate, parseClaim, pruneClaims, pruneEvents, sha256Hex, validateHatch } from '../src/logic'
+import { allowRate, capList, localDate, localHour, parseClaim, pruneClaims, pruneEvents, sha256Hex, validateHatch } from '../src/logic'
 
 describe('sha256Hex', () => {
   it('matches the known vector', async () => {
@@ -98,5 +98,13 @@ describe('withForms', () => {
   })
   it('counts a pet from before growth existed as grown', () => {
     expect(withForms([], [m('mochi')])).toEqual(['mochi:grown'])
+  })
+})
+
+describe('localHour', () => {
+  it('is the hour on the pet\'s own clock', () => {
+    expect(localHour(Date.UTC(2026, 9, 13, 23, 30), 'Asia/Tokyo')).toBe(8)
+    expect(localHour(Date.UTC(2026, 9, 13, 23, 30), 'UTC')).toBe(23)
+    expect(localHour(Date.UTC(2026, 9, 13, 0, 5), 'UTC')).toBe(0)
   })
 })

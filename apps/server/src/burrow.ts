@@ -1,5 +1,5 @@
 import { DurableObject } from 'cloudflare:workers'
-import { canPoke, isCareAction, MAX_MEMBERS, parseToken, type BurrowInfo, type CareAction, type ClientMsg, type Ev, type Member, type MemberProfile, type PetGrowth, type ServerMsg, type Today } from '@burrow/core'
+import { canPoke, isCareAction, MAX_MEMBERS, parseToken, type BurrowInfo, type CareAction, type ClientMsg, type Ev, type Member, type MemberProfile, type PetGrowth, type ServerMsg, type Today, type DayStats } from '@burrow/core'
 import { pruneEvents, withForms } from './logic'
 
 export class BurrowDO extends DurableObject<Env> {
@@ -37,7 +37,7 @@ export class BurrowDO extends DurableObject<Env> {
     return ((await this.ctx.storage.get<Member[]>('members')) ?? []).length >= MAX_MEMBERS
   }
 
-  async ingest(petId: string, ev: Ev, today?: Today, growth?: PetGrowth): Promise<void> {
+  async ingest(petId: string, ev: Ev, today?: Today, growth?: PetGrowth, week?: DayStats): Promise<void> {
     const members = (await this.ctx.storage.get<Member[]>('members')) ?? []
     const m = members.find((x) => x.petId === petId)
     if (!m) return
@@ -45,9 +45,10 @@ export class BurrowDO extends DurableObject<Env> {
     if (ev.type === 'stop') m.mealsTotal++
     if (today) m.today = today
     if (growth) m.growth = growth
+    if (week) m.week = week
     await this.ctx.storage.put({ members, catalog: await this.catalogWith([m]) })
     // The Worker that stamped ev.t may run on a machine whose clock is slightly ahead of this one.
-    this.broadcast({ t: 'event', petId, ev, today, growth, serverNow: Math.max(Date.now(), ev.t) })
+    this.broadcast({ t: 'event', petId, ev, today, week, growth, serverNow: Math.max(Date.now(), ev.t) })
   }
 
   /** A member's owner fed or played with it (PetDO already charged the koban). */
@@ -58,6 +59,14 @@ export class BurrowDO extends DurableObject<Env> {
     m.growth = growth
     await this.ctx.storage.put({ members, catalog: await this.catalogWith([m]) })
     this.broadcast({ t: 'grow', petId, growth, effect, serverNow: now })
+  }
+
+  /** What a page's snapshot holds, for the CLI's status line and stats table. Null if there is no such burrow. */
+  async snapshotJson(now: number): Promise<Extract<ServerMsg, { t: 'snapshot' }> | null> {
+    const info = await this.info()
+    if (!info) return null
+    const members = ((await this.ctx.storage.get<Member[]>('members')) ?? []).map((m) => ({ ...m, events: pruneEvents(m.events, now) }))
+    return { t: 'snapshot', burrow: info, members, catalog: await this.catalogWith(members), serverNow: now }
   }
 
   /** The stored catalog plus these members' current forms. It only ever grows. */

@@ -90,6 +90,12 @@ export default {
       return json({ burrowId: join[1], name: (await b.info())!.name }, 200)
     }
 
+    const snap = url.pathname.match(/^\/v1\/burrows\/([^/]+)\/snapshot$/)
+    if (req.method === 'GET' && snap) {
+      const s = isId(snap[1]) ? await burrow(env, snap[1]).snapshotJson(now) : null
+      return s ? json(s, 200, { ...cors, 'cache-control': 'no-store' }) : json({ error: 'not found' }, 404, cors)
+    }
+
     const ws = url.pathname.match(/^\/v1\/burrows\/([^/]+)\/ws$/)
     if (req.method === 'GET' && ws) {
       if (!isId(ws[1])) return json({ error: 'not found' }, 404, cors)

@@ -45,6 +45,11 @@ export function localDate(t: number, tz: string): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(t)
 }
 
+/** The hour (0-23) on the pet's own clock, for its activity strip. */
+export function localHour(t: number, tz: string): number {
+  return Number(new Intl.DateTimeFormat('en-GB', { timeZone: tz, hour: '2-digit', hourCycle: 'h23' }).format(t))
+}
+
 /** A one-time browser sign-in: `<petId>.<code>`, code 16 Crockford chars. */
 export const CLAIM_CODE_LEN = 16
 const CODE_RE = new RegExp(`^[0-9a-hjkmnp-tv-z]{${CLAIM_CODE_LEN}}$`)

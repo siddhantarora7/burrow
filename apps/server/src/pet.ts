@@ -1,6 +1,6 @@
 import { DurableObject } from 'cloudflare:workers'
-import { care, CLAIM_TTL_MS, earn, runLength, emptyLedger, foldWait, LEGACY_XP, newGrowth, newId, parseWireEvent, publicGrowth, SECRET_LEN, type CareAction, type Ev, type Growth, type MemberProfile, type PetGrowth, type Today, type WaitLedger } from '@burrow/core'
-import { allowRate, capList, CLAIM_CODE_LEN, localDate, pruneClaims, sha256Hex, type Claim, type Hatch } from './logic'
+import { care, CLAIM_TTL_MS, earn, runLength, emptyBook, emptyLedger, foldStats, foldWait, sumWeek, type StatsBook, LEGACY_XP, newGrowth, newId, parseWireEvent, publicGrowth, SECRET_LEN, type CareAction, type Ev, type Growth, type MemberProfile, type PetGrowth, type Today, type WaitLedger } from '@burrow/core'
+import { allowRate, capList, CLAIM_CODE_LEN, localDate, localHour, pruneClaims, sha256Hex, type Claim, type Hatch } from './logic'
 
 interface Profile extends MemberProfile {
   tz: string
@@ -92,7 +92,9 @@ export class PetDO extends DurableObject<Env> {
     const parsed = parseWireEvent(body)
     if (!parsed.ok) return { status: 400, error: parsed.error }
 
-    const ev: Ev = { ...parsed.value, t: now }
+    // usage feeds the stats book only; stored and broadcast events never carry it
+    const { usage, ...wire } = parsed.value
+    const ev: Ev = { ...wire, t: now }
     const profile = (await this.ctx.storage.get<Profile>('profile'))!
     const stats = (await this.ctx.storage.get<Stats>('stats'))!
     const day = localDate(now, profile.tz)
@@ -105,14 +107,19 @@ export class PetDO extends DurableObject<Env> {
     // earn() reads the ledger from before this event: a reply's wait is ev.t minus when it opened
     const prev = (await this.ctx.storage.get<WaitLedger>('ledger')) ?? emptyLedger(day)
     const events = (await this.ctx.storage.get<Ev[]>('events')) ?? []
-    const growth = earn(await this.loadGrowth(now), prev, ev, day, runLength(events, ev))
+    const runMs = runLength(events, ev)
+    const growth = earn(await this.loadGrowth(now), prev, ev, day, runMs)
     const ledger = foldWait(prev, ev, day)
+    const book = foldStats((await this.ctx.storage.get<StatsBook>('book')) ?? emptyBook(), ev, {
+      day, hour: localHour(now, profile.tz), prev, runMs: runMs ?? 0, waitedMs: ledger.waitedMs, meals: stats.mealsToday, usage,
+    })
     events.push(ev)
-    await this.ctx.storage.put({ stats, ledger, growth, events: events.filter((e) => e.t > now - 86_400_000).slice(-200) })
+    await this.ctx.storage.put({ stats, ledger, growth, book, events: events.filter((e) => e.t > now - 86_400_000).slice(-200) })
 
-    const today: Today = { day, waitedMs: ledger.waitedMs, meals: stats.mealsToday }
+    const today: Today = book.days.at(-1)!
+    const week = sumWeek(book.days, day)
     const burrows = (await this.ctx.storage.get<string[]>('burrows')) ?? []
-    await Promise.all(burrows.map((id) => this.env.BURROW.get(this.env.BURROW.idFromName(id)).ingest(profile.petId, ev, today, publicGrowth(growth))))
+    await Promise.all(burrows.map((id) => this.env.BURROW.get(this.env.BURROW.idFromName(id)).ingest(profile.petId, ev, today, publicGrowth(growth), week)))
     return { status: 204 }
   }
 
