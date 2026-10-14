@@ -48,7 +48,7 @@ export function statusLines(o: { claude: ClaudeStatus; me: { petId: string; name
   }
   const mine = o.snap?.members.find((m) => m.petId === o.me.petId)
 
-  const head = `${c('38;5;211', FACE[o.me.species])} ${c('1', o.me.name)}`
+  const head = `${c('38;5;211', FACE[o.me.species])} ${c('1', mine?.name ?? o.me.name)}`
   const parts: string[] = []
   if (mine) {
     const word = stateOf(mine)

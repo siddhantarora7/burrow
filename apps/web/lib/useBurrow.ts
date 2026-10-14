@@ -76,5 +76,10 @@ export function useBurrow(id: string) {
     if (ws?.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ t: 'care', action } satisfies ClientMsg))
   }, [])
 
-  return { ...state, poke, care }
+  const rename = useCallback((name: string) => {
+    const ws = socket.current
+    if (ws?.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ t: 'rename', name } satisfies ClientMsg))
+  }, [])
+
+  return { ...state, poke, care, rename }
 }

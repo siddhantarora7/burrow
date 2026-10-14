@@ -60,6 +60,9 @@ stranger.send(JSON.stringify({ t: 'care', action: 'play' }))
 await new Promise((r) => setTimeout(r, 300))
 ws.send(JSON.stringify({ t: 'care', action: 'feed' }))
 ws.send(JSON.stringify({ t: 'care', action: 'play' }))
+// the signed-in browser renames its own pet from the page; a stranger's socket cannot
+stranger.send(JSON.stringify({ t: 'rename', name: 'hijack' }))
+ws.send(JSON.stringify({ t: 'rename', name: 'Pal Two' }))
 await new Promise((r) => setTimeout(r, 800))
 stranger.close()
 ws.close()
@@ -78,6 +81,8 @@ if (mine.at(-1)?.growth?.koban !== 2) fail(`a quick answer should pay 2 and a on
 if (!['onigiri:baby', 'tofu:baby'].every((k) => got[0].catalog?.includes(k))) fail(`the catalog should hold both babies, got ${JSON.stringify(got[0].catalog)}`)
 const grows = got.filter((m) => m.t === 'grow')
 if (grows.length !== 1 || grows[0].petId !== friend.petId || grows[0].effect !== 'play' || grows[0].growth.koban !== 1 || grows[0].growth.xp !== 5) fail(`expected one play on the friend's pet, got ${JSON.stringify(grows)}`)
+const renames = got.filter((m) => m.t === 'rename')
+if (renames.length !== 1 || renames[0].petId !== friend.petId || renames[0].name !== 'pal two') fail(`expected one rename from the page, got ${JSON.stringify(renames)}`)
 if (types.join() !== 'prompt,needs_input,stop') throw new Error(`unexpected events: ${types.join()}`)
 if (/secret|leak|smoke-session/.test(raw)) throw new Error('private data reached the burrow')
 // stats: usage only on a stop, counted once; the public snapshot carries today and the week

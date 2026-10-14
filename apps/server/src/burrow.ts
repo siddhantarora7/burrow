@@ -137,6 +137,13 @@ export class BurrowDO extends DurableObject<Env> {
       if (!me || !members.some((m) => m.petId === me)) return
       await this.env.PET.get(this.env.PET.idFromName(me)).care(msg.action, Date.now())
     }
+    if (msg.t === 'rename' && typeof msg.name === 'string') {
+      // same rule as care: a signed-in member renames only its own pet; PetDO tells every garden
+      const me = (ws.deserializeAttachment() as { me?: string | null } | null)?.me ?? null
+      const members = (await this.ctx.storage.get<Member[]>('members')) ?? []
+      if (!me || !members.some((m) => m.petId === me)) return
+      await this.env.PET.get(this.env.PET.idFromName(me)).renameFromPage(msg.name, Date.now())
+    }
   }
 
   override async webSocketClose(ws: WebSocket, code: number): Promise<void> {

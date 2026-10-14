@@ -47,7 +47,7 @@ export type ServerMsg =
   /** A signed-in owner fed or played with their pet. */
   | { t: 'grow'; petId: string; growth: PetGrowth; effect: CareAction; serverNow: number }
 
-export type ClientMsg = { t: 'hello'; token?: string } | { t: 'poke'; to: string } | { t: 'care'; action: CareAction }
+export type ClientMsg = { t: 'hello'; token?: string } | { t: 'poke'; to: string } | { t: 'care'; action: CareAction } | { t: 'rename'; name: string }
 
 export const MAX_MEMBER_EVENTS = 50
 export const EVENT_RETENTION_MS = 24 * 60 * 60 * 1000

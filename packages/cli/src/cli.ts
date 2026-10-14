@@ -157,6 +157,8 @@ ${privacyBlock(usage)}
   ${invite ? 'you moved into a friend\'s burrow.' : 'your burrow is ready. send the plain link to friends; keep it open on a second screen.'}
 
 ${signInLine(webUrl, body.burrowId, body.claim)}
+
+  ${dim('the garden walks you through the rest: your pet\'s name, alerts, inviting friends.')}
 `)
 }
 

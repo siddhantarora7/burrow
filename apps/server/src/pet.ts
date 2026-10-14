@@ -130,6 +130,18 @@ export class PetDO extends DurableObject<Env> {
     const rate = allowRate(this.renameStamps, now, 5, 60_000)
     this.renameStamps = rate.stamps
     if (!rate.ok) return { error: 'slow down' }
+    return this.setName(raw, now)
+  }
+
+  /** The same rename from a signed-in page (BurrowDO checked the web token at hello). */
+  async renameFromPage(raw: unknown, now: number): Promise<{ name: string } | { error: 'bad name' | 'slow down' }> {
+    const rate = allowRate(this.renameStamps, now, 5, 60_000)
+    this.renameStamps = rate.stamps
+    if (!rate.ok) return { error: 'slow down' }
+    return this.setName(raw, now)
+  }
+
+  private async setName(raw: unknown, now: number): Promise<{ name: string } | { error: 'bad name' }> {
     const name = cleanName(raw)
     if (!name) return { error: 'bad name' }
     const p = (await this.ctx.storage.get<Profile>('profile'))!

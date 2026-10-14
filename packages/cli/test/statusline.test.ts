@@ -95,3 +95,10 @@ describe('shouldRefresh: few requests, even when they fail', () => {
     expect(shouldRefresh({ now: NOW, fetchedAt: NOW - 600_000, attemptAt: NOW - 30_000, active: true })).toBe(false)
   })
 })
+
+describe('statusLines: a name changed on the website', () => {
+  it('shows the garden\'s name for your pet over the one saved locally', () => {
+    const line = statusLines({ claude: {}, me, snap: snap([member(me.petId, 'mochi kiwi', [])]), now: NOW, todayKey: TODAY, color: false })[0]
+    expect(line!.startsWith('(•ᴗ•) mochi kiwi')).toBe(true)
+  })
+})

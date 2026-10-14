@@ -9,13 +9,12 @@ import { usePetStates } from '@/lib/usePetStates'
 import { useAlerts } from '@/lib/useAlerts'
 import { burrowTitle, VERB } from '@/lib/status'
 import { INIT, inviteCommand } from '@/lib/commands'
-import { BarChart, Bell, BellOff, BookOpen, Check, Copy, ShieldCheck, Terminal, Trophy, UserPlus, VolumeOff } from './icons'
+import { BarChart, Bell, BellOff, BookOpen, ShieldCheck, Sparkles, Terminal, Trophy, UserPlus, VolumeOff } from './icons'
+import { Onboarding } from './Onboarding'
 import { CarePill } from './CarePill'
 import { CatalogPanel, RanksPanel, StatsPanel, type PanelName } from './Panels'
-import { growthOf, stageOf, type CareAction, type Member } from '@burrow/core'
-import { Sprite } from './Sprite'
+import type { CareAction } from '@burrow/core'
 import { Logo } from './Logo'
-import { toneOf } from '@/lib/pixel/sprites'
 
 // The visitor's own clock drives the light. The server cannot know it, so it renders the
 // chrome only (null) instead of guessing a time of day.
@@ -42,6 +41,7 @@ export function BurrowView({ id }: { id: string }) {
 type ScreenProps = BurrowState & {
   poke?: (to: string) => void
   care?: (action: CareAction) => void
+  rename?: (name: string) => void
   /** Header text beside the wordmark; defaults to the burrow's name. */
   label?: string
   /** Replaces the connection status, e.g. "demo". */
@@ -55,13 +55,33 @@ type ScreenProps = BurrowState & {
 const ALERT_ICON = { 'alerts on': Bell, 'allow notifications': Bell, 'chime only': Bell, 'alerts off': BellOff, 'click for sound': VolumeOff } as const
 
 /** The garden page for any source of members: the live WebSocket, or the synthetic demo. */
-export function BurrowScreen({ status, burrow, members, offset, me, pokes, poke, care, catalog, cares, label, statusLabel, invite, embed = false }: ScreenProps) {
+export function BurrowScreen({ status, burrow, members, offset, me, pokes, poke, care, rename, catalog, cares, label, statusLabel, invite, embed = false }: ScreenProps) {
   const states = usePetStates(members, offset)
   const [panel, setPanel] = useState<PanelName | null>(null)
   const mine = me ? members.find((m) => m.petId === me) : undefined
   const showCare = !embed && !!mine && !!care
   const alerts = useAlerts({ me, members, states, pokes })
   const hour = useHour()
+
+  // the getting-started guide: once per pet on its owner's first signed-in visit, then from the setup button
+  const [guide, setGuide] = useState(false)
+  const guideKey = mine ? `burrow:onboarded:${mine.petId}` : null
+  useEffect(() => {
+    if (!showCare || !guideKey) return
+    try {
+      if (localStorage.getItem(guideKey) !== '1') setGuide(true)
+    } catch {
+      // private mode: the setup button still opens it
+    }
+  }, [showCare, guideKey])
+  const closeGuide = () => {
+    setGuide(false)
+    try {
+      if (guideKey) localStorage.setItem(guideKey, '1')
+    } catch {
+      // nothing to remember
+    }
+  }
 
   // the landing page links back here ("my garden") once this browser's pet lives in this garden
   useEffect(() => {
@@ -95,6 +115,12 @@ export function BurrowScreen({ status, burrow, members, offset, me, pokes, poke,
             {(label ?? burrow?.name) && <span className="lbl hidden border-l border-current/20 pl-2.5 opacity-70 sm:block">{label ?? burrow?.name}</span>}
           </Link>
           <nav className={`${skin} pill ml-auto gap-0.5 px-1`}>
+            {showCare && (
+              <button type="button" className="pill-btn" onClick={() => setGuide(true)} aria-label="setup">
+                <Sparkles />
+                <span className="lbl hidden md:block">setup</span>
+              </button>
+            )}
             <button type="button" className="pill-btn" onClick={() => setPanel('stats')} aria-label="stats">
               <BarChart />
               <span className="lbl hidden md:block">stats</span>
@@ -128,7 +154,7 @@ export function BurrowScreen({ status, burrow, members, offset, me, pokes, poke,
       {hour !== null && <PixelBurrow members={members} states={states} offset={offset} hour={hour} me={me} pokes={pokes} onPoke={poke} showHint={!embed} cares={cares} careShown={showCare} />}
 
       {showCare && <CarePill member={mine!} night={night} onCare={care!} />}
-      {showCare && <Welcome member={mine!} night={night} />}
+      {showCare && guide && <Onboarding member={mine!} night={night} invite={invite} alerts={alerts} onRename={(n) => rename?.(n)} onDone={closeGuide} />}
       {panel === 'stats' && <StatsPanel members={members} me={me} night={night} onClose={() => setPanel(null)} />}
       {panel === 'catalog' && <CatalogPanel catalog={catalog} members={members} night={night} onClose={() => setPanel(null)} />}
       {panel === 'ranks' && <RanksPanel members={members} me={me} night={night} onClose={() => setPanel(null)} />}
@@ -153,61 +179,8 @@ export function BurrowScreen({ status, burrow, members, offset, me, pokes, poke,
   )
 }
 
-/** Once per pet, the first time its owner opens their garden signed in: what to expect from here. */
-function Welcome({ member, night }: { member: Member; night: boolean }) {
-  const key = `burrow:welcomed:${member.petId}`
-  const [show, setShow] = useState(false)
-  useEffect(() => {
-    try {
-      setShow(localStorage.getItem(key) !== '1')
-    } catch {
-      // private mode: skip it rather than show it every visit
-    }
-  }, [key])
-  if (!show) return null
-  const done = () => {
-    setShow(false)
-    try {
-      localStorage.setItem(key, '1')
-    } catch {
-      // nothing to remember
-    }
-  }
-  return (
-    <section aria-label="welcome" className={`welcome chip ${night ? 'chip-night' : ''} fixed inset-x-3 top-[4.5rem] z-30 mx-auto flex max-w-md items-start gap-3 rounded-2xl p-4 sm:top-24`}>
-      <Sprite species={member.species} color={toneOf(member.species, member.color)} stage={stageOf(growthOf(member).xp)} state="cheer" size={48} animate className="shrink-0" />
-      <div className="min-w-0 flex-1">
-        <p className="font-display font-bold">this is {member.name}&apos;s garden.</p>
-        <p className="mt-1 text-[13px] leading-relaxed opacity-80">
-          keep this tab open and it chimes when your agent needs you. finished runs and quick answers earn koban; spend them on {member.name} and it grows up.
-        </p>
-        <button type="button" onClick={done} className="pill-btn chip-solid mt-3 font-bold">
-          <span className="lbl">got it</span>
-        </button>
-      </div>
-    </section>
-  )
-}
-
-/** A copy button that says what it copied for two seconds. */
-export function CopyButton({ text, label = 'copy', className = '' }: { text: string; label?: string; className?: string }) {
-  const [copied, setCopied] = useState(false)
-  useEffect(() => {
-    if (!copied) return
-    const t = setTimeout(() => setCopied(false), 2000)
-    return () => clearTimeout(t)
-  }, [copied])
-  return (
-    <button
-      type="button"
-      className={`pill-btn chip-solid font-bold ${className}`}
-      onClick={() => navigator.clipboard?.writeText(text).then(() => setCopied(true), () => {})}
-    >
-      {copied ? <Check /> : <Copy />}
-      <span className="lbl" aria-live="polite">{copied ? 'copied' : label}</span>
-    </button>
-  )
-}
+import { CopyButton } from './CopyButton'
+export { CopyButton }
 
 const bottomPill = 'fixed bottom-4 left-1/2 z-20 -translate-x-1/2 sm:bottom-6 sm:left-6 sm:translate-x-0'
 
